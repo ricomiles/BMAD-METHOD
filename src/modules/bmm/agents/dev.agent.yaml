@@ -2,7 +2,7 @@
 
 agent:
   metadata:
-    id: bmad/bmm/agents/dev-impl.md
+    id: bmad/bmm/agents/dev.md
     name: Amelia
     title: Developer Agent
     icon: 💻

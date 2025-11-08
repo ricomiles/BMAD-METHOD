@@ -79,6 +79,7 @@ Parse these fields from YAML comments and metadata:
 <action>Load workflow path file based on workflow_path field</action>
 <action>Identify current phase from next workflow to be done</action>
 <action>Build list of completed, pending, and optional workflows</action>
+<action>For each workflow, look up its agent from the path file</action>
 
 <output>
 ## 📊 Current Status
@@ -93,7 +94,7 @@ Parse these fields from YAML comments and metadata:
 {{phase_name}}:
 {{#each workflows_in_phase}}
 
-- {{workflow_name}}: {{status_display}}
+- {{workflow_name}} ({{agent}}): {{status_display}}
   {{/each}}
   {{/each}}
 
@@ -118,7 +119,7 @@ Parse these fields from YAML comments and metadata:
 <step n="4" goal="Offer actions">
 <ask>What would you like to do?
 
-1. **Start next workflow** - {{next_workflow_name}} ({{next_agent}} agent)
+1. **Start next workflow** - {{next_workflow_name}} ({{next_agent}})
    {{#if optional_workflows_available}}
 2. **Run optional workflow** - Choose from available options
    {{/if}}

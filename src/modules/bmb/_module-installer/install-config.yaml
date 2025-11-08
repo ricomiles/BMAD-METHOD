@@ -9,6 +9,7 @@ prompt: "Happy Building - Build the Modules, Workflows and Agents of your dreams
 ## user_name
 ## communication_language
 ## output_folder
+## bmad_folder
 
 custom_agent_location:
   prompt: "Where do custom agents get created?"

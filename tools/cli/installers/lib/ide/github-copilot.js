@@ -214,24 +214,31 @@ class GitHubCopilotSetup extends BaseIdeSetup {
     const whenToUseMatch = content.match(/whenToUse="([^"]+)"/);
     const description = whenToUseMatch ? whenToUseMatch[1] : `Activates the ${title} agent persona.`;
 
-    // Available GitHub Copilot tools
+    // Available GitHub Copilot tools (November 2025 - Official VS Code Documentation)
+    // Reference: https://code.visualstudio.com/docs/copilot/reference/copilot-vscode-features#_chat-tools
     const tools = [
-      'changes',
-      'codebase',
-      'fetch',
-      'findTestFiles',
-      'githubRepo',
-      'problems',
-      'usages',
-      'editFiles',
-      'runCommands',
-      'runTasks',
-      'runTests',
-      'search',
-      'searchResults',
-      'terminalLastCommand',
-      'terminalSelection',
-      'testFailure',
+      'changes', // List of source control changes
+      'codebase', // Perform code search in workspace
+      'createDirectory', // Create new directory in workspace
+      'createFile', // Create new file in workspace
+      'editFiles', // Apply edits to files in workspace
+      'fetch', // Fetch content from web page
+      'fileSearch', // Search files using glob patterns
+      'githubRepo', // Perform code search in GitHub repo
+      'listDirectory', // List files in a directory
+      'problems', // Add workspace issues from Problems panel
+      'readFile', // Read content of a file in workspace
+      'runInTerminal', // Run shell command in integrated terminal
+      'runTask', // Run existing task in workspace
+      'runTests', // Run unit tests in workspace
+      'runVscodeCommand', // Run VS Code command
+      'search', // Enable file searching in workspace
+      'searchResults', // Get search results from Search view
+      'terminalLastCommand', // Get last terminal command and output
+      'terminalSelection', // Get current terminal selection
+      'testFailure', // Get unit test failure information
+      'textSearch', // Find text in files
+      'usages', // Find references and navigate definitions
     ];
 
     let chatmodeContent = `---

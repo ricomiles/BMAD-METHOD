@@ -13,6 +13,7 @@ prompt:
 ## user_name
 ## communication_language
 ## output_folder
+## bmad_folder
 
 project_name:
   prompt: "What is the title of your project you will be working on?"
