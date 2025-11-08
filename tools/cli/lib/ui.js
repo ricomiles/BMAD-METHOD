@@ -21,10 +21,21 @@ class UI {
 
     const confirmedDirectory = await this.getConfirmedDirectory();
 
+    // Preflight: Check for legacy BMAD v4 footprints immediately after getting directory
+    const { Detector } = require('../installers/lib/core/detector');
+    const { Installer } = require('../installers/lib/core/installer');
+    const detector = new Detector();
+    const installer = new Installer();
+    const legacyV4 = await detector.detectLegacyV4(confirmedDirectory);
+    if (legacyV4.hasLegacyV4) {
+      await installer.handleLegacyV4Migration(confirmedDirectory, legacyV4);
+    }
+
     // Check if there's an existing BMAD installation
     const fs = require('fs-extra');
     const path = require('node:path');
-    const bmadDir = path.join(confirmedDirectory, 'bmad');
+    // Use findBmadDir to detect any custom folder names (V6+)
+    const bmadDir = await installer.findBmadDir(confirmedDirectory);
     const hasExistingInstall = await fs.pathExists(bmadDir);
 
     // Track action type (only set if there's an existing installation)

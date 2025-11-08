@@ -35,7 +35,7 @@ class Installer {
 
   /**
    * Find the bmad installation directory in a project
-   * Checks for custom bmad_folder names (.bmad, .bmad-custom, etc.) and falls back to 'bmad'
+   * V6+ installations can use ANY folder name but ALWAYS have _cfg/manifest.yaml
    * @param {string} projectDir - Project directory
    * @returns {Promise<string>} Path to bmad directory
    */
@@ -46,34 +46,25 @@ class Installer {
       return path.join(projectDir, 'bmad');
     }
 
-    // First, try to read from existing core config to get the bmad_folder value
-    const possibleDirs = ['.bmad', 'bmad']; // Common defaults
-
-    // Check if any of these exist
-    for (const dir of possibleDirs) {
-      const fullPath = path.join(projectDir, dir);
-      if (await fs.pathExists(fullPath)) {
-        // Try to read the config to confirm this is a bmad installation
-        const configPath = path.join(fullPath, 'core', 'config.yaml');
-        if (await fs.pathExists(configPath)) {
-          return fullPath;
+    // V6+ strategy: Look for ANY directory with _cfg/manifest.yaml
+    // This is the definitive marker of a V6+ installation
+    try {
+      const entries = await fs.readdir(projectDir, { withFileTypes: true });
+      for (const entry of entries) {
+        if (entry.isDirectory()) {
+          const manifestPath = path.join(projectDir, entry.name, '_cfg', 'manifest.yaml');
+          if (await fs.pathExists(manifestPath)) {
+            // Found a V6+ installation
+            return path.join(projectDir, entry.name);
+          }
         }
       }
+    } catch {
+      // Ignore errors, fall through to default
     }
 
-    // If nothing found, check for any directory that contains core/config.yaml
-    // This handles custom bmad_folder names
-    const entries = await fs.readdir(projectDir, { withFileTypes: true });
-    for (const entry of entries) {
-      if (entry.isDirectory()) {
-        const configPath = path.join(projectDir, entry.name, 'core', 'config.yaml');
-        if (await fs.pathExists(configPath)) {
-          return path.join(projectDir, entry.name);
-        }
-      }
-    }
-
-    // Default fallback
+    // No V6+ installation found, return default
+    // This will be used for new installations
     return path.join(projectDir, 'bmad');
   }
 
@@ -249,12 +240,10 @@ class Installer {
     // Display welcome message
     CLIUtils.displaySection('BMAD™ Installation', 'Version ' + require(path.join(getProjectRoot(), 'package.json')).version);
 
-    // Preflight: Handle legacy BMAD v4 footprints before any prompts/writes
+    // Note: Legacy V4 detection now happens earlier in UI.promptInstall()
+    // before any config collection, so we don't need to check again here
+
     const projectDir = path.resolve(config.directory);
-    const legacyV4 = await this.detector.detectLegacyV4(projectDir);
-    if (legacyV4.hasLegacyV4) {
-      await this.handleLegacyV4Migration(projectDir, legacyV4);
-    }
 
     // If core config was pre-collected (from interactive mode), use it
     if (config.coreConfig) {
@@ -279,6 +268,10 @@ class Installer {
     // Get bmad_folder from config (default to 'bmad' for backwards compatibility)
     const bmadFolderName = moduleConfigs.core && moduleConfigs.core.bmad_folder ? moduleConfigs.core.bmad_folder : 'bmad';
     this.bmadFolderName = bmadFolderName; // Store for use in other methods
+
+    // Set bmad folder name on module manager and IDE manager for placeholder replacement
+    this.moduleManager.setBmadFolderName(bmadFolderName);
+    this.ideManager.setBmadFolderName(bmadFolderName);
 
     // Tool selection will be collected after we determine if it's a reinstall/update/new install
 
