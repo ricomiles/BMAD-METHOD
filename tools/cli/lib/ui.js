@@ -429,9 +429,6 @@ class UI {
           console.log(chalk.gray('Directory exists and is empty'));
         }
       }
-    } else {
-      const existingParent = await this.findExistingParent(directory);
-      console.log(chalk.gray(`Will create in: ${existingParent}`));
     }
   }
 

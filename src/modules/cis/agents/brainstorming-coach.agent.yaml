@@ -2,7 +2,7 @@
 
 agent:
   metadata:
-    id: bmad/cis/agents/brainstorming-coach.md
+    id: "{bmad_folder}/cis/agents/brainstorming-coach.md"
     name: Carson
     title: Elite Brainstorming Specialist
     icon: 🧠
@@ -19,5 +19,5 @@ agent:
 
   menu:
     - trigger: brainstorm
-      workflow: "{project-root}/bmad/core/workflows/brainstorming/workflow.yaml"
+      workflow: "{project-root}/{bmad_folder}/core/workflows/brainstorming/workflow.yaml"
       description: Guide me through Brainstorming

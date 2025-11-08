@@ -34,6 +34,85 @@ class Installer {
   }
 
   /**
+   * Find the bmad installation directory in a project
+   * Checks for custom bmad_folder names (.bmad, .bmad-custom, etc.) and falls back to 'bmad'
+   * @param {string} projectDir - Project directory
+   * @returns {Promise<string>} Path to bmad directory
+   */
+  async findBmadDir(projectDir) {
+    // Check if project directory exists
+    if (!(await fs.pathExists(projectDir))) {
+      // Project doesn't exist yet, return default
+      return path.join(projectDir, 'bmad');
+    }
+
+    // First, try to read from existing core config to get the bmad_folder value
+    const possibleDirs = ['.bmad', 'bmad']; // Common defaults
+
+    // Check if any of these exist
+    for (const dir of possibleDirs) {
+      const fullPath = path.join(projectDir, dir);
+      if (await fs.pathExists(fullPath)) {
+        // Try to read the config to confirm this is a bmad installation
+        const configPath = path.join(fullPath, 'core', 'config.yaml');
+        if (await fs.pathExists(configPath)) {
+          return fullPath;
+        }
+      }
+    }
+
+    // If nothing found, check for any directory that contains core/config.yaml
+    // This handles custom bmad_folder names
+    const entries = await fs.readdir(projectDir, { withFileTypes: true });
+    for (const entry of entries) {
+      if (entry.isDirectory()) {
+        const configPath = path.join(projectDir, entry.name, 'core', 'config.yaml');
+        if (await fs.pathExists(configPath)) {
+          return path.join(projectDir, entry.name);
+        }
+      }
+    }
+
+    // Default fallback
+    return path.join(projectDir, 'bmad');
+  }
+
+  /**
+   * Copy a file and replace {bmad_folder} placeholder with actual folder name
+   * @param {string} sourcePath - Source file path
+   * @param {string} targetPath - Target file path
+   * @param {string} bmadFolderName - The bmad folder name to use for replacement
+   */
+  async copyFileWithPlaceholderReplacement(sourcePath, targetPath, bmadFolderName) {
+    // List of text file extensions that should have placeholder replacement
+    const textExtensions = ['.md', '.yaml', '.yml', '.txt', '.json', '.js', '.ts', '.html', '.css', '.sh', '.bat', '.csv'];
+    const ext = path.extname(sourcePath).toLowerCase();
+
+    // Check if this is a text file that might contain placeholders
+    if (textExtensions.includes(ext)) {
+      try {
+        // Read the file content
+        let content = await fs.readFile(sourcePath, 'utf8');
+
+        // Replace {bmad_folder} placeholder with actual folder name
+        if (content.includes('{bmad_folder}')) {
+          content = content.replaceAll('{bmad_folder}', bmadFolderName);
+        }
+
+        // Write to target with replaced content
+        await fs.ensureDir(path.dirname(targetPath));
+        await fs.writeFile(targetPath, content, 'utf8');
+      } catch {
+        // If reading as text fails (might be binary despite extension), fall back to regular copy
+        await fs.copy(sourcePath, targetPath, { overwrite: true });
+      }
+    } else {
+      // Binary file or other file type - just copy directly
+      await fs.copy(sourcePath, targetPath, { overwrite: true });
+    }
+  }
+
+  /**
    * Collect Tool/IDE configurations after module configuration
    * @param {string} projectDir - Project directory
    * @param {Array} selectedModules - Selected modules from configuration
@@ -61,7 +140,7 @@ class Installer {
     // Check for already configured IDEs
     const { Detector } = require('./detector');
     const detector = new Detector();
-    const bmadDir = path.join(projectDir, 'bmad');
+    const bmadDir = path.join(projectDir, this.bmadFolderName || 'bmad');
 
     // During full reinstall, use the saved previous IDEs since bmad dir was deleted
     // Otherwise detect from existing installation
@@ -197,6 +276,10 @@ class Installer {
       moduleConfigs = await this.configCollector.collectAllConfigurations(config.modules || [], path.resolve(config.directory));
     }
 
+    // Get bmad_folder from config (default to 'bmad' for backwards compatibility)
+    const bmadFolderName = moduleConfigs.core && moduleConfigs.core.bmad_folder ? moduleConfigs.core.bmad_folder : 'bmad';
+    this.bmadFolderName = bmadFolderName; // Store for use in other methods
+
     // Tool selection will be collected after we determine if it's a reinstall/update/new install
 
     const spinner = ora('Preparing installation...').start();
@@ -204,6 +287,63 @@ class Installer {
     try {
       // Resolve target directory (path.resolve handles platform differences)
       const projectDir = path.resolve(config.directory);
+
+      // Check if bmad_folder has changed from existing installation (only if project dir exists)
+      let existingBmadDir = null;
+      let existingBmadFolderName = null;
+
+      if (await fs.pathExists(projectDir)) {
+        existingBmadDir = await this.findBmadDir(projectDir);
+        existingBmadFolderName = path.basename(existingBmadDir);
+      }
+
+      const targetBmadDir = path.join(projectDir, bmadFolderName);
+
+      // If bmad_folder changed during update/upgrade, back up old folder and do fresh install
+      if (existingBmadDir && (await fs.pathExists(existingBmadDir)) && existingBmadFolderName !== bmadFolderName) {
+        spinner.stop();
+        console.log(chalk.yellow(`\n⚠️  bmad_folder has changed: ${existingBmadFolderName} → ${bmadFolderName}`));
+        console.log(chalk.yellow('This will result in a fresh installation to the new folder.'));
+
+        const inquirer = require('inquirer');
+        const { confirmFreshInstall } = await inquirer.prompt([
+          {
+            type: 'confirm',
+            name: 'confirmFreshInstall',
+            message: chalk.cyan('Proceed with fresh install? (Your old folder will be backed up)'),
+            default: true,
+          },
+        ]);
+
+        if (!confirmFreshInstall) {
+          console.log(chalk.yellow('Installation cancelled.'));
+          return { success: false, cancelled: true };
+        }
+
+        spinner.start('Backing up existing installation...');
+
+        // Find a unique backup name
+        let backupDir = `${existingBmadDir}-bak`;
+        let counter = 1;
+        while (await fs.pathExists(backupDir)) {
+          backupDir = `${existingBmadDir}-bak-${counter}`;
+          counter++;
+        }
+
+        // Rename the old folder to backup
+        await fs.move(existingBmadDir, backupDir);
+
+        spinner.succeed(`Backed up ${existingBmadFolderName} → ${path.basename(backupDir)}`);
+        console.log(chalk.cyan('\n📋 Important:'));
+        console.log(chalk.dim(`  - Your old installation has been backed up to: ${path.basename(backupDir)}`));
+        console.log(chalk.dim(`  - If you had custom agents or configurations, copy them from:`));
+        console.log(chalk.dim(`    ${path.basename(backupDir)}/_cfg/`));
+        console.log(chalk.dim(`  - To the new location:`));
+        console.log(chalk.dim(`    ${bmadFolderName}/_cfg/`));
+        console.log('');
+
+        spinner.start('Starting fresh installation...');
+      }
 
       // Create a project directory if it doesn't exist (user already confirmed)
       if (!(await fs.pathExists(projectDir))) {
@@ -225,7 +365,7 @@ class Installer {
         }
       }
 
-      const bmadDir = path.join(projectDir, 'bmad');
+      const bmadDir = path.join(projectDir, bmadFolderName);
 
       // Check existing installation
       spinner.text = 'Checking for existing installation...';
@@ -726,7 +866,8 @@ class Installer {
     const spinner = ora('Checking installation...').start();
 
     try {
-      const bmadDir = path.join(path.resolve(config.directory), 'bmad');
+      const projectDir = path.resolve(config.directory);
+      const bmadDir = await this.findBmadDir(projectDir);
       const existingInstall = await this.detector.detect(bmadDir);
 
       if (!existingInstall.installed) {
@@ -786,7 +927,8 @@ class Installer {
    * Get installation status
    */
   async getStatus(directory) {
-    const bmadDir = path.join(path.resolve(directory), 'bmad');
+    const projectDir = path.resolve(directory);
+    const bmadDir = await this.findBmadDir(projectDir);
     return await this.detector.detect(bmadDir);
   }
 
@@ -801,14 +943,15 @@ class Installer {
    * Uninstall BMAD
    */
   async uninstall(directory) {
-    const bmadDir = path.join(path.resolve(directory), 'bmad');
+    const projectDir = path.resolve(directory);
+    const bmadDir = await this.findBmadDir(projectDir);
 
     if (await fs.pathExists(bmadDir)) {
       await fs.remove(bmadDir);
     }
 
     // Clean up IDE configurations
-    await this.ideManager.cleanup(path.resolve(directory));
+    await this.ideManager.cleanup(projectDir);
 
     return { success: true };
   }
@@ -986,7 +1129,7 @@ class Installer {
         const targetPath = path.join(agentsDir, fileName);
 
         if (await fs.pathExists(sourcePath)) {
-          await fs.copy(sourcePath, targetPath);
+          await this.copyFileWithPlaceholderReplacement(sourcePath, targetPath, this.bmadFolderName || 'bmad');
           this.installedFiles.push(targetPath);
         }
       }
@@ -1002,7 +1145,7 @@ class Installer {
         const targetPath = path.join(tasksDir, fileName);
 
         if (await fs.pathExists(sourcePath)) {
-          await fs.copy(sourcePath, targetPath);
+          await this.copyFileWithPlaceholderReplacement(sourcePath, targetPath, this.bmadFolderName || 'bmad');
           this.installedFiles.push(targetPath);
         }
       }
@@ -1018,7 +1161,7 @@ class Installer {
         const targetPath = path.join(toolsDir, fileName);
 
         if (await fs.pathExists(sourcePath)) {
-          await fs.copy(sourcePath, targetPath);
+          await this.copyFileWithPlaceholderReplacement(sourcePath, targetPath, this.bmadFolderName || 'bmad');
           this.installedFiles.push(targetPath);
         }
       }
@@ -1034,7 +1177,7 @@ class Installer {
         const targetPath = path.join(templatesDir, fileName);
 
         if (await fs.pathExists(sourcePath)) {
-          await fs.copy(sourcePath, targetPath);
+          await this.copyFileWithPlaceholderReplacement(sourcePath, targetPath, this.bmadFolderName || 'bmad');
           this.installedFiles.push(targetPath);
         }
       }
@@ -1049,7 +1192,7 @@ class Installer {
         await fs.ensureDir(path.dirname(targetPath));
 
         if (await fs.pathExists(dataPath)) {
-          await fs.copy(dataPath, targetPath);
+          await this.copyFileWithPlaceholderReplacement(dataPath, targetPath, this.bmadFolderName || 'bmad');
           this.installedFiles.push(targetPath);
         }
       }
@@ -1109,9 +1252,8 @@ class Installer {
         }
       }
 
-      // Copy the file
-      await fs.ensureDir(path.dirname(targetFile));
-      await fs.copy(sourceFile, targetFile, { overwrite: true });
+      // Copy the file with placeholder replacement
+      await this.copyFileWithPlaceholderReplacement(sourceFile, targetFile, this.bmadFolderName || 'bmad');
 
       // Track the installed file
       this.installedFiles.push(targetFile);
@@ -1182,7 +1324,7 @@ class Installer {
         if (!(await fs.pathExists(customizePath))) {
           const genericTemplatePath = getSourcePath('utility', 'templates', 'agent.customize.template.yaml');
           if (await fs.pathExists(genericTemplatePath)) {
-            await fs.copy(genericTemplatePath, customizePath);
+            await this.copyFileWithPlaceholderReplacement(genericTemplatePath, customizePath, this.bmadFolderName || 'bmad');
             console.log(chalk.dim(`  Created customize: ${moduleName}-${agentName}.customize.yaml`));
           }
         }
@@ -1417,7 +1559,7 @@ class Installer {
 
     try {
       const projectDir = path.resolve(config.directory);
-      const bmadDir = path.join(projectDir, 'bmad');
+      const bmadDir = await this.findBmadDir(projectDir);
 
       // Check if bmad directory exists
       if (!(await fs.pathExists(bmadDir))) {
@@ -1548,7 +1690,7 @@ class Installer {
 
     try {
       const projectDir = path.resolve(config.directory);
-      const bmadDir = path.join(projectDir, 'bmad');
+      const bmadDir = await this.findBmadDir(projectDir);
 
       // Check if bmad directory exists
       if (!(await fs.pathExists(bmadDir))) {
@@ -2097,7 +2239,7 @@ class Installer {
       const targetDocPath = path.join(docsDir, `${ide}-instructions.md`);
 
       if (await fs.pathExists(sourceDocPath)) {
-        await fs.copy(sourceDocPath, targetDocPath, { overwrite: true });
+        await this.copyFileWithPlaceholderReplacement(sourceDocPath, targetDocPath, this.bmadFolderName || 'bmad');
       }
     }
   }

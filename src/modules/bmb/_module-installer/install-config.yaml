@@ -10,18 +10,20 @@ prompt: "Happy Building - Build the Modules, Workflows and Agents of your dreams
 ## communication_language
 ## output_folder
 ## bmad_folder
+## install_user_docs
+## kb_install
 
 custom_agent_location:
   prompt: "Where do custom agents get created?"
-  default: "bmad/agents"
+  default: "{bmad_folder}/custom/agents"
   result: "{project-root}/{value}"
 
 custom_workflow_location:
   prompt: "Where do custom workflows get stored?"
-  default: "bmad/workflows"
+  default: "{bmad_folder}/custom/workflows"
   result: "{project-root}/{value}"
 
 custom_module_location:
   prompt: "Where do custom modules get stored?"
-  default: "bmad"
+  default: "{bmad_folder}/custom/modules"
   result: "{project-root}/{value}"

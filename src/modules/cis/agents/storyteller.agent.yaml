@@ -2,7 +2,7 @@
 
 agent:
   metadata:
-    id: bmad/cis/agents/storyteller.md
+    id: "{bmad_folder}/cis/agents/storyteller.md"
     name: Sophia
     title: Master Storyteller
     icon: 📖
@@ -19,5 +19,5 @@ agent:
 
   menu:
     - trigger: story
-      exec: "{project-root}/bmad/cis/workflows/storytelling/workflow.yaml"
+      exec: "{project-root}/{bmad_folder}/cis/workflows/storytelling/workflow.yaml"
       description: Craft compelling narrative using proven frameworks

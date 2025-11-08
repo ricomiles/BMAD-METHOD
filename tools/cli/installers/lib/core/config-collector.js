@@ -18,8 +18,14 @@ class ConfigCollector {
    * @param {string} projectDir - Target project directory
    */
   async loadExistingConfig(projectDir) {
-    const bmadDir = path.join(projectDir, 'bmad');
     this.existingConfig = {};
+
+    // Check if project directory exists first
+    if (!(await fs.pathExists(projectDir))) {
+      return false;
+    }
+
+    const bmadDir = path.join(projectDir, 'bmad');
 
     // Check if bmad directory exists
     if (!(await fs.pathExists(bmadDir))) {
@@ -173,7 +179,7 @@ class ConfigCollector {
       const questions = [];
       for (const key of newKeys) {
         const item = moduleConfig[key];
-        const question = await this.buildQuestion(moduleName, key, item);
+        const question = await this.buildQuestion(moduleName, key, item, moduleConfig);
         if (question) {
           questions.push(question);
         }
@@ -343,7 +349,7 @@ class ConfigCollector {
         continue;
       }
 
-      const question = await this.buildQuestion(moduleName, key, item);
+      const question = await this.buildQuestion(moduleName, key, item, moduleConfig);
       if (question) {
         questions.push(question);
       }
@@ -458,12 +464,60 @@ class ConfigCollector {
   }
 
   /**
+   * Replace placeholders in a string with collected config values
+   * @param {string} str - String with placeholders
+   * @param {string} currentModule - Current module name (to look up defaults in same module)
+   * @param {Object} moduleConfig - Current module's config schema (to look up defaults)
+   * @returns {string} String with placeholders replaced
+   */
+  replacePlaceholders(str, currentModule = null, moduleConfig = null) {
+    if (typeof str !== 'string') {
+      return str;
+    }
+
+    return str.replaceAll(/{([^}]+)}/g, (match, configKey) => {
+      // Preserve special placeholders
+      if (configKey === 'project-root' || configKey === 'value' || configKey === 'directory_name') {
+        return match;
+      }
+
+      // Look for the config value in allAnswers (already answered questions)
+      let configValue = this.allAnswers[configKey] || this.allAnswers[`core_${configKey}`];
+
+      // Check in already collected config
+      if (!configValue) {
+        for (const mod of Object.keys(this.collectedConfig)) {
+          if (mod !== '_meta' && this.collectedConfig[mod] && this.collectedConfig[mod][configKey]) {
+            configValue = this.collectedConfig[mod][configKey];
+            // Remove {project-root}/ prefix if present for cleaner display
+            if (typeof configValue === 'string' && configValue.includes('{project-root}/')) {
+              configValue = configValue.replace('{project-root}/', '');
+            }
+            break;
+          }
+        }
+      }
+
+      // If still not found and we're in the same module, use the default from the config schema
+      if (!configValue && currentModule && moduleConfig && moduleConfig[configKey]) {
+        const referencedItem = moduleConfig[configKey];
+        if (referencedItem && referencedItem.default !== undefined) {
+          configValue = referencedItem.default;
+        }
+      }
+
+      return configValue || match;
+    });
+  }
+
+  /**
    * Build an inquirer question from a config item
    * @param {string} moduleName - Module name
    * @param {string} key - Config key
    * @param {Object} item - Config item definition
+   * @param {Object} moduleConfig - Full module config schema (for resolving defaults)
    */
-  async buildQuestion(moduleName, key, item) {
+  async buildQuestion(moduleName, key, item, moduleConfig = null) {
     const questionName = `${moduleName}_${key}`;
 
     // Check for existing value
@@ -483,9 +537,42 @@ class ConfigCollector {
     let defaultValue = item.default;
     let choices = null;
 
-    if (typeof defaultValue === 'string' && defaultValue.includes('{directory_name}') && this.currentProjectDir) {
-      const dirName = path.basename(this.currentProjectDir);
-      defaultValue = defaultValue.replaceAll('{directory_name}', dirName);
+    // Check if default contains references to other fields in the same module
+    const hasSameModuleReference = typeof defaultValue === 'string' && defaultValue.match(/{([^}]+)}/);
+    let dynamicDefault = false;
+
+    // Replace placeholders in default value with collected config values
+    if (typeof defaultValue === 'string') {
+      if (defaultValue.includes('{directory_name}') && this.currentProjectDir) {
+        const dirName = path.basename(this.currentProjectDir);
+        defaultValue = defaultValue.replaceAll('{directory_name}', dirName);
+      }
+
+      // Check if this references another field in the same module (for dynamic defaults)
+      if (hasSameModuleReference && moduleConfig) {
+        const matches = defaultValue.match(/{([^}]+)}/g);
+        if (matches) {
+          for (const match of matches) {
+            const fieldName = match.slice(1, -1); // Remove { }
+            // Check if this field exists in the same module config
+            if (moduleConfig[fieldName]) {
+              dynamicDefault = true;
+              break;
+            }
+          }
+        }
+      }
+
+      // If not dynamic, replace placeholders now
+      if (!dynamicDefault) {
+        defaultValue = this.replacePlaceholders(defaultValue, moduleName, moduleConfig);
+      }
+
+      // Strip {project-root}/ from defaults since it will be added back by result template
+      // This makes the display cleaner and user input simpler
+      if (defaultValue.includes('{project-root}/')) {
+        defaultValue = defaultValue.replace('{project-root}/', '');
+      }
     }
 
     // Handle different question types
@@ -548,30 +635,66 @@ class ConfigCollector {
       message = item.prompt;
     }
 
+    // Replace placeholders in prompt message with collected config values
+    if (typeof message === 'string') {
+      message = this.replacePlaceholders(message, moduleName, moduleConfig);
+    }
+
     // Add current value indicator for existing configs
     if (existingValue !== null && existingValue !== undefined) {
       if (typeof existingValue === 'boolean') {
         message += chalk.dim(` (current: ${existingValue ? 'true' : 'false'})`);
-        defaultValue = existingValue;
       } else if (Array.isArray(existingValue)) {
         message += chalk.dim(` (current: ${existingValue.join(', ')})`);
       } else if (questionType !== 'list') {
         // Show the cleaned value (without {project-root}/) for display
         message += chalk.dim(` (current: ${existingValue})`);
-        defaultValue = existingValue;
       }
     } else if (item.example && questionType === 'input') {
       // Show example for input fields
-      const exampleText = typeof item.example === 'string' ? item.example.replace('{project-root}/', '') : JSON.stringify(item.example);
+      let exampleText = typeof item.example === 'string' ? item.example : JSON.stringify(item.example);
+      // Replace placeholders in example
+      if (typeof exampleText === 'string') {
+        exampleText = this.replacePlaceholders(exampleText, moduleName, moduleConfig);
+        exampleText = exampleText.replace('{project-root}/', '');
+      }
       message += chalk.dim(` (e.g., ${exampleText})`);
     }
 
+    // Build the question object
     const question = {
       type: questionType,
       name: questionName,
       message: message,
-      default: defaultValue,
     };
+
+    // Set default - if it's dynamic, use a function that inquirer will evaluate with current answers
+    // But if we have an existing value, always use that instead
+    if (existingValue !== null && existingValue !== undefined && questionType !== 'list') {
+      question.default = existingValue;
+    } else if (dynamicDefault && typeof item.default === 'string') {
+      const originalDefault = item.default;
+      question.default = (answers) => {
+        // Replace placeholders using answers from previous questions in the same batch
+        let resolved = originalDefault;
+        resolved = resolved.replaceAll(/{([^}]+)}/g, (match, fieldName) => {
+          // Look for the answer in the current batch (prefixed with module name)
+          const answerKey = `${moduleName}_${fieldName}`;
+          if (answers[answerKey] !== undefined) {
+            return answers[answerKey];
+          }
+          // Fall back to collected config
+          return this.collectedConfig[moduleName]?.[fieldName] || match;
+        });
+        // Strip {project-root}/ for cleaner display
+        if (resolved.includes('{project-root}/')) {
+          resolved = resolved.replace('{project-root}/', '');
+        }
+        return resolved;
+      };
+    } else {
+      question.default = defaultValue;
+    }
 
     // Add choices for select types
     if (choices) {
@@ -583,6 +706,23 @@ class ConfigCollector {
       question.validate = (input) => {
         if (!input && item.required) {
           return 'This field is required';
+        }
+        // Validate against regex pattern if provided
+        if (input && item.regex) {
+          const regex = new RegExp(item.regex);
+          if (!regex.test(input)) {
+            return `Invalid format. Must match pattern: ${item.regex}`;
+          }
+        }
+        return true;
+      };
+    }
+
+    // Add validation for checkbox (multi-select) fields
+    if (questionType === 'checkbox' && item.required) {
+      question.validate = (answers) => {
+        if (!answers || answers.length === 0) {
+          return 'At least one option must be selected';
         }
         return true;
       };
