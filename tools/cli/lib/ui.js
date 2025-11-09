@@ -17,7 +17,8 @@ class UI {
    */
   async promptInstall() {
     CLIUtils.displayLogo();
-    CLIUtils.displaySection('BMAD™ Setup', 'Build More, Architect Dreams');
+    const version = CLIUtils.getVersion();
+    CLIUtils.displaySection('BMAD™ Setup', `Build More, Architect Dreams v${version}`);
 
     const confirmedDirectory = await this.getConfirmedDirectory();
 
@@ -102,9 +103,7 @@ class UI {
     // This allows text-based prompts to complete before the checkbox prompt
     const toolSelection = await this.promptToolSelection(confirmedDirectory, selectedModules);
 
-    console.clear();
-    CLIUtils.displayLogo();
-    CLIUtils.displayModuleComplete('core', false); // false = don't clear the screen again
+    // No more screen clearing - keep output flowing
 
     return {
       actionType: actionType || 'update', // Preserve reinstall or update action

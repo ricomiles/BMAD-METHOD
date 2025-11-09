@@ -1,7 +1,6 @@
 const path = require('node:path');
 const { BaseIdeSetup } = require('./_base-ide');
 const chalk = require('chalk');
-const inquirer = require('inquirer');
 
 /**
  * Roo IDE setup handler
@@ -36,31 +35,6 @@ class RooSetup extends BaseIdeSetup {
   }
 
   /**
-   * Collect configuration choices before installation
-   * @param {Object} options - Configuration options
-   * @returns {Object} Collected configuration
-   */
-  async collectConfiguration(options = {}) {
-    const response = await inquirer.prompt([
-      {
-        type: 'list',
-        name: 'permissions',
-        message: 'Select default file edit permissions for BMAD agents:',
-        choices: [
-          { name: 'Development files only (js, ts, py, etc.)', value: 'dev' },
-          { name: 'Configuration files only (json, yaml, xml, etc.)', value: 'config' },
-          { name: 'Documentation files only (md, txt, doc, etc.)', value: 'docs' },
-          { name: 'All files (unrestricted access)', value: 'all' },
-          { name: 'Custom per agent (will be configured individually)', value: 'custom' },
-        ],
-        default: 'dev',
-      },
-    ]);
-
-    return { permissions: response.permissions };
-  }
-
-  /**
    * Setup Roo IDE configuration
    * @param {string} projectDir - Project directory
    * @param {string} bmadDir - BMAD installation directory
@@ -87,9 +61,8 @@ class RooSetup extends BaseIdeSetup {
     // Get agents
     const agents = await this.getAgents(bmadDir);
 
-    // Use pre-collected configuration if available
-    const config = options.preCollectedConfig || {};
-    let permissionChoice = config.permissions || options.permissions || 'dev';
+    // Always use 'all' permissions - users can customize in .roomodes file
+    const permissionChoice = 'all';
 
     // Create modes content
     let newModesContent = '';
@@ -107,7 +80,7 @@ class RooSetup extends BaseIdeSetup {
       }
 
       const content = await this.readFile(agent.path);
-      const modeEntry = this.createModeEntry(agent, content, permissionChoice, projectDir);
+      const modeEntry = await this.createModeEntry(agent, content, permissionChoice, projectDir);
 
       newModesContent += modeEntry;
       addedCount++;
@@ -133,8 +106,9 @@ class RooSetup extends BaseIdeSetup {
       console.log(chalk.dim(`  - ${skippedCount} modes skipped (already exist)`));
     }
     console.log(chalk.dim(`  - Configuration file: ${this.configFile}`));
-    console.log(chalk.dim(`  - Permission level: ${permissionChoice}`));
-    console.log(chalk.dim('\n  Modes will be available when you open this project in Roo Code'));
+    console.log(chalk.dim(`  - Permission level: all (unrestricted)`));
+    console.log(chalk.yellow(`\n  💡 Tip: Edit ${this.configFile} to customize file permissions per agent`));
+    console.log(chalk.dim(`  Modes will be available when you open this project in Roo Code`));
 
     return {
       success: true,
@@ -144,32 +118,9 @@ class RooSetup extends BaseIdeSetup {
   }
 
   /**
-   * Ask user about permission configuration
-   */
-  async askPermissions() {
-    const response = await inquirer.prompt([
-      {
-        type: 'list',
-        name: 'permissions',
-        message: 'Select default file edit permissions for BMAD agents:',
-        choices: [
-          { name: 'Development files only (js, ts, py, etc.)', value: 'dev' },
-          { name: 'Configuration files only (json, yaml, xml, etc.)', value: 'config' },
-          { name: 'Documentation files only (md, txt, doc, etc.)', value: 'docs' },
-          { name: 'All files (unrestricted access)', value: 'all' },
-          { name: 'Custom per agent (will be configured individually)', value: 'custom' },
-        ],
-        default: 'dev',
-      },
-    ]);
-
-    return response.permissions;
-  }
-
-  /**
    * Create a mode entry for an agent
    */
-  createModeEntry(agent, content, permissionChoice, projectDir) {
+  async createModeEntry(agent, content, permissionChoice, projectDir) {
     // Extract metadata from agent content
     const titleMatch = content.match(/title="([^"]+)"/);
     const title = titleMatch ? titleMatch[1] : this.formatTitle(agent.name);
@@ -179,6 +130,9 @@ class RooSetup extends BaseIdeSetup {
 
     const whenToUseMatch = content.match(/whenToUse="([^"]+)"/);
     const whenToUse = whenToUseMatch ? whenToUseMatch[1] : `Use for ${title} tasks`;
+
+    // Get the activation header from central template
+    const activationHeader = await this.getAgentCommandHeader();
 
     const roleDefinitionMatch = content.match(/roleDefinition="([^"]+)"/);
     const roleDefinition = roleDefinitionMatch
@@ -202,7 +156,7 @@ class RooSetup extends BaseIdeSetup {
 
     modeEntry += `   roleDefinition: ${roleDefinition}\n`;
     modeEntry += `   whenToUse: ${whenToUse}\n`;
-    modeEntry += `   customInstructions: CRITICAL Read the full YAML from ${relativePath} start activation to alter your state of being follow startup section instructions stay in this being until told to exit this mode\n`;
+    modeEntry += `   customInstructions: ${activationHeader} Read the full YAML from ${relativePath} start activation to alter your state of being follow startup section instructions stay in this being until told to exit this mode\n`;
     modeEntry += `   groups:\n`;
     modeEntry += `    - read\n`;
 

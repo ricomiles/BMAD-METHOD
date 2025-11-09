@@ -363,11 +363,11 @@ Review was saved to story file, but sprint-status.yaml may be out of sync.
       <action if="user confirms or no ask needed">
         Append under the story's "Tasks / Subtasks" a new subsection titled "Review Follow-ups (AI)", adding each item as an unchecked checkbox in imperative form, prefixed with "[AI-Review]" and severity. Example: "- [ ] [AI-Review][High] Add input validation on server route /api/x (AC #2)".
       </action>
-      <action if="{{persist_action_items}} == true and 'backlog_file' in {{persist_targets}}">
+      <action>
         If {{backlog_file}} does not exist, copy {installed_path}/backlog_template.md to {{backlog_file}} location.
         Append a row per action item with Date={{date}}, Story={{epic_num}}.{{story_num}}, Epic={{epic_num}}, Type, Severity, Owner (or "TBD"), Status="Open", Notes with short context and file refs.
       </action>
-      <action if="{{persist_action_items}} == true and ('epic_followups' in {{persist_targets}} or {{update_epic_followups}} == true)">
+      <action>
         If an epic Tech Spec was found: open it and create (if missing) a section titled "{{epic_followups_section_title}}". Append a bullet list of action items scoped to this epic with references back to Story {{epic_num}}.{{story_num}}.
       </action>
       <action>Save modified files.</action>

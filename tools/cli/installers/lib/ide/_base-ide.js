@@ -30,6 +30,22 @@ class BaseIdeSetup {
   }
 
   /**
+   * Get the agent command activation header from the central template
+   * @returns {string} The activation header text (without XML tags)
+   */
+  async getAgentCommandHeader() {
+    const headerPath = path.join(getSourcePath(), 'src', 'utility', 'models', 'agent-command-header.md');
+    try {
+      const content = await fs.readFile(headerPath, 'utf8');
+      // Strip the <critical> tags to get plain text
+      return content.replaceAll(/<critical>|<\/critical>/g, '').trim();
+    } catch {
+      // Fallback if file doesn't exist
+      return "You must fully embody this agent's persona and follow all activation instructions, steps and rules exactly as specified. NEVER break character until given an exit command.";
+    }
+  }
+
+  /**
    * Main setup method - must be implemented by subclasses
    * @param {string} projectDir - Project directory
    * @param {string} bmadDir - BMAD installation directory

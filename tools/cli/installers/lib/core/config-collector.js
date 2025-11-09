@@ -14,6 +14,41 @@ class ConfigCollector {
   }
 
   /**
+   * Find the bmad installation directory in a project
+   * V6+ installations can use ANY folder name but ALWAYS have _cfg/manifest.yaml
+   * @param {string} projectDir - Project directory
+   * @returns {Promise<string>} Path to bmad directory
+   */
+  async findBmadDir(projectDir) {
+    // Check if project directory exists
+    if (!(await fs.pathExists(projectDir))) {
+      // Project doesn't exist yet, return default
+      return path.join(projectDir, 'bmad');
+    }
+
+    // V6+ strategy: Look for ANY directory with _cfg/manifest.yaml
+    // This is the definitive marker of a V6+ installation
+    try {
+      const entries = await fs.readdir(projectDir, { withFileTypes: true });
+      for (const entry of entries) {
+        if (entry.isDirectory()) {
+          const manifestPath = path.join(projectDir, entry.name, '_cfg', 'manifest.yaml');
+          if (await fs.pathExists(manifestPath)) {
+            // Found a V6+ installation
+            return path.join(projectDir, entry.name);
+          }
+        }
+      }
+    } catch {
+      // Ignore errors, fall through to default
+    }
+
+    // No V6+ installation found, return default
+    // This will be used for new installations
+    return path.join(projectDir, 'bmad');
+  }
+
+  /**
    * Load existing config if it exists from module config files
    * @param {string} projectDir - Target project directory
    */
@@ -25,7 +60,8 @@ class ConfigCollector {
       return false;
     }
 
-    const bmadDir = path.join(projectDir, 'bmad');
+    // Find the actual bmad directory (handles custom folder names)
+    const bmadDir = await this.findBmadDir(projectDir);
 
     // Check if bmad directory exists
     if (!(await fs.pathExists(bmadDir))) {
@@ -165,17 +201,13 @@ class ConfigCollector {
           this.allAnswers[`${moduleName}_${key}`] = value;
         }
       }
+      // Show "no config" message for modules with no new questions
+      CLIUtils.displayModuleNoConfig(moduleName, moduleConfig.header, moduleConfig.subheader);
       return false; // No new fields
     }
 
-    // If we have new fields, show prompt section and collect only new fields
+    // If we have new fields, build questions first
     if (newKeys.length > 0) {
-      console.log(chalk.yellow(`\n📋 New configuration options available for ${moduleName}`));
-      if (moduleConfig.prompt) {
-        const prompts = Array.isArray(moduleConfig.prompt) ? moduleConfig.prompt : [moduleConfig.prompt];
-        CLIUtils.displayPromptSection(prompts);
-      }
-
       const questions = [];
       for (const key of newKeys) {
         const item = moduleConfig[key];
@@ -186,6 +218,8 @@ class ConfigCollector {
       }
 
       if (questions.length > 0) {
+        // Only show header if we actually have questions
+        CLIUtils.displayModuleConfigHeader(moduleName, moduleConfig.header, moduleConfig.subheader);
         console.log(); // Line break before questions
         const answers = await inquirer.prompt(questions);
 
@@ -212,6 +246,9 @@ class ConfigCollector {
           }
           this.collectedConfig[moduleName][originalKey] = result;
         }
+      } else {
+        // New keys exist but no questions generated - show no config message
+        CLIUtils.displayModuleNoConfig(moduleName, moduleConfig.header, moduleConfig.subheader);
       }
     }
 
@@ -331,12 +368,6 @@ class ConfigCollector {
       return;
     }
 
-    // Display module prompts using better formatting
-    if (moduleConfig.prompt) {
-      const prompts = Array.isArray(moduleConfig.prompt) ? moduleConfig.prompt : [moduleConfig.prompt];
-      CLIUtils.displayPromptSection(prompts);
-    }
-
     // Process each config item
     const questions = [];
     const configKeys = Object.keys(moduleConfig).filter((key) => key !== 'prompt');
@@ -355,7 +386,9 @@ class ConfigCollector {
       }
     }
 
+    // Display appropriate header based on whether there are questions
     if (questions.length > 0) {
+      CLIUtils.displayModuleConfigHeader(moduleName, moduleConfig.header, moduleConfig.subheader);
       console.log(); // Line break before questions
       const answers = await inquirer.prompt(questions);
 
@@ -456,10 +489,10 @@ class ConfigCollector {
         this.collectedConfig[moduleName][originalKey] = result;
       }
 
-      // Display module completion message after collecting all answers (unless skipped)
-      if (!skipCompletion) {
-        CLIUtils.displayModuleComplete(moduleName);
-      }
+      // No longer display completion boxes - keep output clean
+    } else {
+      // No questions for this module - show completion message
+      CLIUtils.displayModuleNoConfig(moduleName, moduleConfig.header, moduleConfig.subheader);
     }
   }
 

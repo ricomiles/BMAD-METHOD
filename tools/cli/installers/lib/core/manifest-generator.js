@@ -39,6 +39,7 @@ class ManifestGenerator {
     this.updatedModules = [...new Set(['core', ...selectedModules])]; // Only these get rescanned
     this.preservedModules = preservedModules; // These stay as-is in CSVs
     this.bmadDir = bmadDir;
+    this.bmadFolderName = path.basename(bmadDir); // Get the actual folder name (e.g., '.bmad' or 'bmad')
     this.allInstalledFiles = installedFiles;
 
     if (!Object.prototype.hasOwnProperty.call(options, 'ides')) {
@@ -140,8 +141,8 @@ class ManifestGenerator {
               // Build relative path for installation
               const installPath =
                 moduleName === 'core'
-                  ? `bmad/core/workflows/${relativePath}/workflow.yaml`
-                  : `bmad/${moduleName}/workflows/${relativePath}/workflow.yaml`;
+                  ? `${this.bmadFolderName}/core/workflows/${relativePath}/workflow.yaml`
+                  : `${this.bmadFolderName}/${moduleName}/workflows/${relativePath}/workflow.yaml`;
 
               // Check for standalone property (default: false)
               const standalone = workflow.standalone === true;
@@ -241,7 +242,8 @@ class ManifestGenerator {
         const principlesMatch = content.match(/<principles>([\s\S]*?)<\/principles>/);
 
         // Build relative path for installation
-        const installPath = moduleName === 'core' ? `bmad/core/agents/${file}` : `bmad/${moduleName}/agents/${file}`;
+        const installPath =
+          moduleName === 'core' ? `${this.bmadFolderName}/core/agents/${file}` : `${this.bmadFolderName}/${moduleName}/agents/${file}`;
 
         const agentName = file.replace('.md', '');
 
@@ -324,7 +326,8 @@ class ManifestGenerator {
         const standalone = !!standaloneMatch;
 
         // Build relative path for installation
-        const installPath = moduleName === 'core' ? `bmad/core/tasks/${file}` : `bmad/${moduleName}/tasks/${file}`;
+        const installPath =
+          moduleName === 'core' ? `${this.bmadFolderName}/core/tasks/${file}` : `${this.bmadFolderName}/${moduleName}/tasks/${file}`;
 
         const taskName = file.replace(/\.(xml|md)$/, '');
         tasks.push({
@@ -393,7 +396,8 @@ class ManifestGenerator {
         const standalone = !!standaloneMatch;
 
         // Build relative path for installation
-        const installPath = moduleName === 'core' ? `bmad/core/tools/${file}` : `bmad/${moduleName}/tools/${file}`;
+        const installPath =
+          moduleName === 'core' ? `${this.bmadFolderName}/core/tools/${file}` : `${this.bmadFolderName}/${moduleName}/tools/${file}`;
 
         const toolName = file.replace(/\.(xml|md)$/, '');
         tools.push({
@@ -659,7 +663,7 @@ class ManifestGenerator {
     } else {
       // Fallback: use the collected workflows/agents/tasks
       for (const file of this.files) {
-        const filePath = path.join(this.bmadDir, file.path.replace('bmad/', ''));
+        const filePath = path.join(this.bmadDir, file.path.replace(this.bmadFolderName + '/', ''));
         const hash = await this.calculateFileHash(filePath);
         allFiles.push({
           ...file,

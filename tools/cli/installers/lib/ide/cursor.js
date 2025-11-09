@@ -256,6 +256,13 @@ specific agent expertise, task workflows, tools, or guided workflows.
     // First apply base processing (includes activation injection for agents)
     let processed = super.processContent(content, metadata);
 
+    // Strip any existing frontmatter from the processed content
+    // This prevents duplicate frontmatter blocks
+    const frontmatterRegex = /^---\s*\n[\s\S]*?\n---\s*\n/;
+    if (frontmatterRegex.test(processed)) {
+      processed = processed.replace(frontmatterRegex, '');
+    }
+
     // Determine the type and description based on content
     const isAgent = content.includes('<agent');
     const isTask = content.includes('<task');

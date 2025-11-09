@@ -8,6 +8,7 @@ output_folder: "{config_source}:output_folder"
 user_name: "{config_source}:user_name"
 communication_language: "{config_source}:communication_language"
 date: system-generated
+ephemeral_files: "{config_source}:dev_ephemeral_location"
 
 # Workflow components
 installed_path: "{project-root}/{bmad_folder}/bmm/workflows/4-implementation/sprint-planning"

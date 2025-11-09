@@ -40,7 +40,7 @@ class TraeSetup extends BaseIdeSetup {
     let agentCount = 0;
     for (const agent of agents) {
       const content = await this.readFile(agent.path);
-      const processedContent = this.createAgentRule(agent, content, bmadDir, projectDir);
+      const processedContent = await this.createAgentRule(agent, content, bmadDir, projectDir);
 
       // Use bmad- prefix: bmad-agent-{module}-{name}.md
       const targetPath = path.join(rulesDir, `bmad-agent-${agent.module}-${agent.name}.md`);
@@ -108,13 +108,16 @@ class TraeSetup extends BaseIdeSetup {
   /**
    * Create rule content for an agent
    */
-  createAgentRule(agent, content, bmadDir, projectDir) {
+  async createAgentRule(agent, content, bmadDir, projectDir) {
     // Extract metadata from agent content
     const titleMatch = content.match(/title="([^"]+)"/);
     const title = titleMatch ? titleMatch[1] : this.formatTitle(agent.name);
 
     const iconMatch = content.match(/icon="([^"]+)"/);
     const icon = iconMatch ? iconMatch[1] : '🤖';
+
+    // Get the activation header from central template
+    const activationHeader = await this.getAgentCommandHeader();
 
     // Extract YAML content if available
     const yamlMatch = content.match(/```ya?ml\r?\n([\s\S]*?)```/);
@@ -129,7 +132,9 @@ This rule is triggered when the user types \`@${agent.name}\` and activates the 
 
 ## Agent Activation
 
-CRITICAL: Read the full YAML, start activation to alter your state of being, follow startup section instructions, stay in this being until told to exit this mode:
+${activationHeader}
+
+Read the full YAML, start activation to alter your state of being, follow startup section instructions, stay in this being until told to exit this mode:
 
 \`\`\`yaml
 ${yamlContent}
@@ -143,9 +148,6 @@ The complete agent definition is available in [${relativePath}](${relativePath})
 
 When the user types \`@${agent.name}\`, activate this ${title} persona and follow all instructions defined in the YAML configuration above.
 
-## Module
-
-Part of the BMAD ${agent.module.toUpperCase()} module.
 `;
 
     return ruleContent;

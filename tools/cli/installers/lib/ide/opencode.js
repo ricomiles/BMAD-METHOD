@@ -4,8 +4,8 @@ const os = require('node:os');
 const chalk = require('chalk');
 const yaml = require('js-yaml');
 const { BaseIdeSetup } = require('./_base-ide');
-const { WorkflowCommandGenerator } = require('./workflow-command-generator');
-const { TaskToolCommandGenerator } = require('./task-tool-command-generator');
+const { WorkflowCommandGenerator } = require('./shared/workflow-command-generator');
+const { TaskToolCommandGenerator } = require('./shared/task-tool-command-generator');
 
 const { getAgentsFromBmad } = require('./shared/bmad-artifacts');
 
@@ -44,7 +44,7 @@ class OpenCodeSetup extends BaseIdeSetup {
         name: agent.name,
       });
 
-      const agentContent = this.createAgentContent(processed, agent);
+      const agentContent = await this.createAgentContent(processed, agent);
       // Flat structure in agent folder: bmad-agent-{module}-{name}.md
       const targetPath = path.join(agentsBaseDir, `bmad-agent-${agent.module}-${agent.name}.md`);
       await this.writeFile(targetPath, agentContent);
@@ -52,7 +52,7 @@ class OpenCodeSetup extends BaseIdeSetup {
     }
 
     // Install workflow commands with flat naming: bmad-workflow-{module}-{name}.md
-    const workflowGenerator = new WorkflowCommandGenerator();
+    const workflowGenerator = new WorkflowCommandGenerator(this.bmadFolderName);
     const { artifacts: workflowArtifacts, counts: workflowCounts } = await workflowGenerator.collectWorkflowArtifacts(bmadDir);
 
     let workflowCommandCount = 0;
@@ -127,7 +127,7 @@ class OpenCodeSetup extends BaseIdeSetup {
     return this.processContent(content, metadata);
   }
 
-  createAgentContent(content, metadata) {
+  async createAgentContent(content, metadata) {
     const { frontmatter = {}, body } = this.parseFrontmatter(content);
 
     frontmatter.description =
@@ -140,7 +140,10 @@ class OpenCodeSetup extends BaseIdeSetup {
 
     const frontmatterString = this.stringifyFrontmatter(frontmatter);
 
-    return `${frontmatterString}\n${body}`;
+    // Get the activation header from central template
+    const activationHeader = await this.getAgentCommandHeader();
+
+    return `${frontmatterString}\n\n${activationHeader}\n\n${body}`;
   }
 
   parseFrontmatter(content) {

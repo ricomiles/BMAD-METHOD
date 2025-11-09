@@ -2,8 +2,8 @@ const path = require('node:path');
 const { BaseIdeSetup } = require('./_base-ide');
 const chalk = require('chalk');
 const { getProjectRoot, getSourcePath, getModulePath } = require('../../../lib/project-root');
-const { WorkflowCommandGenerator } = require('./workflow-command-generator');
-const { TaskToolCommandGenerator } = require('./task-tool-command-generator');
+const { WorkflowCommandGenerator } = require('./shared/workflow-command-generator');
+const { TaskToolCommandGenerator } = require('./shared/task-tool-command-generator');
 const {
   loadModuleInjectionConfig,
   shouldApplyInjection,
@@ -161,7 +161,7 @@ class ClaudeCodeSetup extends BaseIdeSetup {
     // await this.createClaudeConfig(projectDir, modules);
 
     // Generate workflow commands from manifest (if it exists)
-    const workflowGen = new WorkflowCommandGenerator();
+    const workflowGen = new WorkflowCommandGenerator(this.bmadFolderName);
     const { artifacts: workflowArtifacts } = await workflowGen.collectWorkflowArtifacts(bmadDir);
 
     // Write only workflow-command artifacts, skip workflow-launcher READMEs

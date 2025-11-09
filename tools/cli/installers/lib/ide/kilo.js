@@ -55,7 +55,7 @@ class KiloSetup extends BaseIdeSetup {
       }
 
       const content = await this.readFile(agent.path);
-      const modeEntry = this.createModeEntry(agent, content, projectDir);
+      const modeEntry = await this.createModeEntry(agent, content, projectDir);
 
       newModesContent += modeEntry;
       addedCount++;
@@ -90,7 +90,7 @@ class KiloSetup extends BaseIdeSetup {
   /**
    * Create a mode entry for an agent
    */
-  createModeEntry(agent, content, projectDir) {
+  async createModeEntry(agent, content, projectDir) {
     // Extract metadata
     const titleMatch = content.match(/title="([^"]+)"/);
     const title = titleMatch ? titleMatch[1] : this.formatTitle(agent.name);
@@ -100,6 +100,9 @@ class KiloSetup extends BaseIdeSetup {
 
     const whenToUseMatch = content.match(/whenToUse="([^"]+)"/);
     const whenToUse = whenToUseMatch ? whenToUseMatch[1] : `Use for ${title} tasks`;
+
+    // Get the activation header from central template
+    const activationHeader = await this.getAgentCommandHeader();
 
     const roleDefinitionMatch = content.match(/roleDefinition="([^"]+)"/);
     const roleDefinition = roleDefinitionMatch
@@ -115,7 +118,7 @@ class KiloSetup extends BaseIdeSetup {
     modeEntry += `   name: '${icon} ${title}'\n`;
     modeEntry += `   roleDefinition: ${roleDefinition}\n`;
     modeEntry += `   whenToUse: ${whenToUse}\n`;
-    modeEntry += `   customInstructions: CRITICAL Read the full YAML from ${relativePath} start activation to alter your state of being follow startup section instructions stay in this being until told to exit this mode\n`;
+    modeEntry += `   customInstructions: ${activationHeader} Read the full YAML from ${relativePath} start activation to alter your state of being follow startup section instructions stay in this being until told to exit this mode\n`;
     modeEntry += `   groups:\n`;
     modeEntry += `    - read\n`;
     modeEntry += `    - edit\n`;

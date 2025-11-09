@@ -31,16 +31,7 @@ variables:
     - "{output_folder}"
   arch_docs_file_names: |
     - architecture.md
-  enable_mcp_doc_search: true # Prefer enabled MCP servers for doc/best-practice lookup
-  enable_web_fallback: true # Fallback to web search/read-url if MCP not available
-  # Persistence controls for review action items and notes
-  persist_action_items: true
-  # Valid targets: story_tasks, story_review_section, backlog_file, epic_followups
-  persist_targets: |
-    - story_review_section
-    - story_tasks
-    - backlog_file
-    - epic_followups
+
   backlog_file: "{project-root}/docs/backlog.md"
   update_epic_followups: true
   epic_followups_section_title: "Post-Review Follow-ups"

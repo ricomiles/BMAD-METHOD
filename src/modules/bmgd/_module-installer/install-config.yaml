@@ -4,11 +4,8 @@ code: bmgd
 name: "BMGD: BMad Game Development"
 default_selected: false
 
-prompt:
-  - "Welcome to the BMad Game Development Module!"
-  - "This module provides specialized agents and workflows for game creation,"
-  - "from initial concept through production, covering all major game dev phases."
-  - "All paths are relative to project root, with no leading slash."
+header: "BMad Game Development Module"
+subheader: "Configure the settings for the BMad Game Development module"
 
 # Core config values automatically inherited:
 ## user_name

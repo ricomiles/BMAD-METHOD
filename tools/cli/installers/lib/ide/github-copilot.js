@@ -111,7 +111,7 @@ class GitHubCopilotSetup extends BaseIdeSetup {
     let modeCount = 0;
     for (const agent of agents) {
       const content = await this.readFile(agent.path);
-      const chatmodeContent = this.createChatmodeContent(agent, content);
+      const chatmodeContent = await this.createChatmodeContent(agent, content);
 
       // Use bmad- prefix: bmad-agent-{module}-{name}.chatmode.md
       const targetPath = path.join(chatmodesDir, `bmad-agent-${agent.module}-${agent.name}.chatmode.md`);
@@ -206,13 +206,23 @@ class GitHubCopilotSetup extends BaseIdeSetup {
   /**
    * Create chat mode content
    */
-  createChatmodeContent(agent, content) {
+  async createChatmodeContent(agent, content) {
     // Extract metadata
     const titleMatch = content.match(/title="([^"]+)"/);
     const title = titleMatch ? titleMatch[1] : this.formatTitle(agent.name);
 
     const whenToUseMatch = content.match(/whenToUse="([^"]+)"/);
     const description = whenToUseMatch ? whenToUseMatch[1] : `Activates the ${title} agent persona.`;
+
+    // Get the activation header from central template
+    const activationHeader = await this.getAgentCommandHeader();
+
+    // Strip any existing frontmatter from the content
+    const frontmatterRegex = /^---\s*\n[\s\S]*?\n---\s*\n/;
+    let cleanContent = content;
+    if (frontmatterRegex.test(content)) {
+      cleanContent = content.replace(frontmatterRegex, '');
+    }
 
     // Available GitHub Copilot tools (November 2025 - Official VS Code Documentation)
     // Reference: https://code.visualstudio.com/docs/copilot/reference/copilot-vscode-features#_chat-tools
@@ -248,11 +258,10 @@ tools: ${JSON.stringify(tools)}
 
 # ${title} Agent
 
-${content}
+${activationHeader}
 
-## Module
+${cleanContent}
 
-Part of the BMAD ${agent.module.toUpperCase()} module.
 `;
 
     return chatmodeContent;

@@ -4,8 +4,8 @@ code: cis
 name: "CIS: Creative Innovation Suite"
 default_selected: false # This module will not be selected by default for new installations
 
-prompt:
-  - "Thank you for choosing the BMAD™ Creative Intelligence Suite, an early release with much more planned!"
+header: "Creative Innovation Suite (CIS) Module"
+subheader: "No Configuration needed - uses Core Config only."
 # Variables from Core Config inserted:
 ## user_name
 ## communication_language

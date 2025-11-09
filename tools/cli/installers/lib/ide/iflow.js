@@ -39,7 +39,7 @@ class IFlowSetup extends BaseIdeSetup {
     let agentCount = 0;
     for (const agent of agents) {
       const content = await this.readFile(agent.path);
-      const commandContent = this.createAgentCommand(agent, content);
+      const commandContent = await this.createAgentCommand(agent, content);
 
       const targetPath = path.join(agentsDir, `${agent.module}-${agent.name}.md`);
       await this.writeFile(targetPath, commandContent);
@@ -72,14 +72,17 @@ class IFlowSetup extends BaseIdeSetup {
   /**
    * Create agent command content
    */
-  createAgentCommand(agent, content) {
+  async createAgentCommand(agent, content) {
     // Extract metadata
     const titleMatch = content.match(/title="([^"]+)"/);
     const title = titleMatch ? titleMatch[1] : this.formatTitle(agent.name);
 
+    // Get the activation header from central template
+    const activationHeader = await this.getAgentCommandHeader();
+
     let commandContent = `# /${agent.name} Command
 
-When this command is used, adopt the following agent persona:
+${activationHeader}
 
 ## ${title} Agent
 
@@ -89,9 +92,6 @@ ${content}
 
 This command activates the ${title} agent from the BMAD ${agent.module.toUpperCase()} module.
 
-## Module
-
-Part of the BMAD ${agent.module.toUpperCase()} module.
 `;
 
     return commandContent;

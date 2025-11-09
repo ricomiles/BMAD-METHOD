@@ -8,6 +8,7 @@ output_folder: "{config_source}:output_folder"
 user_name: "{config_source}:user_name"
 communication_language: "{config_source}:communication_language"
 date: system-generated
+context_dir: "{config_source}:dev_ephemeral_location"
 
 # Inputs expected (check output_folder or ask user if missing)
 recommended_inputs:
@@ -53,7 +54,7 @@ instructions: "{installed_path}/instructions.md"
 validation: "{installed_path}/checklist.md"
 
 # Output configuration
-default_output_file: "{output_folder}/tech-spec-epic-{{epic_id}}.md"
+default_output_file: "{context_dir}/tech-spec-epic-{{epic_id}}.md"
 
 standalone: true
 

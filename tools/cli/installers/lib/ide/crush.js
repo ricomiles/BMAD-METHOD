@@ -84,7 +84,7 @@ class CrushSetup extends BaseIdeSetup {
       const moduleAgents = agents.filter((a) => a.module === module);
       for (const agent of moduleAgents) {
         const content = await this.readFile(agent.path);
-        const commandContent = this.createAgentCommand(agent, content, projectDir);
+        const commandContent = await this.createAgentCommand(agent, content, projectDir);
         const targetPath = path.join(moduleAgentsDir, `${agent.name}.md`);
         await this.writeFile(targetPath, commandContent);
         agentCount++;
@@ -132,7 +132,7 @@ class CrushSetup extends BaseIdeSetup {
   /**
    * Create agent command content
    */
-  createAgentCommand(agent, content, projectDir) {
+  async createAgentCommand(agent, content, projectDir) {
     // Extract metadata
     const titleMatch = content.match(/title="([^"]+)"/);
     const title = titleMatch ? titleMatch[1] : this.formatTitle(agent.name);
@@ -140,12 +140,15 @@ class CrushSetup extends BaseIdeSetup {
     const iconMatch = content.match(/icon="([^"]+)"/);
     const icon = iconMatch ? iconMatch[1] : '🤖';
 
+    // Get the activation header from central template
+    const activationHeader = await this.getAgentCommandHeader();
+
     // Get relative path
     const relativePath = path.relative(projectDir, agent.path).replaceAll('\\', '/');
 
     let commandContent = `# /${agent.name} Command
 
-When this command is used, adopt the following agent persona:
+${activationHeader}
 
 ## ${icon} ${title} Agent
 
@@ -159,9 +162,6 @@ This command activates the ${title} agent from the BMAD ${agent.module.toUpperCa
 
 Complete agent definition: [${relativePath}](${relativePath})
 
-## Module
-
-Part of the BMAD ${agent.module.toUpperCase()} module.
 `;
 
     return commandContent;

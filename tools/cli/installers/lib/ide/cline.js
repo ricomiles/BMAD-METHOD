@@ -2,7 +2,7 @@ const path = require('node:path');
 const fs = require('fs-extra');
 const chalk = require('chalk');
 const { BaseIdeSetup } = require('./_base-ide');
-const { WorkflowCommandGenerator } = require('./workflow-command-generator');
+const { WorkflowCommandGenerator } = require('./shared/workflow-command-generator');
 const { getAgentsFromBmad, getTasksFromBmad } = require('./shared/bmad-artifacts');
 
 /**
@@ -11,7 +11,7 @@ const { getAgentsFromBmad, getTasksFromBmad } = require('./shared/bmad-artifacts
  */
 class ClineSetup extends BaseIdeSetup {
   constructor() {
-    super('cline', 'Cline', true); // preferred IDE
+    super('cline', 'Cline', false);
     this.configDir = '.clinerules';
     this.workflowsDir = 'workflows';
   }
@@ -131,7 +131,7 @@ class ClineSetup extends BaseIdeSetup {
     }
 
     // Get workflows
-    const workflowGenerator = new WorkflowCommandGenerator();
+    const workflowGenerator = new WorkflowCommandGenerator(this.bmadFolderName);
     const { artifacts: workflowArtifacts, counts: workflowCounts } = await workflowGenerator.collectWorkflowArtifacts(bmadDir);
     artifacts.push(...workflowArtifacts);
 
