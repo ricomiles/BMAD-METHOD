@@ -4,7 +4,8 @@ const os = require('node:os');
 const chalk = require('chalk');
 const { BaseIdeSetup } = require('./_base-ide');
 const { WorkflowCommandGenerator } = require('./shared/workflow-command-generator');
-const { getAgentsFromBmad, getTasksFromBmad } = require('./shared/bmad-artifacts');
+const { AgentCommandGenerator } = require('./shared/agent-command-generator');
+const { getTasksFromBmad } = require('./shared/bmad-artifacts');
 
 /**
  * Codex setup handler (CLI mode)
@@ -92,23 +93,17 @@ class CodexSetup extends BaseIdeSetup {
     const selectedModules = options.selectedModules || [];
     const artifacts = [];
 
-    const agents = await getAgentsFromBmad(bmadDir, selectedModules);
-    for (const agent of agents) {
-      const content = await this.readAndProcessWithProject(
-        agent.path,
-        {
-          module: agent.module,
-          name: agent.name,
-        },
-        projectDir,
-      );
+    // Generate agent launchers
+    const agentGen = new AgentCommandGenerator(this.bmadFolderName);
+    const { artifacts: agentArtifacts } = await agentGen.collectAgentArtifacts(bmadDir, selectedModules);
 
+    for (const artifact of agentArtifacts) {
       artifacts.push({
         type: 'agent',
-        module: agent.module,
-        sourcePath: agent.path,
-        relativePath: path.join(agent.module, 'agents', `${agent.name}.md`),
-        content,
+        module: artifact.module,
+        sourcePath: artifact.sourcePath,
+        relativePath: artifact.relativePath,
+        content: artifact.content,
       });
     }
 
@@ -139,7 +134,7 @@ class CodexSetup extends BaseIdeSetup {
     return {
       artifacts,
       counts: {
-        agents: agents.length,
+        agents: agentArtifacts.length,
         tasks: tasks.length,
         workflows: workflowCounts.commands,
         workflowLaunchers: workflowCounts.launchers,

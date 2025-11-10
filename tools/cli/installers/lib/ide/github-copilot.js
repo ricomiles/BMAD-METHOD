@@ -2,6 +2,7 @@ const path = require('node:path');
 const { BaseIdeSetup } = require('./_base-ide');
 const chalk = require('chalk');
 const inquirer = require('inquirer');
+const { AgentCommandGenerator } = require('./shared/agent-command-generator');
 
 /**
  * GitHub Copilot setup handler
@@ -104,21 +105,22 @@ class GitHubCopilotSetup extends BaseIdeSetup {
     // Clean up any existing BMAD files before reinstalling
     await this.cleanup(projectDir);
 
-    // Get agents
-    const agents = await this.getAgents(bmadDir);
+    // Generate agent launchers
+    const agentGen = new AgentCommandGenerator(this.bmadFolderName);
+    const { artifacts: agentArtifacts } = await agentGen.collectAgentArtifacts(bmadDir, options.selectedModules || []);
 
     // Create chat mode files with bmad- prefix
     let modeCount = 0;
-    for (const agent of agents) {
-      const content = await this.readFile(agent.path);
-      const chatmodeContent = await this.createChatmodeContent(agent, content);
+    for (const artifact of agentArtifacts) {
+      const content = artifact.content;
+      const chatmodeContent = await this.createChatmodeContent({ module: artifact.module, name: artifact.name }, content);
 
       // Use bmad- prefix: bmad-agent-{module}-{name}.chatmode.md
-      const targetPath = path.join(chatmodesDir, `bmad-agent-${agent.module}-${agent.name}.chatmode.md`);
+      const targetPath = path.join(chatmodesDir, `bmad-agent-${artifact.module}-${artifact.name}.chatmode.md`);
       await this.writeFile(targetPath, chatmodeContent);
       modeCount++;
 
-      console.log(chalk.green(`  ✓ Created chat mode: bmad-agent-${agent.module}-${agent.name}`));
+      console.log(chalk.green(`  ✓ Created chat mode: bmad-agent-${artifact.module}-${artifact.name}`));
     }
 
     console.log(chalk.green(`✓ ${this.name} configured:`));
@@ -207,21 +209,17 @@ class GitHubCopilotSetup extends BaseIdeSetup {
    * Create chat mode content
    */
   async createChatmodeContent(agent, content) {
-    // Extract metadata
-    const titleMatch = content.match(/title="([^"]+)"/);
-    const title = titleMatch ? titleMatch[1] : this.formatTitle(agent.name);
+    // Extract metadata from launcher frontmatter if present
+    const descMatch = content.match(/description:\s*"([^"]+)"/);
+    const title = descMatch ? descMatch[1] : this.formatTitle(agent.name);
 
-    const whenToUseMatch = content.match(/whenToUse="([^"]+)"/);
-    const description = whenToUseMatch ? whenToUseMatch[1] : `Activates the ${title} agent persona.`;
-
-    // Get the activation header from central template
-    const activationHeader = await this.getAgentCommandHeader();
+    const description = `Activates the ${title} agent persona.`;
 
     // Strip any existing frontmatter from the content
     const frontmatterRegex = /^---\s*\n[\s\S]*?\n---\s*\n/;
     let cleanContent = content;
     if (frontmatterRegex.test(content)) {
-      cleanContent = content.replace(frontmatterRegex, '');
+      cleanContent = content.replace(frontmatterRegex, '').trim();
     }
 
     // Available GitHub Copilot tools (November 2025 - Official VS Code Documentation)
@@ -257,8 +255,6 @@ tools: ${JSON.stringify(tools)}
 ---
 
 # ${title} Agent
-
-${activationHeader}
 
 ${cleanContent}
 

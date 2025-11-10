@@ -6,8 +6,7 @@ const yaml = require('js-yaml');
 const { BaseIdeSetup } = require('./_base-ide');
 const { WorkflowCommandGenerator } = require('./shared/workflow-command-generator');
 const { TaskToolCommandGenerator } = require('./shared/task-tool-command-generator');
-
-const { getAgentsFromBmad } = require('./shared/bmad-artifacts');
+const { AgentCommandGenerator } = require('./shared/agent-command-generator');
 
 /**
  * OpenCode IDE setup handler
@@ -33,20 +32,17 @@ class OpenCodeSetup extends BaseIdeSetup {
     // Clean up any existing BMAD files before reinstalling
     await this.cleanup(projectDir);
 
+    // Generate agent launchers
+    const agentGen = new AgentCommandGenerator(this.bmadFolderName);
+    const { artifacts: agentArtifacts } = await agentGen.collectAgentArtifacts(bmadDir, options.selectedModules || []);
+
     // Install primary agents with flat naming: bmad-agent-{module}-{name}.md
     // OpenCode agents go in the agent folder (not command folder)
-    const agents = await getAgentsFromBmad(bmadDir, options.selectedModules || []);
-
     let agentCount = 0;
-    for (const agent of agents) {
-      const processed = await this.readAndProcess(agent.path, {
-        module: agent.module,
-        name: agent.name,
-      });
-
-      const agentContent = await this.createAgentContent(processed, agent);
+    for (const artifact of agentArtifacts) {
+      const agentContent = artifact.content;
       // Flat structure in agent folder: bmad-agent-{module}-{name}.md
-      const targetPath = path.join(agentsBaseDir, `bmad-agent-${agent.module}-${agent.name}.md`);
+      const targetPath = path.join(agentsBaseDir, `bmad-agent-${artifact.module}-${artifact.name}.md`);
       await this.writeFile(targetPath, agentContent);
       agentCount++;
     }

@@ -1,6 +1,7 @@
 const path = require('node:path');
 const { BaseIdeSetup } = require('./_base-ide');
 const chalk = require('chalk');
+const { AgentCommandGenerator } = require('./shared/agent-command-generator');
 
 /**
  * Auggie CLI setup handler
@@ -27,8 +28,11 @@ class AuggieSetup extends BaseIdeSetup {
     // Clean up old BMAD installation first
     await this.cleanup(projectDir);
 
-    // Get agents, tasks, tools, and workflows (standalone only)
-    const agents = await this.getAgents(bmadDir);
+    // Generate agent launchers
+    const agentGen = new AgentCommandGenerator(this.bmadFolderName);
+    const { artifacts: agentArtifacts } = await agentGen.collectAgentArtifacts(bmadDir, options.selectedModules || []);
+
+    // Get tasks, tools, and workflows (standalone only)
     const tasks = await this.getTasks(bmadDir, true);
     const tools = await this.getTools(bmadDir, true);
     const workflows = await this.getWorkflows(bmadDir, true);
@@ -44,13 +48,10 @@ class AuggieSetup extends BaseIdeSetup {
     await this.ensureDir(toolsDir);
     await this.ensureDir(workflowsDir);
 
-    // Install agents
-    for (const agent of agents) {
-      const content = await this.readFile(agent.path);
-      const commandContent = await this.createAgentCommand(agent, content);
-
-      const targetPath = path.join(agentsDir, `${agent.module}-${agent.name}.md`);
-      await this.writeFile(targetPath, commandContent);
+    // Install agent launchers
+    for (const artifact of agentArtifacts) {
+      const targetPath = path.join(agentsDir, `${artifact.module}-${artifact.name}.md`);
+      await this.writeFile(targetPath, artifact.content);
     }
 
     // Install tasks
@@ -80,10 +81,10 @@ class AuggieSetup extends BaseIdeSetup {
       await this.writeFile(targetPath, commandContent);
     }
 
-    const totalInstalled = agents.length + tasks.length + tools.length + workflows.length;
+    const totalInstalled = agentArtifacts.length + tasks.length + tools.length + workflows.length;
 
     console.log(chalk.green(`✓ ${this.name} configured:`));
-    console.log(chalk.dim(`  - ${agents.length} agents installed`));
+    console.log(chalk.dim(`  - ${agentArtifacts.length} agents installed`));
     console.log(chalk.dim(`  - ${tasks.length} tasks installed`));
     console.log(chalk.dim(`  - ${tools.length} tools installed`));
     console.log(chalk.dim(`  - ${workflows.length} workflows installed`));
@@ -92,40 +93,11 @@ class AuggieSetup extends BaseIdeSetup {
 
     return {
       success: true,
-      agents: agents.length,
+      agents: agentArtifacts.length,
       tasks: tasks.length,
       tools: tools.length,
       workflows: workflows.length,
     };
-  }
-
-  /**
-   * Create agent command content
-   */
-  async createAgentCommand(agent, content) {
-    const titleMatch = content.match(/title="([^"]+)"/);
-    const title = titleMatch ? titleMatch[1] : this.formatTitle(agent.name);
-
-    // Extract description from agent if available
-    const whenToUseMatch = content.match(/whenToUse="([^"]+)"/);
-    const description = whenToUseMatch ? whenToUseMatch[1] : `Activate the ${title} agent`;
-
-    // Get the activation header from central template
-    const activationHeader = await this.getAgentCommandHeader();
-
-    return `---
-description: "${description}"
----
-
-# ${title} Agent
-
-${activationHeader}
-
-${content}
-
-## Module
-BMAD ${agent.module.toUpperCase()} module
-`;
   }
 
   /**

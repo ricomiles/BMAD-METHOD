@@ -1,6 +1,7 @@
 const path = require('node:path');
 const { BaseIdeSetup } = require('./_base-ide');
 const chalk = require('chalk');
+const { AgentCommandGenerator } = require('./shared/agent-command-generator');
 
 /**
  * Roo IDE setup handler
@@ -58,8 +59,9 @@ class RooSetup extends BaseIdeSetup {
       console.log(chalk.yellow(`Found existing .roomodes file with ${existingModes.length} modes`));
     }
 
-    // Get agents
-    const agents = await this.getAgents(bmadDir);
+    // Generate agent launchers (though Roo will reference the actual .bmad agents)
+    const agentGen = new AgentCommandGenerator(this.bmadFolderName);
+    const { artifacts: agentArtifacts } = await agentGen.collectAgentArtifacts(bmadDir, options.selectedModules || []);
 
     // Always use 'all' permissions - users can customize in .roomodes file
     const permissionChoice = 'all';
@@ -69,8 +71,8 @@ class RooSetup extends BaseIdeSetup {
     let addedCount = 0;
     let skippedCount = 0;
 
-    for (const agent of agents) {
-      const slug = `bmad-${agent.module}-${agent.name}`;
+    for (const artifact of agentArtifacts) {
+      const slug = `bmad-${artifact.module}-${artifact.name}`;
 
       // Skip if already exists
       if (existingModes.includes(slug)) {
@@ -79,8 +81,17 @@ class RooSetup extends BaseIdeSetup {
         continue;
       }
 
-      const content = await this.readFile(agent.path);
-      const modeEntry = await this.createModeEntry(agent, content, permissionChoice, projectDir);
+      // Read the actual agent file from .bmad for metadata extraction
+      const agentPath = path.join(bmadDir, artifact.module, 'agents', `${artifact.name}.md`);
+      const content = await this.readFile(agentPath);
+
+      // Create mode entry that references the actual .bmad agent
+      const modeEntry = await this.createModeEntry(
+        { module: artifact.module, name: artifact.name, path: agentPath },
+        content,
+        permissionChoice,
+        projectDir,
+      );
 
       newModesContent += modeEntry;
       addedCount++;

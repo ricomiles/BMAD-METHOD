@@ -3,6 +3,7 @@ const fs = require('fs-extra');
 const yaml = require('js-yaml');
 const { BaseIdeSetup } = require('./_base-ide');
 const chalk = require('chalk');
+const { AgentCommandGenerator } = require('./shared/agent-command-generator');
 
 /**
  * Gemini CLI setup handler
@@ -63,22 +64,24 @@ class GeminiSetup extends BaseIdeSetup {
     // Clean up any existing BMAD files before reinstalling
     await this.cleanup(projectDir);
 
-    // Get agents and tasks
-    const agents = await this.getAgents(bmadDir);
+    // Generate agent launchers
+    const agentGen = new AgentCommandGenerator(this.bmadFolderName);
+    const { artifacts: agentArtifacts } = await agentGen.collectAgentArtifacts(bmadDir, options.selectedModules || []);
+
+    // Get tasks
     const tasks = await this.getTasks(bmadDir);
 
     // Install agents as TOML files with bmad- prefix (flat structure)
     let agentCount = 0;
-    for (const agent of agents) {
-      const content = await this.readFile(agent.path);
-      const tomlContent = await this.createAgentToml(agent, content);
+    for (const artifact of agentArtifacts) {
+      const tomlContent = await this.createAgentLauncherToml(artifact);
 
       // Flat structure: bmad-agent-{module}-{name}.toml
-      const tomlPath = path.join(commandsDir, `bmad-agent-${agent.module}-${agent.name}.toml`);
+      const tomlPath = path.join(commandsDir, `bmad-agent-${artifact.module}-${artifact.name}.toml`);
       await this.writeFile(tomlPath, tomlContent);
       agentCount++;
 
-      console.log(chalk.green(`  ✓ Added agent: /bmad:agents:${agent.module}:${agent.name}`));
+      console.log(chalk.green(`  ✓ Added agent: /bmad:agents:${artifact.module}:${artifact.name}`));
     }
 
     // Install tasks as TOML files with bmad- prefix (flat structure)
@@ -107,6 +110,28 @@ class GeminiSetup extends BaseIdeSetup {
       agents: agentCount,
       tasks: taskCount,
     };
+  }
+
+  /**
+   * Create agent launcher TOML content from artifact
+   */
+  async createAgentLauncherToml(artifact) {
+    // Strip frontmatter from launcher content
+    const frontmatterRegex = /^---\s*\n[\s\S]*?\n---\s*\n/;
+    const contentWithoutFrontmatter = artifact.content.replace(frontmatterRegex, '').trim();
+
+    // Extract title from launcher frontmatter
+    const titleMatch = artifact.content.match(/description:\s*"([^"]+)"/);
+    const title = titleMatch ? titleMatch[1] : this.formatTitle(artifact.name);
+
+    // Create TOML wrapper around launcher content (without frontmatter)
+    const description = `BMAD ${artifact.module.toUpperCase()} Agent: ${title}`;
+
+    return `description = "${description}"
+prompt = """
+${contentWithoutFrontmatter}
+"""
+`;
   }
 
   /**

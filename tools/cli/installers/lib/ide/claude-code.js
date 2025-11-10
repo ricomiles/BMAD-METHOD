@@ -4,6 +4,7 @@ const chalk = require('chalk');
 const { getProjectRoot, getSourcePath, getModulePath } = require('../../../lib/project-root');
 const { WorkflowCommandGenerator } = require('./shared/workflow-command-generator');
 const { TaskToolCommandGenerator } = require('./shared/task-tool-command-generator');
+const { AgentCommandGenerator } = require('./shared/agent-command-generator');
 const {
   loadModuleInjectionConfig,
   shouldApplyInjection,
@@ -117,33 +118,24 @@ class ClaudeCodeSetup extends BaseIdeSetup {
 
     await this.ensureDir(bmadCommandsDir);
 
-    // Get agents from INSTALLED bmad/ directory
-    // Base installer has already built .md files from .agent.yaml sources
-    const agents = await getAgentsFromBmad(bmadDir, options.selectedModules || []);
+    // Generate agent launchers using AgentCommandGenerator
+    // This creates small launcher files that reference the actual agents in .bmad/
+    const agentGen = new AgentCommandGenerator(this.bmadFolderName);
+    const { artifacts: agentArtifacts, counts: agentCounts } = await agentGen.collectAgentArtifacts(bmadDir, options.selectedModules || []);
 
-    // Create directories for each module (including standalone)
+    // Create directories for each module
     const modules = new Set();
-    for (const item of agents) modules.add(item.module);
+    for (const artifact of agentArtifacts) {
+      modules.add(artifact.module);
+    }
 
     for (const module of modules) {
       await this.ensureDir(path.join(bmadCommandsDir, module));
       await this.ensureDir(path.join(bmadCommandsDir, module, 'agents'));
     }
 
-    // Copy agents from bmad/ to .claude/commands/
-    let agentCount = 0;
-    for (const agent of agents) {
-      const sourcePath = agent.path;
-      const targetPath = path.join(bmadCommandsDir, agent.module, 'agents', `${agent.name}.md`);
-
-      const content = await this.readAndProcess(sourcePath, {
-        module: agent.module,
-        name: agent.name,
-      });
-
-      await this.writeFile(targetPath, content);
-      agentCount++;
-    }
+    // Write agent launcher files
+    const agentCount = await agentGen.writeAgentLaunchers(bmadCommandsDir, agentArtifacts);
 
     // Process Claude Code specific injections for installed modules
     // Use pre-collected configuration if available, or skip if already configured
