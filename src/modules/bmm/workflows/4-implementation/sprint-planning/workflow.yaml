@@ -32,7 +32,7 @@ variables:
   epics_pattern: "epic*.md" # Pattern to find epic files
 
   # Output configuration
-  status_file: "{output_folder}/sprint-status.yaml"
+  status_file: "{ephemeral_files}/sprint-status.yaml"
 
 # Smart input file references - handles both whole docs and sharded docs
 # Priority: Whole document first, then sharded version

@@ -30,23 +30,19 @@ input_file_patterns:
     whole: "{output_folder}/*epic*.md"
     sharded_index: "{output_folder}/*epic*/index.md"
     sharded_single: "{output_folder}/*epic*/epic-{{epic_num}}.md"
-
   previous_retrospective:
     pattern: "{ephemeral_files}/retrospectives/epic-{{prev_epic_num}}-retro-*.md"
-
   architecture:
     whole: "{output_folder}/*architecture*.md"
     sharded: "{output_folder}/*architecture*/index.md"
-
   prd:
     whole: "{output_folder}/*prd*.md"
     sharded: "{output_folder}/*prd*/index.md"
-
   document_project:
     sharded: "{output_folder}/docs/index.md"
 
 # Required files
-sprint_status_file: "{ephemeral_files}/sprint-status.yaml"
+sprint_status_file: "{context_dir}/sprint-status.yaml || {output_folder}/sprint-status.yaml"
 story_directory: "{ephemeral_files}/stories"
 retrospectives_folder: "{ephemeral_files}/retrospectives"
 

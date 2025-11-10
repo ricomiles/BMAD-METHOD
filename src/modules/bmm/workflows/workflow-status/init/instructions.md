@@ -25,9 +25,10 @@
 
 **Check for implementation artifacts:**
 
-- Story files: {output_folder}/stories/\*.md
-- Sprint status: {output*folder}/\_sprint*.yaml or {output_folder}/sprint-status.yaml
-- Existing workflow status: {output_folder}/bmm-workflow-status.yaml
+- The following could be in or nested under {output_folder} OR {ephemeral_location} - CHECK BOTH LOCATIONS
+  - Story files: {output*folder}/stories/*.md or {ephemeral*location}/stories/*.md
+  - Sprint status: {output_folder}/sprint-status.yaml or {ephemeral_location}/sprint-status.yaml
+  - Existing workflow status: {output_folder}/bmm-workflow-status.yaml or {ephemeral_location}/bmm-workflow-status.yaml
 
 **Check for codebase:**
 
