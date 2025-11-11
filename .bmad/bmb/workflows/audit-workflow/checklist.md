@@ -125,10 +125,10 @@ _List any cleanup recommendations:_
 
 ## Audit Summary
 
-**Total Checks:** 72
-**Passed:** **\_** / 72
-**Failed:** **\_** / 72
-**Pass Rate:** **\_**%
+**Total Checks:** {total}
+**Passed:** {total passed}
+**Failed:** {total failed}
+**Pass Rate:** {percent passed}
 
 **Recommendation:**
 
@@ -140,4 +140,4 @@ _List any cleanup recommendations:_
 ---
 
 **Audit Completed:** {{date}}
-**Auditor:** Audit Workflow (BMAD v6)
+**Auditor:** Audit Workflow (BMad Method)

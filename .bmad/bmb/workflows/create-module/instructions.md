@@ -329,7 +329,7 @@ prompt:
 
 <critical>Save location:</critical>
 
-- Save to {{module_path}}/\_module-installer/install-config.yaml
+- Save to {{module_path}}/module-installer/install-config.yaml
 
 <ask>Does your module need custom installation logic (database setup, API registration, etc.)?</ask>
 
@@ -374,7 +374,7 @@ module.exports = { install };
 
 <critical>Save location:</critical>
 
-- Save to {{module_path}}/\_module-installer/installer.js
+- Save to {{module_path}}/module-installer/installer.js
 </check>
 
 <check if="no">

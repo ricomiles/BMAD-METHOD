@@ -236,9 +236,9 @@
 
 ## Sign-off
 
-**Module Name:** \***\*\*\*\*\***\_\_\***\*\*\*\*\***
-**Module Code:** \***\*\*\*\*\***\_\_\***\*\*\*\*\***
-**Version:** \***\*\*\*\*\***\_\_\***\*\*\*\*\***
-**Validated By:** \***\*\*\*\*\***\_\_\***\*\*\*\*\***
-**Date:** \***\*\*\*\*\***\_\_\***\*\*\*\*\***
-**Status:** ⬜ Pass / ⬜ Pass with Issues / ⬜ Fail
+**Module Name:** {name}
+**Module Code:** {code}
+**Version:** {version}
+**Validated By:** {name}
+**Date:** {date}
+**Status:** [ ] Pass / [ ] Pass with Issues / [ ] Fail
