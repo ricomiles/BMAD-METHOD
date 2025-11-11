@@ -18,28 +18,6 @@ validation: "{installed_path}/checklist.md"
 checklist: "{installed_path}/checklist.md"
 default_output_file: "{output_folder}/sprint-change-proposal-{date}.md"
 
-# Workflow execution mode (interactive: step-by-step with user, non-interactive: automated)
-mode: interactive
-
-required_inputs:
-  - change_trigger: "Description of the issue or change that triggered this workflow"
-  - project_documents: "Access to PRD, Epics/Stories, Architecture, UI/UX specs"
-
-output_artifacts:
-  - sprint_change_proposal: "Comprehensive proposal documenting issue, impact, and recommended changes"
-  - artifact_edits: "Specific before/after edits for affected documents"
-  - handoff_plan: "Clear routing for implementation based on change scope"
-
-halt_conditions:
-  - "Change trigger unclear or undefined"
-  - "Core project documents unavailable"
-  - "Impact analysis incomplete"
-  - "User approval not obtained"
-
-execution_modes:
-  - incremental: "Recommended - Refine each edit with user collaboration"
-  - batch: "Present all changes at once for review"
-
 standalone: true
 
 web_bundle: false

@@ -11,7 +11,7 @@
 
 <action>Read the completed tech-spec.md file from {output_folder}/tech-spec.md</action>
 <action>Load bmm-workflow-status.yaml from {output_folder}/bmm-workflow-status.yaml (if exists)</action>
-<action>Extract dev_ephemeral_location from config (where stories are stored)</action>
+<action>Extract sprint_artifacts from config (where stories are stored)</action>
 
 <action>Extract from the ENHANCED tech-spec structure:
 
@@ -42,7 +42,7 @@
 </example>
 
 <action>Set story_filename = "story-{slug}.md"</action>
-<action>Set story_path = "{dev_ephemeral_location}/story-{slug}.md"</action>
+<action>Set story_path = "{sprint_artifacts}/story-{slug}.md"</action>
 
 </step>
 
@@ -193,7 +193,7 @@ Only needed for extremely complex scenarios:
 2. Generate additional story context (for complex edge cases)
 3. Exit for now
 
-Select option (1-3):</ask>
+Select option (1-3)</ask>
 
 </step>
 

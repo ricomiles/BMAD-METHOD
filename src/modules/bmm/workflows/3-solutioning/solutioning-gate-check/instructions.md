@@ -8,7 +8,7 @@
 <workflow>
 
 <step n="0" goal="Validate workflow readiness" tag="workflow-status">
-<action>Check if {output_folder}/bmm-workflow-status.yaml exists</action>
+<action>Check if {workflow_status_file} exists</action>
 
 <check if="status file not found">
   <output>No workflow status file found. Implementation Ready Check can run standalone or as part of BMM workflow path.</output>
@@ -23,14 +23,13 @@
 </check>
 
 <check if="status file found">
-  <action>Load the FULL file: {output_folder}/bmm-workflow-status.yaml</action>
+  <action>Load the FULL file:  {workflow_status_file}</action>
   <action>Parse workflow_status section</action>
   <action>Check status of "solutioning-gate-check" workflow</action>
-  <action>Get project_level from YAML metadata</action>
+  <action>Get {selected_track} (quick-flow, bmad-method, or enterprise-bmad-method)</action>
   <action>Find first non-completed workflow (next expected workflow)</action>
 
-<action>Based on the project_level, understand what artifacts should exist: - Level 0-1: Tech spec and simple stories only (no PRD, minimal solutioning) - Level 2: PRD, tech spec, epics/stories (no separate architecture doc) - Level 3-4: Full suite - PRD, architecture document, epics/stories, possible UX artifacts
-</action>
+<action>Based on the selected_track, understand what artifacts should exist: - quick-flow: Tech spec and simple stories in an epic only (no PRD, minimal solutioning) - bmad-method and enterprise-bmad-method: PRD, tech spec, epics/stories, architecture, possible UX artifacts</action>
 
   <check if="solutioning-gate-check status is file path (already completed)">
     <output>⚠️ Gate check already completed: {{solutioning-gate-check status}}</output>
@@ -53,28 +52,18 @@
 <action>Set standalone_mode = false</action>
 </check>
 
-<critical>The validation approach must adapt to the project level - don't look for documents that shouldn't exist at lower levels</critical>
-
 <template-output>project_context</template-output>
 </step>
 
 <step n="1" goal="Discover and inventory project artifacts">
-<action>Search the {output_folder} for relevant planning and solutioning documents based on project level identified in Step 0</action>
+<action>Search the {output_folder} for relevant planning and solutioning documents</action>
 
-<action>For Level 0-1 projects, locate:
-
-- Technical specification document(s)
-- Story/task lists or simple epic breakdowns
-- Any API or interface definitions
-  </action>
-
-<action>For Level 2-4 projects, locate:
+<action>Locate:
 
 - Product Requirements Document (PRD)
-- Architecture document (architecture.md) (Level 3-4 only)
-- Technical Specification (Level 2 includes architecture within)
+- Architecture
 - Epic and story breakdowns
-- UX artifacts if the active path includes UX workflow
+- UX Design artifacts if the active path includes UX workflow
 - Any supplementary planning documents
   </action>
 
@@ -91,15 +80,15 @@
 
 <step n="2" goal="Deep analysis of core planning documents">
 <action>Load and thoroughly analyze each discovered document to extract:
-- Core requirements and success criteria
-- Architectural decisions and constraints
-- Technical implementation approaches
-- User stories and acceptance criteria
-- Dependencies and sequencing requirements
-- Any assumptions or risks documented
+  - Core requirements and success criteria
+  - Architectural decisions and constraints
+  - Technical implementation approaches
+  - User stories and acceptance criteria
+  - Dependencies and sequencing requirements
+  - Any assumptions or risks documented
 </action>
 
-<action>For PRD analysis (Level 2-4), focus on:
+<action>For PRD analysis, focus on:
 
 - User requirements and use cases
 - Functional and non-functional requirements
@@ -131,9 +120,8 @@
 </step>
 
 <step n="3" goal="Cross-reference validation and alignment check">
-<action>Systematically validate alignment between all artifacts, adapting validation based on project level</action>
 
-<action>PRD ↔ Architecture Alignment (Level 3-4):
+<action>PRD ↔ Architecture Alignment:
 
 - Verify every PRD requirement has corresponding architectural support
 - Check that architectural decisions don't contradict PRD constraints
@@ -142,7 +130,7 @@
 - If using new architecture workflow: verify implementation patterns are defined
   </action>
 
-<action>PRD ↔ Stories Coverage (Level 2-4):
+<action>PRD ↔ Stories Coverage:
 
 - Map each PRD requirement to implementing stories
 - Identify any PRD requirements without story coverage
@@ -156,13 +144,6 @@
 - Check that story technical tasks align with architectural approach
 - Identify any stories that might violate architectural constraints
 - Ensure infrastructure and setup stories exist for architectural components
-  </action>
-
-<action>For Level 0-1 projects (Tech Spec only):
-
-- Validate internal consistency within tech spec
-- Check that all specified features have corresponding stories
-- Verify story sequencing matches technical dependencies
   </action>
 
 <template-output>alignment_validation</template-output>
@@ -219,20 +200,20 @@
 </step>
 
 <step n="5" goal="UX and special concerns validation" optional="true">
-<check if="UX artifacts exist or UX workflow in active path">
-<action>Review UX artifacts and validate integration:
-- Check that UX requirements are reflected in PRD
-- Verify stories include UX implementation tasks
-- Ensure architecture supports UX requirements (performance, responsiveness)
-- Identify any UX concerns not addressed in stories
-</action>
+  <check if="UX artifacts exist or UX workflow in active path">
+    <action>Review UX artifacts and validate integration:
+      - Check that UX requirements are reflected in PRD
+      - Verify stories include UX implementation tasks
+      - Ensure architecture supports UX requirements (performance, responsiveness)
+      - Identify any UX concerns not addressed in stories
+    </action>
 
-<action>Validate accessibility and usability coverage:
+    <action>Validate accessibility and usability coverage:
+      - Check for accessibility requirement coverage in stories
+      - Verify responsive design considerations if applicable
+      - Ensure user flow completeness across stories
+    </action>
 
-- Check for accessibility requirement coverage in stories
-- Verify responsive design considerations if applicable
-- Ensure user flow completeness across stories
-  </action>
   </check>
 
 <template-output>ux_validation</template-output>
@@ -269,7 +250,7 @@
 
 <step n="7" goal="Update status and complete" tag="workflow-status">
 <check if="standalone_mode != true">
-  <action>Load the FULL file: {output_folder}/bmm-workflow-status.yaml</action>
+  <action>Load the FULL file: {workflow_status_file}</action>
   <action>Find workflow_status key "solutioning-gate-check"</action>
   <critical>ONLY write the file path as the status value - no other text, notes, or metadata</critical>
   <action>Update workflow_status["solutioning-gate-check"] = "{output_folder}/bmm-readiness-assessment-{{date}}.md"</action>

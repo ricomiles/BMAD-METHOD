@@ -382,7 +382,7 @@ Alice (Product Owner): "Good thinking - helps us connect what we learned to what
 <action>Attempt to load next epic using selective loading strategy:</action>
 
 **Try sharded first (more specific):**
-<action>Check if file exists: {output*folder}/\_epic*/epic-{{next_epic_num}}.md</action>
+<action>Check if file exists: {output-folder}/\_epic\*/epic-{{next_epic_num}}.md</action>
 
 <check if="sharded epic file found">
   <action>Load {output_folder}/*epic*/epic-{{next_epic_num}}.md</action>
@@ -391,7 +391,7 @@ Alice (Product Owner): "Good thinking - helps us connect what we learned to what
 
 **Fallback to whole document:**
 <check if="sharded epic not found">
-<action>Check if file exists: {output*folder}/\_epic*.md</action>
+<action>Check if file exists: {output-folder}/\_epic\*.md</action>
 
   <check if="whole epic file found">
     <action>Load entire epics document</action>

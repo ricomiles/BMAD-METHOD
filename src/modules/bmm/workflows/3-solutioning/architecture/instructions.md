@@ -16,7 +16,7 @@
 <action>Check if {output_folder}/bmm-workflow-status.yaml exists</action>
 
 <check if="status file not found">
-  <output>No workflow status file found. Decision Architecture can run standalone or as part of BMM workflow path.</output>
+  <output>No workflow status file found. Create Architecture can run standalone or as part of BMM workflow path.</output>
   <output>**Recommended:** Run `workflow-init` first for project context tracking and workflow sequencing.</output>
   <ask>Continue in standalone mode or exit to run workflow-init? (continue/exit)</ask>
   <check if="continue">
@@ -33,17 +33,9 @@
   <action>Check status of "create-architecture" workflow</action>
   <action>Get project_level from YAML metadata</action>
   <action>Find first non-completed workflow (next expected workflow)</action>
-
-  <check if="project_level < 3">
-    <output>**Note: Level {{project_level}} Project**
-
-The Detailed Architecture is typically for Level 3-4 projects, but can be used for any project that needs architectural planning.
-
-For Level {{project_level}}, we'll keep the architecture appropriately scoped.
-</output>
 </check>
 
-  <check if="create-architecture status is file path (already completed)">
+  <check if="create-architecture status is indicates already completed">
     <output>⚠️ Architecture already completed: {{create-architecture status}}</output>
     <ask>Re-running will overwrite the existing architecture. Continue? (y/n)</ask>
     <check if="n">
@@ -62,7 +54,6 @@ For Level {{project_level}}, we'll keep the architecture appropriately scoped.
   </check>
 
 <action>Set standalone_mode = false</action>
-</check>
 
 <action>Check for existing PRD and epics files using fuzzy matching</action>
 
@@ -70,21 +61,22 @@ For Level {{project_level}}, we'll keep the architecture appropriately scoped.
 <check if="PRD_not_found">
 <output>**PRD Not Found**
 
-Decision Architecture works from your Product Requirements Document (PRD).
+Creation of an Architecture works from your Product Requirements Document (PRD), along with an optional UX Design and other assets.
 
-Looking for: _PRD_, PRD.md, or prd/index.md + files in {output_folder}
+Looking for: _prd_.md, or prd/\* + files in {output_folder}
 
-Please run the PRD workflow first to define your requirements.
-
-Architect: `create-prd`
+Please talk to the PM Agent to run the Create PRD workflow first to define your requirements, or if I am mistaken and it does exist, provide the file now.
 </output>
-<action>Exit workflow - PRD required</action>
+<ask>Would you like to exit, or can you provide a PRD?
+<action if='yes to exit'>Exit workflow - PRD required</action>
+<action if='prd provided'>Proceed to Step 1</action>
+</ask>
 </check>
 
 </step>
 
 <step n="1" goal="Load and understand project context">
-  <action>Load the PRD using fuzzy matching: {prd_file}, if the PRD is mulitple files in a folder, load the index file and all files associated with the PRD</action>
+  <action>Load the PRD using fuzzy matching: {prd_file}, if the PRD is multiple files in a folder, load the index file and all files associated with the PRD</action>
   <action>Load epics file using fuzzy matching: {epics_file}</action>
 
 <action>Check for UX specification using fuzzy matching:
@@ -623,14 +615,15 @@ Enforcement: "All agents MUST follow this pattern"
 <action>Run validation checklist from {installed_path}/checklist.md</action>
 
 <action>Verify MANDATORY items:
-□ Decision table has Version column with specific versions
-□ Every epic is mapped to architecture components
-□ Source tree is complete, not generic
-□ No placeholder text remains
-□ All FRs from PRD have architectural support
-□ All NFRs from PRD are addressed
-□ Implementation patterns cover all potential conflicts
-□ Novel patterns are fully documented (if applicable)
+
+- [] Decision table has Version column with specific versions
+- [] Every epic is mapped to architecture components
+- [] Source tree is complete, not generic
+- [] No placeholder text remains
+- [] All FRs from PRD have architectural support
+- [] All NFRs from PRD are addressed
+- [] Implementation patterns cover all potential conflicts
+- [] Novel patterns are fully documented (if applicable)
 </action>
 
   <check if="validation_failed">

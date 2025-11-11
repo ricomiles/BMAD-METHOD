@@ -325,11 +325,11 @@ findings.batches_completed: [
   </check>
 
 <action>Build API contracts catalog</action>
-<action>IMMEDIATELY write to: {output*folder}/api-contracts-{part_id}.md</action>
+<action>IMMEDIATELY write to: {output-folder}/api-contracts-{part_id}.md</action>
 <action>Validate document has all required sections</action>
 <action>Update state file with output generated</action>
 <action>PURGE detailed API data, keep only: "{{api_count}} endpoints documented"</action>
-<template-output>api_contracts*{part_id}</template-output>
+<template-output>api_contracts\*{part_id}</template-output>
 </check>
 
 <check if="requires_data_models == true">
@@ -346,11 +346,11 @@ findings.batches_completed: [
   </check>
 
 <action>Build database schema documentation</action>
-<action>IMMEDIATELY write to: {output*folder}/data-models-{part_id}.md</action>
+<action>IMMEDIATELY write to: {output-folder}/data-models-{part_id}.md</action>
 <action>Validate document completeness</action>
 <action>Update state file with output generated</action>
 <action>PURGE detailed schema data, keep only: "{{table_count}} tables documented"</action>
-<template-output>data_models*{part_id}</template-output>
+<template-output>data_models\*{part_id}</template-output>
 </check>
 
 <check if="requires_state_management == true">

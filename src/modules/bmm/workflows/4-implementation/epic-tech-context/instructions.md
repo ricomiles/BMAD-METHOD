@@ -15,7 +15,7 @@
 
     **Epic Discovery Process (SELECTIVE OPTIMIZATION):**
 
-    1. **Determine which epic** you need (epic_num from workflow context or user input)
+    1. **Determine which epic** you need (epic_num from {sprint_status} or user input)
     2. **Check for sharded version**: Look for `epics/index.md`
     3. **If sharded version found**:
       - Read `index.md` to understand structure
@@ -27,7 +27,7 @@
     **Other Documents (prd, gdd, architecture, ux-design) - Full Load:**
 
     1. **Search for whole document first** - Use fuzzy file matching
-    2. **Check for sharded version** - If whole document not found, look for `{doc-name}/index.md`
+    2. **Check for sharded version** - If whole document not found, look for `{doc-name}/*.*`
     3. **If sharded version found**:
       - Read `index.md` to understand structure
       - Read ALL section files listed in the index
@@ -158,7 +158,7 @@ Continuing to regenerate tech spec...
     <invoke-task>Validate against checklist at {installed_path}/checklist.md using {bmad_folder}/core/tasks/validate-workflow.xml</invoke-task>
 
     <!-- Mark epic as contexted -->
-    <action>Load the FULL file: {{output_folder}}/sprint-status.yaml</action>
+    <action>Load the FULL file: {sprint_status}</action>
     <action>Find development_status key "epic-{{epic_id}}"</action>
     <action>Verify current status is "backlog" (expected previous state)</action>
     <action>Update development_status["epic-{{epic_id}}"] = "contexted"</action>

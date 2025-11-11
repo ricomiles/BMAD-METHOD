@@ -72,11 +72,12 @@ Foundation framework powering all BMad modules:
 
 ### v6 Core Enhancements
 
-- **🎨 Agent Customization** - Modify names, roles, personalities via `bmad/_cfg/agents/`
+- **🎨 Agent Customization** - Modify names, roles, personalities via `bmad/_cfg/agents/` **[→ Customization Guide](./docs/agent-customization-guide.md)**
 - **🌐 Multi-Language** - Independent language settings for communication and output
 - **👤 Personalization** - Agents adapt to your name, skill level, and preferences
 - **🔄 Persistent Config** - Customizations survive module updates
 - **⚙️ Flexible Settings** - Configure per-module or globally
+- **📦 Web Bundles** - Share agents in Gemini Gems and Custom GPTs **[→ Web Bundles Guide](./docs/web-bundles-gemini-gpt-guide.md)**
 
 ### C.O.R.E. Philosophy
 
@@ -343,6 +344,11 @@ Optional optimization for large projects (BMad Method and Enterprise tracks):
 - **[BMM Complete Documentation Hub](./src/modules/bmm/docs/README.md)** - All BMM guides, FAQs, troubleshooting
 - **[BMB Module Reference](./src/modules/bmb/README.md)** - Build custom agents and workflows
 - **[CIS Workflows Guide](./src/modules/cis/workflows/README.md)** - Creative facilitation workflows
+
+**Customization & Sharing:**
+
+- **[Agent Customization Guide](./docs/agent-customization-guide.md)** - Customize agent names, personas, and behaviors
+- **[Web Bundles for Gemini & GPT](./docs/web-bundles-gemini-gpt-guide.md)** - Use BMad agents in Gemini Gems and Custom GPTs
 
 **Additional Resources:**
 

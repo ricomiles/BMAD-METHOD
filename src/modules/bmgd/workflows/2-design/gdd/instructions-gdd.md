@@ -324,7 +324,7 @@ For each {{placeholder}} in the fragment, elicit and capture that information.
 
 <for-each epic="epic_list">
 
-<template-output file="epics.md">epic\_{{epic_number}}\_details</template-output>
+<template-output file="epics.md">epic*{{epic_number}}*details</template-output>
 <invoke-task halt="true">{project-root}/{bmad_folder}/core/tasks/adv-elicit.xml</invoke-task>
 
 </for-each>

@@ -8,7 +8,7 @@ output_folder: "{config_source}:output_folder"
 user_name: "{config_source}:user_name"
 communication_language: "{config_source}:communication_language"
 date: system-generated
-story_dir: "{config_source}:dev_ephemeral_location/stories"
+story_dir: "{config_source}:sprint_artifacts"
 
 # Workflow components
 installed_path: "{project-root}/{bmad_folder}/bmm/workflows/4-implementation/create-story"
@@ -18,7 +18,7 @@ validation: "{installed_path}/checklist.md"
 
 # Variables and inputs
 variables:
-  sprint_status: "{config_source}:dev_ephemeral_location/sprint-status.yaml || {output_folder}/sprint-status.yaml" # Primary source for story tracking
+  sprint_status: "{config_source}:sprint_artifacts/sprint-status.yaml || {output_folder}/sprint-status.yaml" # Primary source for story tracking
   epics_file: "{output_folder}/epics.md" # Preferred source for epic/story breakdown
   prd_file: "{output_folder}/PRD.md" # Fallback for requirements
   architecture_file: "{output_folder}/architecture.md" # Optional architecture context
@@ -32,8 +32,6 @@ variables:
     - *architecture*.md
   story_title: "" # Will be elicited if not derivable
 
-# Output configuration
-# Uses story_key from sprint-status.yaml (e.g., "1-2-user-authentication")
 default_output_file: "{story_dir}/{{story_key}}.md"
 
 # Smart input file references - handles both whole docs and sharded docs

@@ -14,6 +14,7 @@ date: system-generated
 # Workflow status integration
 workflow_status_workflow: "{project-root}/{bmad_folder}/bmm/workflows/workflow-status/workflow.yaml"
 workflow_paths_dir: "{project-root}/{bmad_folder}/bmm/workflows/workflow-status/paths"
+workflow_status_file: "{output_folder}/bmm-workflow-status.yaml"
 
 # Module path and component files
 installed_path: "{project-root}/{bmad_folder}/bmm/workflows/3-solutioning/solutioning-gate-check"
@@ -38,28 +39,20 @@ input_file_patterns:
   prd:
     whole: "{output_folder}/*prd*.md"
     sharded: "{output_folder}/*prd*/index.md"
-
   epics:
     whole: "{output_folder}/*epic*.md"
     sharded: "{output_folder}/*epic*/index.md"
-
   architecture:
     whole: "{output_folder}/*architecture*.md"
     sharded: "{output_folder}/*architecture*/index.md"
-
   ux_design:
     whole: "{output_folder}/*ux*.md"
     sharded: "{output_folder}/*ux*/index.md"
-
   tech_spec:
     whole: "{output_folder}/*tech-spec*.md"
     sharded: "{output_folder}/*tech-spec*/index.md"
-
   document_project:
     sharded: "{output_folder}/docs/index.md"
-
-# Validation criteria data
-validation_criteria: "{installed_path}/validation-criteria.yaml"
 
 standalone: true
 

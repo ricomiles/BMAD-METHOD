@@ -12,7 +12,7 @@
 
 <action>Read the completed tech-spec.md file from {output_folder}/tech-spec.md</action>
 <action>Load bmm-workflow-status.yaml from {output_folder}/bmm-workflow-status.yaml (if exists)</action>
-<action>Extract dev_ephemeral_location from config (where stories are stored)</action>
+<action>Extract sprint_artifacts from config (where stories are stored)</action>
 
 <action>Extract from the ENHANCED tech-spec structure:
 
@@ -178,7 +178,7 @@ Since tech-spec is context-rich, populate ALL template fields:
   </guidelines>
 
 <for-each story="1 to story_count">
-  <action>Set story_path_{n} = "{dev_ephemeral_location}/story-{epic_slug}-{n}.md"</action>
+  <action>Set story_path_{n} = "{sprint_artifacts}/story-{epic_slug}-{n}.md"</action>
   <action>Create story file from user_story_template with the following content:</action>
 
   <template-output file="{story_path_{n}}">
@@ -391,7 +391,7 @@ Stories are implementation-ready!</output>
 - `story-{epic_slug}-3.md` → Third story
   {{/if}}
 
-**Story Location:** `{dev_ephemeral_location}/`
+**Story Location:** `{sprint_artifacts}/`
 
 **Next Steps - Iterative Implementation:**
 

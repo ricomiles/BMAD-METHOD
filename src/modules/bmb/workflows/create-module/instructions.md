@@ -180,7 +180,7 @@
 └── data/                     # User data directory
 ```
 
-**SOURCE MODULE** (\_module-installer is for installation only, not copied to target):
+**SOURCE MODULE** (module-installer is for installation only, not copied to target):
 
 ```
 {{module_code}}/
@@ -268,7 +268,7 @@
 <critical>IMPORTANT: Create install-config.yaml NOT install-config.yaml</critical>
 <critical>This is the STANDARD format that BMAD installer uses</critical>
 
-Create \_module-installer/install-config.yaml:
+Create module-installer/install-config.yaml:
 
 ```yaml
 # {{module_name}} Module Configuration
@@ -329,7 +329,7 @@ prompt:
 
 <critical>Save location:</critical>
 
-- Save to {{module_path}}/\_module-installer/install-config.yaml
+- Save to {{module_path}}/module-installer/install-config.yaml
 
 <ask>Does your module need custom installation logic (database setup, API registration, etc.)?</ask>
 
@@ -374,7 +374,7 @@ module.exports = { install };
 
 <critical>Save location:</critical>
 
-- Save to {{module_path}}/\_module-installer/installer.js
+- Save to {{module_path}}/module-installer/installer.js
 </check>
 
 <check if="no">

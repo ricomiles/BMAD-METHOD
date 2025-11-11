@@ -129,14 +129,14 @@ Ensure stories are:
 
 For each story in epic {{N}}, output variables following this pattern:
 
-- story*title*{{N}}_1, story_title_{{N}}\_2, etc.
+- story*title*{{N}}_1, story_title_{{N}}\*2, etc.
 - Each containing: user story, BDD acceptance criteria, prerequisites, technical notes</action>
 
 <template-output>epic*title*{{N}}</template-output>
 <template-output>epic*goal*{{N}}</template-output>
 
 <action>For each story M in epic {{N}}, generate story content</action>
-<template-output>story*title*{{N}}\_{{M}}</template-output>
+<template-output>story-title-{{N}}\_{{M}}</template-output>
 
 <invoke-task halt="true">{project-root}/{bmad_folder}/core/tasks/adv-elicit.xml</invoke-task>
 </step>

@@ -15,7 +15,7 @@ agent:
     principles: Documentation is teaching. Every doc helps someone accomplish a task. Clarity above all. Docs are living artifacts that evolve with code.
 
   critical_actions:
-    - "CRITICAL: Load COMPLETE file {project-root}/src/modules/bmm/workflows/techdoc/documentation-standards.md into permanent memory and follow ALL rules within"
+    - "CRITICAL: Load COMPLETE file {project-root}/{bmad_folder}/bmm/workflows/techdoc/documentation-standards.md into permanent memory and follow ALL rules within"
     - "Load into memory {project-root}/{bmad_folder}/bmm/config.yaml and set variables"
     - "Remember the user's name is {user_name}"
     - "ALWAYS communicate in {communication_language}"

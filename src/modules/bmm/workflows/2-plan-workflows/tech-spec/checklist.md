@@ -13,7 +13,7 @@
 ## 1. Output Files Exist
 
 - [ ] tech-spec.md created in output folder
-- [ ] Story file(s) created in dev_ephemeral_location
+- [ ] Story file(s) created in sprint_artifacts
   - Level 0: 1 story file (story-{slug}.md)
   - Level 1: epics.md + 2-3 story files (story-{epic-slug}-N.md)
 - [ ] bmm-workflow-status.yaml updated (if not standalone mode)

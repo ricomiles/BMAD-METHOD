@@ -123,13 +123,13 @@ This ensures the tech-spec is grounded in reality and gives developers everythin
 Search for and load (using dual-strategy: whole first, then sharded):
 
 1. **Product Brief:**
-   - Search pattern: {output*folder}/\_brief*.md
-   - Sharded: {output*folder}/\_brief*/index.md
+   - Search pattern: {output-folder}/_brief_.md
+   - Sharded: {output-folder}/_brief_/index.md
    - If found: Load completely and extract key context
 
 2. **Research Documents:**
-   - Search pattern: {output*folder}/\_research*.md
-   - Sharded: {output*folder}/\_research*/index.md
+   - Search pattern: {output-folder}/\_research\*.md
+   - Sharded: {output-folder}/\_research\*/index.md
    - If found: Load completely and extract insights
 
 3. **Document-Project Output (CRITICAL for brownfield):**

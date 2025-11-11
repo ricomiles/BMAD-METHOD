@@ -2,7 +2,7 @@
 # Full product + architecture planning for greenfield projects (10-50+ stories typically)
 
 method_name: "BMad Method"
-track: "method"
+track: "bmad-method"
 field_type: "greenfield"
 description: "Complete product and system design methodology for greenfield projects"
 

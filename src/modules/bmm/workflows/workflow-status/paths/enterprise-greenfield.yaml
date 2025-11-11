@@ -1,8 +1,8 @@
 # BMad Enterprise Method - Greenfield
 # Extended enterprise planning with security/devops/test for greenfield (30+ stories typically)
 
-method_name: "BMad Enterprise Method"
-track: "enterprise"
+method_name: "Enterprise BMad Method"
+track: "enterprise-bmad-method"
 field_type: "greenfield"
 description: "Complete enterprise-grade planning with security, devops, and test strategy"
 
