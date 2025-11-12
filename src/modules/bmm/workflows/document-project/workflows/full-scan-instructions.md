@@ -758,15 +758,15 @@ When a document SHOULD be generated but wasn't (due to quick scan, missing data,
 ### Generated Documentation
 
 - [Project Overview](./project-overview.md)
-- [Architecture](./architecture{{#if multi-part}}-{part*id}{{/if}}.md){{#unless architecture_file_exists}} *(To be generated)\_{{/unless}}
+- [Architecture](./architecture{{#if multi-part}}-{part\*id}{{/if}}.md){{#unless architecture_file_exists}} (To be generated) {{/unless}}
 - [Source Tree Analysis](./source-tree-analysis.md)
-- [Component Inventory](./component-inventory{{#if multi-part}}-{part*id}{{/if}}.md){{#unless component_inventory_exists}} *(To be generated)\_{{/unless}}
-- [Development Guide](./development-guide{{#if multi-part}}-{part*id}{{/if}}.md){{#unless dev_guide_exists}} *(To be generated)_{{/unless}}
-  {{#if deployment_found}}- [Deployment Guide](./deployment-guide.md){{#unless deployment_guide_exists}} _(To be generated)_{{/unless}}{{/if}}
+- [Component Inventory](./component-inventory{{#if multi-part}}-{part\*id}{{/if}}.md){{#unless component_inventory_exists}} (To be generated) {{/unless}}
+- [Development Guide](./development-guide{{#if multi-part}}-{part\*id}{{/if}}.md){{#unless dev_guide_exists}} (To be generated) {{/unless}}
+  {{#if deployment_found}}- [Deployment Guide](./deployment-guide.md){{#unless deployment_guide_exists}} (To be generated) {{/unless}}{{/if}}
   {{#if contribution_found}}- [Contribution Guide](./contribution-guide.md){{/if}}
-  {{#if api_documented}}- [API Contracts](./api-contracts{{#if multi-part}}-{part_id}{{/if}}.md){{#unless api_contracts_exists}} _(To be generated)_{{/unless}}{{/if}}
-  {{#if data_models_documented}}- [Data Models](./data-models{{#if multi-part}}-{part_id}{{/if}}.md){{#unless data_models_exists}} _(To be generated)_{{/unless}}{{/if}}
-  {{#if multi-part}}- [Integration Architecture](./integration-architecture.md){{#unless integration_arch_exists}} _(To be generated)\_{{/unless}}{{/if}}
+  {{#if api_documented}}- [API Contracts](./api-contracts{{#if multi-part}}-{part_id}{{/if}}.md){{#unless api_contracts_exists}} (To be generated) {{/unless}}{{/if}}
+  {{#if data_models_documented}}- [Data Models](./data-models{{#if multi-part}}-{part_id}{{/if}}.md){{#unless data_models_exists}} (To be generated) {{/unless}}{{/if}}
+  {{#if multi-part}}- [Integration Architecture](./integration-architecture.md){{#unless integration_arch_exists}} (To be generated) {{/unless}}{{/if}}
 
 ### Existing Documentation
 
@@ -850,10 +850,10 @@ Set {{incomplete_docs_list}} = {{incomplete_docs_strict}} + {{incomplete_docs_fu
 For each item store structure:
 {
 "title": "Architecture – Server",
-"file*path": "./architecture-server.md",
+"file\*path": "./architecture-server.md",
 "doc_type": "architecture",
 "part_id": "server",
-"line_text": "- [Architecture – Server](./architecture-server.md) *(To be generated)\_",
+"line_text": "- [Architecture – Server](./architecture-server.md) (To be generated)",
 "fuzzy_match": false
 }
 </action>

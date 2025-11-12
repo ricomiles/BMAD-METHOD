@@ -136,7 +136,7 @@ For each story in epic {{N}}, output variables following this pattern:
 <template-output>epic*goal*{{N}}</template-output>
 
 <action>For each story M in epic {{N}}, generate story content</action>
-<template-output>story-title-{{N}}\_{{M}}</template-output>
+<template-output>story-title-{{N}}-{{M}}</template-output>
 
 <invoke-task halt="true">{project-root}/{bmad_folder}/core/tasks/adv-elicit.xml</invoke-task>
 </step>

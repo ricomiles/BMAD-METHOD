@@ -201,7 +201,7 @@ Analyze the existing project structure:
 
 4. **Testing Patterns & Standards (CRITICAL):**
    - Identify test framework in use (from package.json/requirements.txt)
-   - Note test file naming patterns (.test.js, \_test.py, .spec.ts, Test.java)
+   - Note test file naming patterns (.test.js, test.py, .spec.ts, Test.java)
    - Document test organization (tests/, **tests**, spec/, test/)
    - Look for test configuration files (jest.config.js, pytest.ini, .rspec)
    - Check for coverage requirements (in CI config, test scripts)
