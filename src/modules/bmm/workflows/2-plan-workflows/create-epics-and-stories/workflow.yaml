@@ -31,6 +31,16 @@ input_file_patterns:
     whole: "{output_folder}/*domain*brief*.md"
     sharded: "{output_folder}/*domain*brief*/index.md"
     load_strategy: "INDEX_GUIDED"
+  ux_design:
+    description: "UX design specification for interaction patterns (optional)"
+    whole: "{output_folder}/*ux*.md"
+    sharded: "{output_folder}/*ux*/index.md"
+    load_strategy: "FULL_LOAD"
+  architecture:
+    description: "Architecture decisions and technical design (optional)"
+    whole: "{output_folder}/*architecture*.md"
+    sharded: "{output_folder}/*architecture*/index.md"
+    load_strategy: "FULL_LOAD"
 
 # Module path and component files
 installed_path: "{project-root}/{bmad_folder}/bmm/workflows/2-plan-workflows/create-epics-and-stories"

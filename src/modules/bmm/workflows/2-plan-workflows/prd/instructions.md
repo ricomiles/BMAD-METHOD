@@ -8,6 +8,7 @@
 <critical>LIVING DOCUMENT: Write to PRD.md continuously as you discover - never wait until the end</critical>
 <critical>GUIDING PRINCIPLE: Identify what makes this product special and ensure it's reflected throughout the PRD</critical>
 <critical>Input documents specified in workflow.yaml input_file_patterns - workflow engine handles fuzzy matching, whole vs sharded document discovery automatically</critical>
+<critical>⚠️ ABSOLUTELY NO TIME ESTIMATES - NEVER mention hours, days, weeks, months, or ANY time-based predictions. AI has fundamentally changed development speed - what once took teams weeks/months can now be done by one person in hours. DO NOT give ANY time estimates whatsoever.</critical>
 
 <workflow>
 
@@ -621,79 +622,80 @@ Skip categories that don't apply!</action>
 </check>
 </step>
 
-<step n="10" goal="Review PRD and transition to epics">
-<action>Review the PRD we've built together
+<step n="10" goal="Complete PRD and determine next steps">
+<action>Quick review of captured requirements:
 
-"Let's review what we've captured:
+"We've captured:
 
-- Vision: [summary]
-- Success: [key metrics]
-- Scope: [MVP highlights]
-- Requirements: [count] functional, [count] non-functional
-- Special considerations: [domain/innovation]
+- {{fr_count}} functional requirements
+- {{nfr_count}} non-functional requirements
+- MVP scope defined
+  {{if domain_complexity == 'high'}}
+- Domain-specific requirements addressed
+  {{/if}}
+  {{if innovation_detected}}
+- Innovation patterns documented
+  {{/if}}
 
-Does this capture your product vision?"</action>
+Your PRD is complete!"
+</action>
 
 <template-output>prd_summary</template-output>
-
-<action>After PRD review and refinement complete:
-
-"Excellent! Now we need to break these requirements into implementable epics and stories.
-
-For the epic breakdown, you have two options:
-
-1. Start a new session focused on epics (recommended for complex projects)
-2. Continue here (I'll transform requirements into epics now)
-
-Which would you prefer?"
-
-If new session:
-"To start epic planning in a new session:
-
-1. Save your work here
-2. Start fresh and run: workflow epics-stories
-3. It will load your PRD and create the epic breakdown
-
-This keeps each session focused and manageable."
-
-If continue:
-"Let's continue with epic breakdown here..."
-[Proceed with create-epics-and-stories workflow]
-Set project_track based on workflow status (BMad Method or Enterprise Method)
-Generate epic_details for the epics breakdown document</action>
-
-<template-output>project_track</template-output>
-</step>
-
-<step n="11" goal="Complete PRD and suggest next steps">
 <template-output>product_value_summary</template-output>
 
 <check if="standalone_mode != true">
   <action>Load the FULL file: {status_file}</action>
   <action>Update workflow_status["prd"] = "{default_output_file}"</action>
   <action>Save file, preserving ALL comments and structure</action>
-</check>
+
+<action>Check workflow path to determine next expected workflows:
+
+- Look for "create-epics-and-stories" as optional after PRD
+- Look for "create-design" as conditional (if_has_ui)
+- Look for "create-epics-and-stories-after-ux" as optional
+- Identify the required next phase workflow
+  </action>
+  </check>
 
 <output>**✅ PRD Complete, {user_name}!**
 
-Your product requirements are documented and ready for implementation.
-
-**Created:**
-
-- **PRD.md** - Complete requirements adapted to {project_type} and {domain}
+**Created:** PRD.md with {{fr_count}} FRs and NFRs
 
 **Next Steps:**
 
-1. **Epic Breakdown** (Required)
-   Run: `workflow create-epics-and-stories` to decompose requirements into implementable stories
+<check if="standalone_mode != true">
+Based on your {{project_track}} workflow path, you can:
 
-2. **UX Design** (If UI exists)
-   Run: `workflow ux-design` for detailed user experience design
+**Option A: Create Epic Breakdown Now** (Optional)
+`workflow create-epics-and-stories`
 
-3. **Architecture** (Recommended)
-   Run: `workflow create-architecture` for technical architecture decisions
+- Creates basic epic structure from PRD
+- Can be enhanced later with UX/Architecture context
 
-What makes your product special - {product_value_summary} - is captured throughout the PRD and will guide all subsequent work.
+<check if="UI_exists">
+**Option B: UX Design First** (Recommended if UI)
+   `workflow create-design`
+   - Design user experience and interactions
+   - Epic breakdown can incorporate UX details later
+</check>
+
+**Option C: Skip to Architecture**
+`workflow create-architecture`
+
+- Define technical decisions
+- Epic breakdown created after with full context
+
+**Recommendation:** {{if UI_exists}}Do UX Design first, then Architecture, then create epics with full context{{else}}Go straight to Architecture, then create epics{{/if}}
+</check>
+
+<check if="standalone_mode == true">
+**Typical next workflows:**
+1. `workflow create-design` - UX Design (if UI exists)
+2. `workflow create-architecture` - Technical architecture
+3. `workflow create-epics-and-stories` - Epic breakdown
+
+**Note:** Epics can be created at any point but have richer detail when created after UX/Architecture.
+</check>
 </output>
 </step>
 
