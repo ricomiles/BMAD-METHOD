@@ -2,7 +2,8 @@
 
 <critical>The workflow execution engine is governed by: {project-root}/{bmad_folder}/core/tasks/workflow.xml</critical>
 <critical>You MUST have already loaded and processed: {project-root}/{bmad_folder}/bmb/workflows/create-agent/workflow.yaml</critical>
-<critical>Study YAML agent examples in: {project-root}/{bmad_folder}/bmm/agents/ for patterns</critical>
+<critical>Study YAML agent examples in: {example_agents_dir} for patterns</critical>
+<critical>Reference activation conventions from: {agent_activation_rules}</critical>
 <critical>Communicate in {communication_language} throughout the agent creation process</critical>
 
 <workflow>
