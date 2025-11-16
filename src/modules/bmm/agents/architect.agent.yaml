@@ -28,9 +28,9 @@ agent:
       checklist: "{project-root}/{bmad_folder}/bmm/workflows/3-solutioning/architecture/checklist.md"
       description: Validate Architecture Document
 
-    - trigger: solutioning-gate-check
-      workflow: "{project-root}/{bmad_folder}/bmm/workflows/3-solutioning/solutioning-gate-check/workflow.yaml"
-      description: Validate solutioning is complete
+    - trigger: implementation-readiness
+      workflow: "{project-root}/{bmad_folder}/bmm/workflows/3-solutioning/implementation-readiness/workflow.yaml"
+      description: Validate implementation readiness - PRD, UX, Architecture, Epics aligned
 
     - trigger: party-mode
       workflow: "{project-root}/{bmad_folder}/core/workflows/party-mode/workflow.yaml"
