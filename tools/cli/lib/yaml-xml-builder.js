@@ -209,7 +209,7 @@ class YamlXmlBuilder {
 
     // Menu section (support both 'menu' and legacy 'commands')
     const menuItems = agent.menu || agent.commands || [];
-    xml += this.buildCommandsXml(menuItems);
+    xml += this.buildCommandsXml(menuItems, buildMetadata.forWebBundle);
 
     xml += '</agent>\n';
     xml += '```\n';
@@ -310,8 +310,10 @@ class YamlXmlBuilder {
   /**
    * Build menu XML section (renamed from commands for clarity)
    * Auto-injects *help and *exit, adds * prefix to all triggers
+   * @param {Array} menuItems - Menu items from YAML
+   * @param {boolean} forWebBundle - Whether building for web bundle
    */
-  buildCommandsXml(menuItems) {
+  buildCommandsXml(menuItems, forWebBundle = false) {
     let xml = '  <menu>\n';
 
     // Always inject *help first
@@ -320,6 +322,14 @@ class YamlXmlBuilder {
     // Add user-defined menu items with * prefix
     if (menuItems && menuItems.length > 0) {
       for (const item of menuItems) {
+        // Skip ide-only items when building for web bundles
+        if (forWebBundle && item['ide-only'] === true) {
+          continue;
+        }
+        // Skip web-only items when NOT building for web bundles (i.e., IDE/local installation)
+        if (!forWebBundle && item['web-only'] === true) {
+          continue;
+        }
         // Build command attributes - add * prefix if not present
         let trigger = item.trigger || '';
         if (!trigger.startsWith('*')) {
