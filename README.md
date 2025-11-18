@@ -167,9 +167,19 @@ Build your own agents, workflows, and modules using the BMad-CORE framework.
 
 **Perfect For:** Creating domain-specific solutions (legal, medical, finance, education, creative, etc.) or extending BMM with custom development workflows.
 
+**Install Custom Agents:**
+
+```bash
+# Install and personalize standalone agents
+npx bmad agent-install
+```
+
+Includes reference agents you can copy, customize, and install with personalized behavior. **[→ Custom Agent Installation Guide](./docs/custom-agent-installation.md)**
+
 **Documentation:**
 
 - **[BMB Module Overview](./src/modules/bmb/README.md)** - Complete reference
+- **[Custom Agent Installation](./docs/custom-agent-installation.md)** - Install standalone simple and expert agents
 - **[Create Agent Workflow](./src/modules/bmb/workflows/create-agent/README.md)** - Build custom agents
 - **[Create Workflow](./src/modules/bmb/workflows/create-workflow/README.md)** - Design guided processes
 - **[Create Module](./src/modules/bmb/workflows/create-module/README.md)** - Package complete solutions
