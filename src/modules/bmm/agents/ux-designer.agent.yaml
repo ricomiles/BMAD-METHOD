@@ -29,6 +29,10 @@ agent:
       document: "{output_folder}/ux-spec.md"
       description: Validate UX Specification and Design Artifacts
 
+    - trigger: create-excalidraw-wireframe
+      workflow: "{project-root}/{bmad_folder}/bmm/workflows/diagrams/create-wireframe/workflow.yaml"
+      description: Create website or app wireframe (Excalidraw)
+
     - trigger: party-mode
       workflow: "{project-root}/{bmad_folder}/core/workflows/party-mode/workflow.yaml"
       description: Bring the whole team in to chat with other expert agents from the party

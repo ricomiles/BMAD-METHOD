@@ -8,7 +8,7 @@
 <workflow>
 
   <step n="0" goal="Contextual Analysis">
-    <action>Review user's request and extract: DFD level, processes, data stores, external entities, save location</action>
+    <action>Review user's request and extract: DFD level, processes, data stores, external entities</action>
     <check if="ALL requirements clear"><action>Skip to Step 4</action></check>
   </step>
 
@@ -20,14 +20,13 @@
       3. Level 2 DFD - Detailed sub-processes
       4. Custom - Specify your requirements
     </action>
-    <action>WAIT for selection, store in {{dfd_level}}</action>
+    <action>WAIT for selection</action>
   </step>
 
   <step n="2" goal="Gather Requirements" elicit="true">
-    <action>Ask process count</action>
-    <action>Ask data store count</action>
-    <action>Ask external entity count</action>
-    <action>Ask save location</action>
+    <action>Ask: "Describe the processes, data stores, and external entities in your system"</action>
+    <action>WAIT for user description</action>
+    <action>Summarize what will be included and confirm with user</action>
   </step>
 
   <step n="3" goal="Theme Setup" elicit="true">
@@ -106,12 +105,12 @@
   <step n="7" goal="Optimize and Save">
     <action>Verify DFD rules compliance</action>
     <action>Strip unused elements and elements with isDeleted: true</action>
-    <action>Save to {{save_location}}</action>
+    <action>Save to {{default_output_file}}</action>
   </step>
 
   <step n="8" goal="Validate JSON Syntax">
     <critical>NEVER delete the file if validation fails - always fix syntax errors</critical>
-    <action>Run: node -e "JSON.parse(require('fs').readFileSync('{{save_location}}', 'utf8')); console.log('✓ Valid JSON')"</action>
+    <action>Run: node -e "JSON.parse(require('fs').readFileSync('{{default_output_file}}', 'utf8')); console.log('✓ Valid JSON')"</action>
     <check if="validation fails (exit code 1)">
       <action>Read the error message carefully - it shows the syntax error and position</action>
       <action>Open the file and navigate to the error location</action>

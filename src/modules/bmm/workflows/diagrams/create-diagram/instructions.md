@@ -8,7 +8,7 @@
 <workflow>
 
   <step n="0" goal="Contextual Analysis">
-    <action>Review user's request and extract: diagram type, components/entities, relationships, notation preferences, save location</action>
+    <action>Review user's request and extract: diagram type, components/entities, relationships, notation preferences</action>
     <check if="ALL requirements clear"><action>Skip to Step 5</action></check>
     <check if="SOME requirements clear"><action>Only ask about missing info in Steps 1-2</action></check>
   </step>
@@ -24,15 +24,14 @@
       6. Network Diagram
       7. Other
     </action>
-    <action>WAIT for selection, store in {{diagram_type}}</action>
+    <action>WAIT for selection</action>
   </step>
 
   <step n="2" goal="Gather Requirements" elicit="true">
-    <action>Ask component count (Small/Medium/Large/Very Large)</action>
-    <action>Ask relationship types (Simple/Hierarchical/Many-to-many/Mixed)</action>
-    <action>Ask notation standard (Standard/Simplified/Strict UML-ERD/Company specific)</action>
-    <action>Ask save location (Default/Custom/Architecture folder/Specific folder)</action>
-    <action>Store all responses in variables</action>
+    <action>Ask: "Describe the components/entities and their relationships"</action>
+    <action>Ask: "What notation standard? (Standard/Simplified/Strict UML-ERD)"</action>
+    <action>WAIT for user input</action>
+    <action>Summarize what will be included and confirm with user</action>
   </step>
 
   <step n="3" goal="Check for Existing Theme" elicit="true">
@@ -117,12 +116,12 @@
 
   <step n="8" goal="Optimize and Save">
     <action>Strip unused elements and elements with isDeleted: true</action>
-    <action>Save to {{save_location}}</action>
+    <action>Save to {{default_output_file}}</action>
   </step>
 
   <step n="9" goal="Validate JSON Syntax">
     <critical>NEVER delete the file if validation fails - always fix syntax errors</critical>
-    <action>Run: node -e "JSON.parse(require('fs').readFileSync('{{save_location}}', 'utf8')); console.log('✓ Valid JSON')"</action>
+    <action>Run: node -e "JSON.parse(require('fs').readFileSync('{{default_output_file}}', 'utf8')); console.log('✓ Valid JSON')"</action>
     <check if="validation fails (exit code 1)">
       <action>Read the error message carefully - it shows the syntax error and position</action>
       <action>Open the file and navigate to the error location</action>
@@ -131,7 +130,7 @@
       <action>Re-run validation with the same command</action>
       <action>Repeat until validation passes</action>
     </check>
-    <action>Once validation passes, confirm: "Diagram created at {{save_location}}. Open to view?"</action>
+    <action>Once validation passes, confirm: "Diagram created at {{default_output_file}}. Open to view?"</action>
   </step>
 
   <step n="10" goal="Validate Content">

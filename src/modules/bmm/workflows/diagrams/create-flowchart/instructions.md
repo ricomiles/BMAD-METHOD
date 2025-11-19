@@ -38,7 +38,6 @@
       5. Other - Describe your specific flowchart needs
     </action>
     <action>WAIT for user selection (1-5)</action>
-    <action>Store selection in {{flowchart_type}}</action>
 
     <action>Ask Question 2: "How many main steps are in this flow?"</action>
     <action>Present numbered options:
@@ -72,7 +71,7 @@
       <action>Ask for specific path</action>
       <action>WAIT for user input</action>
     </check>
-    <action>Store final path in {{save_location}}</action>
+    <action>Store final path in {{default_output_file}}</action>
   </step>
 
   <step n="2" goal="Check for Existing Theme" elicit="true">
@@ -217,12 +216,12 @@
 
   <step n="7" goal="Optimize and Save">
     <action>Strip unused elements and elements with isDeleted: true</action>
-    <action>Save to {{save_location}}</action>
+    <action>Save to {{default_output_file}}</action>
   </step>
 
   <step n="8" goal="Validate JSON Syntax">
     <critical>NEVER delete the file if validation fails - always fix syntax errors</critical>
-    <action>Run: node -e "JSON.parse(require('fs').readFileSync('{{save_location}}', 'utf8')); console.log('✓ Valid JSON')"</action>
+    <action>Run: node -e "JSON.parse(require('fs').readFileSync('{{default_output_file}}', 'utf8')); console.log('✓ Valid JSON')"</action>
     <check if="validation fails (exit code 1)">
       <action>Read the error message carefully - it shows the syntax error and position</action>
       <action>Open the file and navigate to the error location</action>
@@ -231,7 +230,7 @@
       <action>Re-run validation with the same command</action>
       <action>Repeat until validation passes</action>
     </check>
-    <action>Once validation passes, confirm with user: "Flowchart created at {{save_location}}. Open to view?"</action>
+    <action>Once validation passes, confirm with user: "Flowchart created at {{default_output_file}}. Open to view?"</action>
   </step>
 
   <step n="9" goal="Validate Content">

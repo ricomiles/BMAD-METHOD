@@ -30,7 +30,7 @@ agent:
       description: Create Product Requirements Document (PRD)
 
     - trigger: create-epics-and-stories
-      workflow: "{project-root}/{bmad_folder}/bmm/workflows/2-plan-workflows/create-epics-and-stories/workflow.yaml"
+      workflow: "{project-root}/{bmad_folder}/bmm/workflows/3-solutioning/create-epics-and-stories/workflow.yaml"
       description: Break PRD requirements into implementable epics and stories
 
     - trigger: validate-prd
@@ -53,6 +53,10 @@ agent:
       workflow: "{project-root}/{bmad_folder}/bmm/workflows/4-implementation/correct-course/workflow.yaml"
       description: Course Correction Analysis
       ide-only: true
+
+    - trigger: create-excalidraw-flowchart
+      workflow: "{project-root}/{bmad_folder}/bmm/workflows/diagrams/create-flowchart/workflow.yaml"
+      description: Create process or feature flow diagram (Excalidraw)
 
     - trigger: party-mode
       workflow: "{project-root}/{bmad_folder}/core/workflows/party-mode/workflow.yaml"

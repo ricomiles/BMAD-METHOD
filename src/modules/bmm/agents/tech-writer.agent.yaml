@@ -38,9 +38,21 @@ agent:
       workflow: "todo"
       description: Review documentation quality and suggest improvements
 
-    - trigger: generate-diagram
+    - trigger: generate-mermaid
       action: "Create a Mermaid diagram based on user description. Ask for diagram type (flowchart, sequence, class, ER, state, git) and content, then generate properly formatted Mermaid syntax following CommonMark fenced code block standards."
       description: Generate Mermaid diagrams (architecture, sequence, flow, ER, class, state)
+
+    - trigger: create-excalidraw-flowchart
+      workflow: "{project-root}/{bmad_folder}/bmm/workflows/diagrams/create-flowchart/workflow.yaml"
+      description: Create Excalidraw flowchart for processes and logic flows
+
+    - trigger: create-excalidraw-diagram
+      workflow: "{project-root}/{bmad_folder}/bmm/workflows/diagrams/create-diagram/workflow.yaml"
+      description: Create Excalidraw system architecture or technical diagram
+
+    - trigger: create-excalidraw-dataflow
+      workflow: "{project-root}/{bmad_folder}/bmm/workflows/diagrams/create-dataflow/workflow.yaml"
+      description: Create Excalidraw data flow diagram
 
     - trigger: validate-doc
       action: "Review the specified document against CommonMark standards, technical writing best practices, and style guide compliance. Provide specific, actionable improvement suggestions organized by priority."

@@ -21,7 +21,7 @@
       4. Tablet App
       5. Multi-platform
     </action>
-    <action>WAIT for selection, store in {{wireframe_type}}</action>
+    <action>WAIT for selection</action>
   </step>
 
   <step n="2" goal="Gather Requirements" elicit="true">
@@ -108,12 +108,12 @@
 
   <step n="8" goal="Optimize and Save">
     <action>Strip unused elements and elements with isDeleted: true</action>
-    <action>Save to {{save_location}}</action>
+    <action>Save to {{default_output_file}}</action>
   </step>
 
   <step n="9" goal="Validate JSON Syntax">
     <critical>NEVER delete the file if validation fails - always fix syntax errors</critical>
-    <action>Run: node -e "JSON.parse(require('fs').readFileSync('{{save_location}}', 'utf8')); console.log('✓ Valid JSON')"</action>
+    <action>Run: node -e "JSON.parse(require('fs').readFileSync('{{default_output_file}}', 'utf8')); console.log('✓ Valid JSON')"</action>
     <check if="validation fails (exit code 1)">
       <action>Read the error message carefully - it shows the syntax error and position</action>
       <action>Open the file and navigate to the error location</action>

@@ -111,6 +111,8 @@ Automatically adjusts planning depth and documentation based on project needs:
 3. **Phase 3: Solutioning** (Track-dependent) - Architecture, (Coming soon: security, DevOps, test strategy)
 4. **Phase 4: Implementation** (Iterative) - Story-centric development with just-in-time context
 
+> **📊 [View Complete Workflow Diagram](./src/modules/bmm/docs/images/workflow-method-greenfield.svg)** - Visual flowchart showing all phases, agents, and decision points for the BMad Method (Standard Greenfield track)
+
 **🤖 12 Specialized Agents**
 
 PM • Analyst • Architect • Scrum Master • Developer • Test Architect (TEA) • UX Designer • Technical Writer • Game Designer • Game Developer • Game Architect • BMad Master (Orchestrator)

@@ -13,5 +13,5 @@ Aside from stability and bug fixes found during the alpha period - the main focu
 - knowledge base for BMM
 - Module repository and submission process defined
 - MCP Injections based on installation selection
-- sub agent for opencode and claude code optimization
+- sub agent for open-code and claude code optimization
 - TDD Workflow Integration

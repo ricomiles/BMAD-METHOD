@@ -10,6 +10,45 @@ agent.yaml → Handlebars processing → XML generation → frontmatter.md
 
 Source: `tools/cli/lib/agent/compiler.js`
 
+## File Naming Convention
+
+**CRITICAL:** Agent filenames must be ROLE-BASED, not persona-based.
+
+**Why:** Users can customize the agent's persona name via `customize.yaml` config. The filename provides stable identity.
+
+**Correct:**
+
+```
+presentation-master.agent.yaml  ← Role/function
+tech-writer.agent.yaml          ← Role/function
+code-reviewer.agent.yaml        ← Role/function
+```
+
+**Incorrect:**
+
+```
+caravaggio.agent.yaml    ← Persona name (users might rename to "Pablo")
+paige.agent.yaml         ← Persona name (users might rename to "Sarah")
+rex.agent.yaml           ← Persona name (users might rename to "Max")
+```
+
+**Pattern:**
+
+- Filename: `{role-or-function}.agent.yaml` (kebab-case)
+- Metadata ID: `{bmad_folder}/{module}/agents/{role-or-function}.md`
+- Persona Name: User-customizable in metadata or customize.yaml
+
+**Example:**
+
+```yaml
+# File: presentation-master.agent.yaml
+agent:
+  metadata:
+    id: '{bmad_folder}/cis/agents/presentation-master.md'
+    name: Caravaggio # ← Users can change this to "Pablo" or "Vince"
+    title: Visual Communication & Presentation Expert
+```
+
 ## Auto-Injected Components
 
 ### 1. Frontmatter
