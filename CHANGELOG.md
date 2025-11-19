@@ -2,6 +2,14 @@
 
 ## [Unreleased]
 
+## [6.0.0-alpha.12]
+
+**Release: November 19, 2025**
+
+### 🐛 Bug Fixes
+
+- Added missing `yaml` dependency to fix `MODULE_NOT_FOUND` error when running `npx bmad-method install`
+
 ## [6.0.0-alpha.11]
 
 **Release: November 18, 2025**
