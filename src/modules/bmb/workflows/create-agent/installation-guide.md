@@ -56,7 +56,7 @@ npx bmad-method agent-install    # Works anywhere without cloning
 # Install specific agent file
 npx bmad-method agent-install --source ./my-agent.agent.yaml
 
-# Use default configuration (no prompts)
+# Use default configuration (non-interactive, no prompts)
 npx bmad-method agent-install --defaults
 
 # Install to specific destination

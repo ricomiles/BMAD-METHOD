@@ -46,7 +46,7 @@ bmad agent-install -s path/to/my-agent
 # Install a specific .agent.yaml file (simple agent)
 bmad agent-install -s path/to/my-agent.agent.yaml
 
-# Install with defaults (skip all prompts)
+# Install with defaults (non-interactive)
 bmad agent-install -s path/to/my-agent -d
 
 # Install to a specific destination project
