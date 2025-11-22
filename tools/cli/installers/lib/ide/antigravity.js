@@ -458,6 +458,53 @@ class AntigravitySetup extends BaseIdeSetup {
       console.log(chalk.dim(`  Total subagents installed: ${copiedCount}`));
     }
   }
+
+  /**
+   * Install a custom agent launcher for Antigravity
+   * @param {string} projectDir - Project directory
+   * @param {string} agentName - Agent name (e.g., "fred-commit-poet")
+   * @param {string} agentPath - Path to compiled agent (relative to project root)
+   * @param {Object} metadata - Agent metadata
+   * @returns {Object} Installation result
+   */
+  async installCustomAgentLauncher(projectDir, agentName, agentPath, metadata) {
+    const agentDir = path.join(projectDir, this.configDir);
+
+    // Create .agent directory if it doesn't exist
+    await fs.ensureDir(agentDir);
+
+    // Create custom agent launcher with same pattern as regular agents
+    const launcherContent = `name: '${agentName}'
+description: '${agentName} agent'
+usage: |
+  Custom BMAD agent: ${agentName}
+
+  Launch with: /${agentName}
+
+  You must fully embody this agent's persona and follow all activation instructions exactly as specified. NEVER break character until given an exit command.
+<agent-activation CRITICAL="TRUE">
+1. LOAD the FULL agent file from @${agentPath}
+2. READ its entire contents - this contains the complete agent persona, menu, and instructions
+3. EXECUTE as ${agentName} with full persona adoption
+</agent-activation>
+
+---
+
+⚠️ **IMPORTANT**: Run @${agentPath} to load the complete agent before using this launcher!`;
+
+    const fileName = `bmad-custom-agents-${agentName}.md`;
+    const launcherPath = path.join(agentDir, fileName);
+
+    // Write the launcher file
+    await fs.writeFile(launcherPath, launcherContent, 'utf8');
+
+    return {
+      ide: 'antigravity',
+      path: path.relative(projectDir, launcherPath),
+      command: `/${agentName}`,
+      type: 'custom-agent-launcher',
+    };
+  }
 }
 
 module.exports = { AntigravitySetup };
