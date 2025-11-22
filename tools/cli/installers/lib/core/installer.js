@@ -1619,7 +1619,17 @@ class Installer {
         }
       }
 
-      // Regenerate manifests after compilation
+      // Reinstall custom agents from _cfg/custom/agents/ sources
+      spinner.start('Rebuilding custom agents...');
+      const customAgentResults = await this.reinstallCustomAgents(projectDir, bmadDir);
+      if (customAgentResults.count > 0) {
+        spinner.succeed(`Rebuilt ${customAgentResults.count} custom agent${customAgentResults.count > 1 ? 's' : ''}`);
+        agentCount += customAgentResults.count;
+      } else {
+        spinner.succeed('No custom agents found to rebuild');
+      }
+
+      // Regenerate manifests after compilation (including custom agents)
       spinner.start('Regenerating manifests...');
       const installedModules = entries
         .filter((e) => e.isDirectory() && e.name !== '_cfg' && e.name !== 'docs' && e.name !== 'agents' && e.name !== 'core')
