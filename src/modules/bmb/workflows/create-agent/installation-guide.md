@@ -50,6 +50,22 @@ npx bmad-method agent-install    # Works anywhere without cloning
 - `bmad install` → "Compile Agents" (rebuild all agents)
 - `bmad install` → "Quick Update" (during upgrades)
 
+**Advanced Parameters**:
+
+```bash
+# Install specific agent file
+npx bmad-method agent-install --source ./my-agent.agent.yaml
+
+# Use default configuration (no prompts)
+npx bmad-method agent-install --defaults
+
+# Install to specific destination
+npx bmad-method agent-install --destination ./my-project
+
+# Combine parameters
+npx bmad-method agent-install --source ./my-agent.agent.yaml --defaults --destination ./my-project
+```
+
 **When to use which**:
 
 - **Option 1**: Best for new agents or when you want custom persona names

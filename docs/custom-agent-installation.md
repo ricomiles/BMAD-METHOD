@@ -37,20 +37,20 @@ Options:
 
 ## Installing from Custom Locations
 
-Use the `-p` / `--path` option to install agents from any location:
+Use the `-s` / `--source` option to install agents from any location:
 
 ```bash
 # Install agent from a custom folder (expert agent with sidecar)
-bmad agent-install -p path/to/my-agent
+bmad agent-install -s path/to/my-agent
 
 # Install a specific .agent.yaml file (simple agent)
-bmad agent-install -p path/to/my-agent.agent.yaml
+bmad agent-install -s path/to/my-agent.agent.yaml
 
 # Install with defaults (skip all prompts)
-bmad agent-install -p path/to/my-agent -d
+bmad agent-install -s path/to/my-agent -d
 
-# Install to a specific target project
-bmad agent-install -p path/to/my-agent -t /path/to/target/project
+# Install to a specific destination project
+bmad agent-install -s path/to/my-agent --destination /path/to/destination/project
 ```
 
 This is useful when:
