@@ -174,6 +174,57 @@ BMAD ${workflow.module.toUpperCase()} module
       console.log(chalk.dim(`  Removed old BMAD commands`));
     }
   }
+
+  /**
+   * Install a custom agent launcher for Auggie
+   * @param {string} projectDir - Project directory
+   * @param {string} agentName - Agent name (e.g., "fred-commit-poet")
+   * @param {string} agentPath - Path to compiled agent (relative to project root)
+   * @param {Object} metadata - Agent metadata
+   * @returns {Object} Installation result
+   */
+  async installCustomAgentLauncher(projectDir, agentName, agentPath, metadata) {
+    // Auggie uses .augment/commands directory
+    const location = path.join(projectDir, '.augment', 'commands');
+    const bmadCommandsDir = path.join(location, 'bmad');
+
+    // Create .augment/commands/bmad directory if it doesn't exist
+    await fs.ensureDir(bmadCommandsDir);
+
+    // Create custom agent launcher
+    const launcherContent = `---
+description: "Use the ${agentName} custom agent"
+---
+
+# ${agentName} Custom Agent
+
+**⚠️ IMPORTANT**: Run @${agentPath} first to load the complete agent!
+
+This is a launcher for the custom BMAD agent "${agentName}".
+
+## Usage
+1. First run: \`${agentPath}\` to load the complete agent
+2. Then use this command to activate ${agentName}
+
+The agent will follow the persona and instructions from the main agent file.
+
+## Module
+BMAD Custom agent
+`;
+
+    const fileName = `custom-${agentName.toLowerCase()}.md`;
+    const launcherPath = path.join(bmadCommandsDir, fileName);
+
+    // Write the launcher file
+    await fs.writeFile(launcherPath, launcherContent, 'utf8');
+
+    return {
+      ide: 'auggie',
+      path: path.relative(projectDir, launcherPath),
+      command: agentName,
+      type: 'custom-agent-launcher',
+    };
+  }
 }
 
 module.exports = { AuggieSetup };
