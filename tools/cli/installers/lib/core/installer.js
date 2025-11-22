@@ -2265,45 +2265,58 @@ class Installer {
   }
 
   /**
-   * Reinstall custom agents from _cfg/custom/agents/ sources
+   * Reinstall custom agents from backup and source locations
    * This preserves custom agents across quick updates/reinstalls
    * @param {string} projectDir - Project directory
    * @param {string} bmadDir - BMAD installation directory
    * @returns {Object} Result with count and agent names
    */
   async reinstallCustomAgents(projectDir, bmadDir) {
-    const customAgentsCfgDir = path.join(bmadDir, '_cfg', 'custom', 'agents');
+    const {
+      discoverAgents,
+      loadAgentConfig,
+      extractManifestData,
+      addToManifest,
+      createIdeSlashCommands,
+      updateManifestYaml,
+    } = require('../../../lib/agent/installer');
+    const { compileAgent } = require('../../../lib/agent/compiler');
+
     const results = { count: 0, agents: [] };
 
-    if (!(await fs.pathExists(customAgentsCfgDir))) {
+    // Check multiple locations for custom agents
+    const sourceLocations = [
+      path.join(bmadDir, '_cfg', 'custom', 'agents'), // Backup location
+      path.join(bmadDir, 'custom', 'src', 'agents'), // BMAD folder source location
+      path.join(projectDir, 'custom', 'src', 'agents'), // Project root source location
+    ];
+
+    let foundAgents = [];
+    let processedAgents = new Set(); // Track to avoid duplicates
+
+    // Discover agents from all locations
+    for (const location of sourceLocations) {
+      if (await fs.pathExists(location)) {
+        const agents = discoverAgents(location);
+        // Only add agents we haven't processed yet
+        const newAgents = agents.filter((agent) => !processedAgents.has(agent.name));
+        foundAgents.push(...newAgents);
+        for (const agent of newAgents) processedAgents.add(agent.name);
+      }
+    }
+
+    if (foundAgents.length === 0) {
       return results;
     }
 
     try {
-      const {
-        discoverAgents,
-        loadAgentConfig,
-        extractManifestData,
-        addToManifest,
-        createIdeSlashCommands,
-        updateManifestYaml,
-      } = require('../../../lib/agent/installer');
-      const { compileAgent } = require('../../../lib/agent/compiler');
-
-      // Discover custom agents in _cfg/custom/agents/
-      const agents = discoverAgents(customAgentsCfgDir);
-
-      if (agents.length === 0) {
-        return results;
-      }
-
       const customAgentsDir = path.join(bmadDir, 'custom', 'agents');
       await fs.ensureDir(customAgentsDir);
 
       const manifestFile = path.join(bmadDir, '_cfg', 'agent-manifest.csv');
       const manifestYamlFile = path.join(bmadDir, '_cfg', 'manifest.yaml');
 
-      for (const agent of agents) {
+      for (const agent of foundAgents) {
         try {
           const agentConfig = loadAgentConfig(agent.yamlFile);
           const finalAgentName = agent.name; // Already named correctly from save
@@ -2337,6 +2350,16 @@ class Installer {
 
           // Write compiled agent
           await fs.writeFile(compiledPath, xml, 'utf8');
+
+          // Backup source YAML to _cfg/custom/agents if not already there
+          const cfgAgentsBackupDir = path.join(bmadDir, '_cfg', 'custom', 'agents');
+          await fs.ensureDir(cfgAgentsBackupDir);
+          const backupYamlPath = path.join(cfgAgentsBackupDir, `${finalAgentName}.agent.yaml`);
+
+          // Only backup if source is not already in backup location
+          if (agent.yamlFile !== backupYamlPath) {
+            await fs.copy(agent.yamlFile, backupYamlPath);
+          }
 
           // Copy sidecar files if expert agent
           if (agent.hasSidecar && agent.type === 'expert') {
