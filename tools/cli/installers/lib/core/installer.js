@@ -2371,7 +2371,6 @@ class Installer {
           if (await fs.pathExists(manifestFile)) {
             const manifestData = extractManifestData(xml, { ...metadata, name: finalAgentName }, relativePath, 'custom');
             manifestData.name = finalAgentName;
-            manifestData.displayName = metadata.name || finalAgentName;
             manifestData.path = relativePath;
             addToManifest(manifestFile, manifestData);
           }
