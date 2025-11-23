@@ -13,7 +13,7 @@ user_skill_level: "{config_source}:user_skill_level"
 date: system-generated
 
 # Project context
-project_context: "{output_folder}/project-context.md"
+project_context: "**/project-context.md"
 
 # Workflow components
 installed_path: "{project-root}/{bmad_folder}/bmm/workflows/bmad-quick-flow/quick-dev"

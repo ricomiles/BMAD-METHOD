@@ -21,6 +21,8 @@ validation: "{installed_path}/checklist.md"
 template: false
 
 variables:
+  # Project context
+  project_context: "**/project-context.md"
   story_dir: "{sprint_artifacts}"
   tech_spec_search_dir: "{output_folder}"
   tech_spec_glob_template: "tech-spec-epic-{{epic_num}}*.md"

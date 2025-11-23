@@ -322,6 +322,23 @@
 Review was saved to story file, but sprint-status.yaml may be out of sync.
         </output>
       </check>
+
+      <!-- Additional: Update story file status directly (replaces story-done workflow) -->
+      <check if="{{target_status}} == 'done'">
+        <action>Open {{story_path}} and update the story file</action>
+        <action>Find the "Status:" line (usually at the top)</action>
+        <action>Update story file: Change Status to "done"</action>
+        <action>Under 'Dev Agent Record' → 'Completion Notes' (create if missing), add:
+```
+### Senior Developer Review Completion
+**Date:** {date}
+**Outcome:** {{outcome}}
+**Review Notes:** Code review completed and approved
+```
+        </action>
+        <action>Save the story file</action>
+        <output>✅ Story file updated → Status: done</output>
+      </check>
     </check>
   </step>
 
