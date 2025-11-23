@@ -1,4 +1,5 @@
 const path = require('node:path');
+const fs = require('fs-extra');
 const { BaseIdeSetup } = require('./_base-ide');
 const chalk = require('chalk');
 const { getProjectRoot, getSourcePath, getModulePath } = require('../../../lib/project-root');
@@ -44,7 +45,6 @@ class AntigravitySetup extends BaseIdeSetup {
       const injectionConfigPath = path.join(sourceModulesPath, moduleName, 'sub-modules', 'antigravity', 'injections.yaml');
 
       if (await this.exists(injectionConfigPath)) {
-        const fs = require('fs-extra');
         const yaml = require('js-yaml');
 
         try {
@@ -88,7 +88,6 @@ class AntigravitySetup extends BaseIdeSetup {
    * @param {string} projectDir - Project directory
    */
   async cleanup(projectDir) {
-    const fs = require('fs-extra');
     const bmadWorkflowsDir = path.join(projectDir, this.configDir, this.workflowsDir, 'bmad');
 
     if (await fs.pathExists(bmadWorkflowsDir)) {
@@ -191,7 +190,6 @@ class AntigravitySetup extends BaseIdeSetup {
    * Read and process file content
    */
   async readAndProcess(filePath, metadata) {
-    const fs = require('fs-extra');
     const content = await fs.readFile(filePath, 'utf8');
     return this.processContent(content, metadata);
   }
@@ -208,7 +206,6 @@ class AntigravitySetup extends BaseIdeSetup {
    * Get agents from source modules (not installed location)
    */
   async getAgentsFromSource(sourceDir, selectedModules) {
-    const fs = require('fs-extra');
     const agents = [];
 
     // Add core agents
@@ -387,7 +384,6 @@ class AntigravitySetup extends BaseIdeSetup {
    * Inject content at specified point in file
    */
   async injectContent(projectDir, injection, subagentChoices = null) {
-    const fs = require('fs-extra');
     const targetPath = path.join(projectDir, injection.file);
 
     if (await this.exists(targetPath)) {
@@ -413,7 +409,6 @@ class AntigravitySetup extends BaseIdeSetup {
    * Copy selected subagents to appropriate Antigravity agents directory
    */
   async copySelectedSubagents(projectDir, handlerBaseDir, subagentConfig, choices, location) {
-    const fs = require('fs-extra');
     const os = require('node:os');
 
     // Determine target directory based on user choice
@@ -468,10 +463,12 @@ class AntigravitySetup extends BaseIdeSetup {
    * @returns {Object} Installation result
    */
   async installCustomAgentLauncher(projectDir, agentName, agentPath, metadata) {
+    // Create .agent/workflows/bmad directory structure (same as regular agents)
     const agentDir = path.join(projectDir, this.configDir);
+    const workflowsDir = path.join(agentDir, this.workflowsDir);
+    const bmadWorkflowsDir = path.join(workflowsDir, 'bmad');
 
-    // Create .agent directory if it doesn't exist
-    await fs.ensureDir(agentDir);
+    await fs.ensureDir(bmadWorkflowsDir);
 
     // Create custom agent launcher with same pattern as regular agents
     const launcherContent = `name: '${agentName}'
@@ -493,7 +490,7 @@ usage: |
 ⚠️ **IMPORTANT**: Run @${agentPath} to load the complete agent before using this launcher!`;
 
     const fileName = `bmad-custom-agents-${agentName}.md`;
-    const launcherPath = path.join(agentDir, fileName);
+    const launcherPath = path.join(bmadWorkflowsDir, fileName);
 
     // Write the launcher file
     await fs.writeFile(launcherPath, launcherContent, 'utf8');

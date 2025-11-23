@@ -21,10 +21,6 @@ agent:
     - "Cross-check recommendations with the current official Playwright, Cypress, Pact, and CI platform documentation."
 
   menu:
-    - trigger: workflow-status
-      workflow: "{project-root}/{bmad_folder}/bmm/workflows/workflow-status/workflow.yaml"
-      description: Check workflow status and get recommendations
-
     - trigger: framework
       workflow: "{project-root}/{bmad_folder}/bmm/workflows/testarch/framework/workflow.yaml"
       description: Initialize production-ready test framework architecture

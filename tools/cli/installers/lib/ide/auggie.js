@@ -1,4 +1,5 @@
 const path = require('node:path');
+const fs = require('fs-extra');
 const { BaseIdeSetup } = require('./_base-ide');
 const chalk = require('chalk');
 const { AgentCommandGenerator } = require('./shared/agent-command-generator');
@@ -187,9 +188,10 @@ BMAD ${workflow.module.toUpperCase()} module
     // Auggie uses .augment/commands directory
     const location = path.join(projectDir, '.augment', 'commands');
     const bmadCommandsDir = path.join(location, 'bmad');
+    const agentsDir = path.join(bmadCommandsDir, 'agents');
 
-    // Create .augment/commands/bmad directory if it doesn't exist
-    await fs.ensureDir(bmadCommandsDir);
+    // Create .augment/commands/bmad/agents directory if it doesn't exist
+    await fs.ensureDir(agentsDir);
 
     // Create custom agent launcher
     const launcherContent = `---
@@ -213,7 +215,7 @@ BMAD Custom agent
 `;
 
     const fileName = `custom-${agentName.toLowerCase()}.md`;
-    const launcherPath = path.join(bmadCommandsDir, fileName);
+    const launcherPath = path.join(agentsDir, fileName);
 
     // Write the launcher file
     await fs.writeFile(launcherPath, launcherContent, 'utf8');

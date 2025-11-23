@@ -1629,14 +1629,9 @@ class Installer {
         spinner.succeed('No custom agents found to rebuild');
       }
 
-      // Regenerate manifests after compilation (including custom agents)
-      spinner.start('Regenerating manifests...');
-      const installedModules = entries
-        .filter((e) => e.isDirectory() && e.name !== '_cfg' && e.name !== 'docs' && e.name !== 'agents' && e.name !== 'core')
-        .map((e) => e.name);
-      const manifestGen = new ManifestGenerator();
-
-      // Get existing IDE list from manifest
+      // Skip full manifest regeneration during compileAgents to preserve custom agents
+      // Custom agents are already added to manifests during individual installation
+      // Only regenerate YAML manifest for IDE updates if needed
       const existingManifestPath = path.join(bmadDir, '_cfg', 'manifest.yaml');
       let existingIdes = [];
       if (await fs.pathExists(existingManifestPath)) {
@@ -1645,11 +1640,6 @@ class Installer {
         const manifest = yaml.load(manifestContent);
         existingIdes = manifest.ides || [];
       }
-
-      await manifestGen.generateManifests(bmadDir, installedModules, [], {
-        ides: existingIdes,
-      });
-      spinner.succeed('Manifests regenerated');
 
       // Update IDE configurations using the existing IDE list from manifest
       if (existingIdes && existingIdes.length > 0) {
@@ -2369,8 +2359,16 @@ class Installer {
 
           // Update manifest CSV
           if (await fs.pathExists(manifestFile)) {
-            const manifestData = extractManifestData(xml, { ...metadata, name: finalAgentName }, relativePath, 'custom');
-            manifestData.name = finalAgentName;
+            // Preserve YAML metadata for persona name, but override id for filename
+            const manifestMetadata = {
+              ...metadata,
+              id: relativePath, // Use the compiled agent path for id
+              name: metadata.name || finalAgentName, // Use YAML metadata.name (persona name) or fallback
+              title: metadata.title, // Use YAML title
+              icon: metadata.icon, // Use YAML icon
+            };
+            const manifestData = extractManifestData(xml, manifestMetadata, relativePath, 'custom');
+            manifestData.name = finalAgentName; // Use filename for the name field
             manifestData.path = relativePath;
             addToManifest(manifestFile, manifestData);
           }

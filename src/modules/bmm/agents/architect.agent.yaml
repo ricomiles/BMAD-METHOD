@@ -15,10 +15,6 @@ agent:
     principles: User journeys drive technical decisions. Embrace boring technology for stability. Design simple solutions that scale when needed. Developer productivity is architecture. Connect every decision to business value and user impact.
 
   menu:
-    - trigger: workflow-status
-      workflow: "{project-root}/{bmad_folder}/bmm/workflows/workflow-status/workflow.yaml"
-      description: Check workflow status and get recommendations
-
     - trigger: create-architecture
       workflow: "{project-root}/{bmad_folder}/bmm/workflows/3-solutioning/architecture/workflow.yaml"
       description: Produce a Scale Adaptive Architecture

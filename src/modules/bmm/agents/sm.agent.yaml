@@ -18,10 +18,6 @@ agent:
     - "When running *create-story, always run as *yolo. Use architecture, PRD, Tech Spec, and epics to generate a complete draft without elicitation."
 
   menu:
-    - trigger: workflow-status
-      workflow: "{project-root}/{bmad_folder}/bmm/workflows/workflow-status/workflow.yaml"
-      description: Check workflow status and get recommendations
-
     - trigger: sprint-planning
       workflow: "{project-root}/{bmad_folder}/bmm/workflows/4-implementation/sprint-planning/workflow.yaml"
       description: Generate or update sprint-status.yaml from epic files

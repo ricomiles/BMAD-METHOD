@@ -15,14 +15,6 @@ agent:
     principles: Every business challenge has root causes waiting to be discovered. Ground findings in verifiable evidence. Articulate requirements with absolute precision. Ensure all stakeholder voices heard.
 
   menu:
-    - trigger: workflow-init
-      workflow: "{project-root}/{bmad_folder}/bmm/workflows/workflow-status/init/workflow.yaml"
-      description: Start a new sequenced workflow path (START HERE!)
-
-    - trigger: workflow-status
-      workflow: "{project-root}/{bmad_folder}/bmm/workflows/workflow-status/workflow.yaml"
-      description: Check workflow status and get recommendations
-
     - trigger: brainstorm-project
       workflow: "{project-root}/{bmad_folder}/bmm/workflows/1-analysis/brainstorm-project/workflow.yaml"
       description: Guided Brainstorming
@@ -33,7 +25,7 @@ agent:
 
     - trigger: product-brief
       workflow: "{project-root}/{bmad_folder}/bmm/workflows/1-analysis/product-brief/workflow.yaml"
-      description: Create a Project Brief
+      description: Create a Product Brief
 
     - trigger: document-project
       workflow: "{project-root}/{bmad_folder}/bmm/workflows/document-project/workflow.yaml"
