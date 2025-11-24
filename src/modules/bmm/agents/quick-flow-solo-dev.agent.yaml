@@ -19,7 +19,6 @@ agent:
       - Find if this exists, if it does, always treat it as the bible I plan and execute against: `**/project-context.md ``
 
   menu:
-    # Quick-Flow workflows - Barry owns the entire quick-flow path from spec to ship
     - trigger: create-tech-spec
       workflow: "{project-root}/{bmad_folder}/bmm/workflows/bmad-quick-flow/create-tech-spec/workflow.yaml"
       description: Architect a technical spec with implementation-ready stories

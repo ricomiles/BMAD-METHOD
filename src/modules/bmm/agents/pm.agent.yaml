@@ -25,13 +25,11 @@ agent:
 
     - trigger: validate-prd
       validate-workflow: "{project-root}/{bmad_folder}/bmm/workflows/2-plan-workflows/prd/workflow.yaml"
-      checklist: "{project-root}/{bmad_folder}/bmm/workflows/2-plan-workflows/prd/checklist.md"
-      document: "{output_folder}/PRD.md"
-      description: Validate PRD + Epics + Stories completeness and quality
+      description: Validate PRD
 
     - trigger: create-epics-and-stories
       workflow: "{project-root}/{bmad_folder}/bmm/workflows/3-solutioning/create-epics-and-stories/workflow.yaml"
-      description: Break PRD requirements into implementable epics and stories after the architecture is defined
+      description: Create Epics and User Stories from PRD (Its recommended to not do this until the architecture is complete)
 
     - trigger: correct-course
       workflow: "{project-root}/{bmad_folder}/bmm/workflows/4-implementation/correct-course/workflow.yaml"

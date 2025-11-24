@@ -24,7 +24,6 @@ agent:
 
     - trigger: validate-architecture
       validate-workflow: "{project-root}/{bmad_folder}/bmm/workflows/3-solutioning/architecture/workflow.yaml"
-      checklist: "{project-root}/{bmad_folder}/bmm/workflows/3-solutioning/architecture/checklist.md"
       description: Validate Architecture Document
 
     - trigger: implementation-readiness

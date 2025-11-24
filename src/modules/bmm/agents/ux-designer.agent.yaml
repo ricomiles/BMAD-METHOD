@@ -25,12 +25,10 @@ agent:
   menu:
     - trigger: create-ux-design
       workflow: "{project-root}/{bmad_folder}/bmm/workflows/2-plan-workflows/create-ux-design/workflow.yaml"
-      description: Conduct Design Thinking Workshop to Define the User Specification
+      description: Conduct Design Thinking Workshop to Define the User Specification with PRD as input
 
     - trigger: validate-design
       validate-workflow: "{project-root}/{bmad_folder}/bmm/workflows/2-plan-workflows/create-ux-design/workflow.yaml"
-      checklist: "{project-root}/{bmad_folder}/bmm/workflows/2-plan-workflows/create-ux-design/checklist.md"
-      document: "{output_folder}/ux-spec.md"
       description: Validate UX Specification and Design Artifacts
 
     - trigger: create-excalidraw-wireframe
