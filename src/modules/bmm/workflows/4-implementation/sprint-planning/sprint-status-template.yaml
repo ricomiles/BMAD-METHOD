@@ -29,7 +29,7 @@
 #
 # WORKFLOW NOTES:
 # ===============
-# - Epics should be 'contexted' or marked `in-progress` before stories can be 'drafted'
+# - Epics should be marked `in-progress` before stories can be marked beyond `backlog`
 # - SM typically drafts next story ONLY after previous one is 'done' to incorporate learnings
 # - Dev moves story to 'review', dev reviews, then Dev moves to 'done'
 

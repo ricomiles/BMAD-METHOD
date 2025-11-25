@@ -34,11 +34,6 @@ default_output_file: "{story_dir}/{{story_key}}.md"
 # Smart input file references - Simplified for enhanced approach
 # The epics+stories file should contain everything needed with source hints
 input_file_patterns:
-  epics:
-    description: "Enhanced epics+stories file with BDD and source hints"
-    whole: "{output_folder}/*epic*.md"
-    sharded: "{output_folder}/*epic*/*.md"
-    load_strategy: "SELECTIVE_LOAD" # Only load needed epic
   prd:
     description: "PRD (fallback - epics file should have most content)"
     whole: "{output_folder}/*prd*.md"
@@ -54,6 +49,11 @@ input_file_patterns:
     whole: "{output_folder}/*ux*.md"
     sharded: "{output_folder}/*ux*/*.md"
     load_strategy: "SELECTIVE_LOAD" # Only load if needed
+  epics:
+    description: "Enhanced epics+stories file with BDD and source hints"
+    whole: "{output_folder}/*epic*.md"
+    sharded: "{output_folder}/*epic*/*.md"
+    load_strategy: "SELECTIVE_LOAD" # Only load needed epic
 
 standalone: true
 

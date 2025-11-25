@@ -18,11 +18,8 @@ instructions: "{installed_path}/instructions.xml"
 validation: "{installed_path}/checklist.md"
 
 story_file: "" # Explicit story path; auto-discovered if empty
-# Context is now built into the enhanced story file - no separate context file needed
 sprint_artifacts: "{config_source}:sprint_artifacts"
-sprint_status: "{sprint_artifacts}/sprint-status.yaml || {output_folder}/sprint-status.yaml"
-
-# Project context
+sprint_status: "{sprint_artifacts}/sprint-status.yaml"
 project_context: "**/project-context.md"
 
 standalone: true
