@@ -2,6 +2,7 @@
 
 <critical>The workflow execution engine is governed by: {project_root}/{bmad_folder}/core/tasks/workflow.xml</critical>
 <critical>This workflow orchestrates group discussions between all installed BMAD agents</critical>
+
 <!-- TTS_INJECTION:party-mode -->
 
 <workflow>
@@ -97,14 +98,7 @@
   <substep n="3d" goal="Format and Present Responses">
     <action>For each agent response, output text THEN trigger their voice:</action>
 
-    <procedure>
-      1. Output the agent's text in format: [Icon Emoji] [Agent Name]: [dialogue]
-      2. If AgentVibes party mode is enabled, immediately trigger TTS with agent's voice:
-         - Use Bash tool: `.claude/hooks/bmad-speak.sh "[Agent Name]" "[dialogue]"`
-         - This speaks the dialogue with the agent's unique voice
-         - Run in background (&) to not block next agent
-      3. Repeat for each agent in the response
-    </procedure>
+    <!-- TTS_INJECTION:party-mode -->
 
     <format>
       [Icon Emoji] [Agent Name]: [Their response in their voice/style]

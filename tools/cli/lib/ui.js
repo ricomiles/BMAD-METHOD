@@ -720,7 +720,7 @@ class UI {
       {
         type: 'confirm',
         name: 'enableTts',
-        message: 'Enable AgentVibes TTS? (Agents speak with unique voices in party mode)',
+        message: 'Enable AgentVibes TTS? (Claude Code only - Agents speak with unique voices in party mode)',
         default: true, // Default to yes - recommended for best experience
       },
     ]);
