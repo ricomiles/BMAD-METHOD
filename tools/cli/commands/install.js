@@ -9,8 +9,8 @@ const ui = new UI();
 module.exports = {
   command: 'install',
   description: 'Install BMAD Core agents and tools',
-  options: [],
-  action: async () => {
+  options: [['--skip-cleanup', 'Skip automatic cleanup of legacy files']],
+  action: async (options) => {
     try {
       const config = await ui.promptInstall();
 
@@ -42,6 +42,11 @@ module.exports = {
       // Handle reinstall by setting force flag
       if (config.actionType === 'reinstall') {
         config._requestedReinstall = true;
+      }
+
+      // Add skip cleanup flag if option provided
+      if (options && options.skipCleanup) {
+        config.skipCleanup = true;
       }
 
       // Regular install/update flow
