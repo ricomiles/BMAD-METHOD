@@ -6,13 +6,13 @@ const { AgentCommandGenerator } = require('./shared/agent-command-generator');
 
 /**
  * GitHub Copilot setup handler
- * Creates chat modes in .github/chatmodes/ and configures VS Code settings
+ * Creates agents in .github/agents/ and configures VS Code settings
  */
 class GitHubCopilotSetup extends BaseIdeSetup {
   constructor() {
     super('github-copilot', 'GitHub Copilot', true); // preferred IDE
     this.configDir = '.github';
-    this.chatmodesDir = 'chatmodes';
+    this.agentsDir = 'agents';
     this.vscodeDir = '.vscode';
   }
 
@@ -98,10 +98,10 @@ class GitHubCopilotSetup extends BaseIdeSetup {
     const config = options.preCollectedConfig || {};
     await this.configureVsCodeSettings(projectDir, { ...options, ...config });
 
-    // Create .github/chatmodes directory
+    // Create .github/agents directory
     const githubDir = path.join(projectDir, this.configDir);
-    const chatmodesDir = path.join(githubDir, this.chatmodesDir);
-    await this.ensureDir(chatmodesDir);
+    const agentsDir = path.join(githubDir, this.agentsDir);
+    await this.ensureDir(agentsDir);
 
     // Clean up any existing BMAD files before reinstalling
     await this.cleanup(projectDir);
@@ -110,29 +110,29 @@ class GitHubCopilotSetup extends BaseIdeSetup {
     const agentGen = new AgentCommandGenerator(this.bmadFolderName);
     const { artifacts: agentArtifacts } = await agentGen.collectAgentArtifacts(bmadDir, options.selectedModules || []);
 
-    // Create chat mode files with bmad- prefix
-    let modeCount = 0;
+    // Create agent files with bmd- prefix
+    let agentCount = 0;
     for (const artifact of agentArtifacts) {
       const content = artifact.content;
-      const chatmodeContent = await this.createChatmodeContent({ module: artifact.module, name: artifact.name }, content);
+      const agentContent = await this.createAgentContent({ module: artifact.module, name: artifact.name }, content);
 
-      // Use bmad- prefix: bmad-agent-{module}-{name}.chatmode.md
-      const targetPath = path.join(chatmodesDir, `bmad-agent-${artifact.module}-${artifact.name}.chatmode.md`);
-      await this.writeFile(targetPath, chatmodeContent);
-      modeCount++;
+      // Use bmd- prefix: bmd-custom-{module}-{name}.agent.md
+      const targetPath = path.join(agentsDir, `bmd-custom-${artifact.module}-${artifact.name}.agent.md`);
+      await this.writeFile(targetPath, agentContent);
+      agentCount++;
 
-      console.log(chalk.green(`  ✓ Created chat mode: bmad-agent-${artifact.module}-${artifact.name}`));
+      console.log(chalk.green(`  ✓ Created agent: bmd-custom-${artifact.module}-${artifact.name}`));
     }
 
     console.log(chalk.green(`✓ ${this.name} configured:`));
-    console.log(chalk.dim(`  - ${modeCount} chat modes created`));
-    console.log(chalk.dim(`  - Chat modes directory: ${path.relative(projectDir, chatmodesDir)}`));
+    console.log(chalk.dim(`  - ${agentCount} agents created`));
+    console.log(chalk.dim(`  - Agents directory: ${path.relative(projectDir, agentsDir)}`));
     console.log(chalk.dim(`  - VS Code settings configured`));
-    console.log(chalk.dim('\n  Chat modes available in VS Code Chat view'));
+    console.log(chalk.dim('\n  Agents available in VS Code Chat view'));
 
     return {
       success: true,
-      chatmodes: modeCount,
+      agents: agentCount,
       settings: true,
     };
   }
@@ -208,9 +208,9 @@ class GitHubCopilotSetup extends BaseIdeSetup {
   }
 
   /**
-   * Create chat mode content
+   * Create agent content
    */
-  async createChatmodeContent(agent, content) {
+  async createAgentContent(agent, content) {
     // Extract metadata from launcher frontmatter if present
     const descMatch = content.match(/description:\s*"([^"]+)"/);
     const title = descMatch ? descMatch[1] : this.formatTitle(agent.name);
@@ -242,7 +242,7 @@ class GitHubCopilotSetup extends BaseIdeSetup {
       'usages', // Find references and navigate definitions
     ];
 
-    let chatmodeContent = `---
+    let agentContent = `---
 description: "${description.replaceAll('"', String.raw`\"`)}"
 tools: ${JSON.stringify(tools)}
 ---
@@ -253,7 +253,7 @@ ${cleanContent}
 
 `;
 
-    return chatmodeContent;
+    return agentContent;
   }
 
   /**
@@ -271,10 +271,10 @@ ${cleanContent}
    */
   async cleanup(projectDir) {
     const fs = require('fs-extra');
-    const chatmodesDir = path.join(projectDir, this.configDir, this.chatmodesDir);
 
+    // Clean up old chatmodes directory
+    const chatmodesDir = path.join(projectDir, this.configDir, 'chatmodes');
     if (await fs.pathExists(chatmodesDir)) {
-      // Only remove files that start with bmad- prefix
       const files = await fs.readdir(chatmodesDir);
       let removed = 0;
 
@@ -286,7 +286,25 @@ ${cleanContent}
       }
 
       if (removed > 0) {
-        console.log(chalk.dim(`  Cleaned up ${removed} existing BMAD chat modes`));
+        console.log(chalk.dim(`  Cleaned up ${removed} old BMAD chat modes`));
+      }
+    }
+
+    // Clean up new agents directory
+    const agentsDir = path.join(projectDir, this.configDir, this.agentsDir);
+    if (await fs.pathExists(agentsDir)) {
+      const files = await fs.readdir(agentsDir);
+      let removed = 0;
+
+      for (const file of files) {
+        if (file.startsWith('bmd-') && file.endsWith('.agent.md')) {
+          await fs.remove(path.join(agentsDir, file));
+          removed++;
+        }
+      }
+
+      if (removed > 0) {
+        console.log(chalk.dim(`  Cleaned up ${removed} existing BMAD agents`));
       }
     }
   }
@@ -300,13 +318,13 @@ ${cleanContent}
    * @returns {Object|null} Info about created command
    */
   async installCustomAgentLauncher(projectDir, agentName, agentPath, metadata) {
-    const chatmodesDir = path.join(projectDir, this.configDir, this.chatmodesDir);
+    const agentsDir = path.join(projectDir, this.configDir, this.agentsDir);
 
     if (!(await this.exists(path.join(projectDir, this.configDir)))) {
       return null; // IDE not configured for this project
     }
 
-    await this.ensureDir(chatmodesDir);
+    await this.ensureDir(agentsDir);
 
     const launcherContent = `You must fully embody this agent's persona and follow all activation instructions exactly as specified. NEVER break character until given an exit command.
 
@@ -346,7 +364,7 @@ ${cleanContent}
       'usages',
     ];
 
-    const chatmodeContent = `---
+    const agentContent = `---
 description: "Activates the ${metadata.title || agentName} agent persona."
 tools: ${JSON.stringify(copilotTools)}
 ---
@@ -356,12 +374,12 @@ tools: ${JSON.stringify(copilotTools)}
 ${launcherContent}
 `;
 
-    const chatmodePath = path.join(chatmodesDir, `bmad-agent-custom-${agentName}.chatmode.md`);
-    await this.writeFile(chatmodePath, chatmodeContent);
+    const agentFilePath = path.join(agentsDir, `bmd-custom-${agentName}.agent.md`);
+    await this.writeFile(agentFilePath, agentContent);
 
     return {
-      path: chatmodePath,
-      command: `bmad-agent-custom-${agentName}`,
+      path: agentFilePath,
+      command: `bmd-custom-${agentName}`,
     };
   }
 }
