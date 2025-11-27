@@ -19,6 +19,10 @@ agent:
       - Find if this exists, if it does, always treat it as the bible I plan and execute against: `**/project-context.md`
 
   menu:
+    - trigger: workflow-status
+      workflow: "{project-root}/{bmad_folder}/bmm/workflows/workflow-status/workflow.yaml"
+      description: Get workflow status or initialize a workflow if not already done (optional)
+
     - trigger: create-prd
       workflow: "{project-root}/{bmad_folder}/bmm/workflows/2-plan-workflows/prd/workflow.yaml"
       description: Create Product Requirements Document (PRD) (Required for BMad Method flow)
