@@ -40,7 +40,6 @@ These workflows feed into Phase 2 (Planning) workflows, particularly the `prd` w
 | ---------------------- | ------- | ----------- | -------------------------------------------------------------- | ---------------------------- |
 | **brainstorm-project** | Analyst | No          | Explore solution approaches and architectures                  | Solution options + rationale |
 | **research**           | Analyst | No          | Multi-type research (market/technical/competitive/user/domain) | Research reports             |
-| **domain-research**    | Analyst | No          | Industry-specific deep dive research                           | Domain analysis report       |
 | **product-brief**      | Analyst | Recommended | Define product vision and strategy (interactive)               | Product Brief document       |
 
 ---
@@ -96,38 +95,6 @@ These workflows feed into Phase 2 (Planning) workflows, particularly the `prd` w
 - Configurable research depth (quick/standard/comprehensive)
 
 **Example (market):** "SaaS project management tool" → TAM $50B, SAM $5B, SOM $50M, top competitors (Asana, Monday), positioning recommendation.
-
----
-
-### domain-research
-
-**Purpose:** Industry-specific deep dive research to understand domain context, regulations, standards, and patterns relevant to complex projects.
-
-**Agent:** Analyst
-
-**When to Use:**
-
-- Entering new industry verticals
-- Highly regulated domains (healthcare, finance, education)
-- Complex business domains with specialized terminology
-- Need to understand industry standards and compliance requirements
-
-**Key Features:**
-
-- Industry analysis and trends
-- Regulatory landscape
-- Standards and compliance requirements
-- Domain-specific patterns and best practices
-- Key players and ecosystem analysis
-
-**Key Outputs:**
-
-- Domain analysis report
-- Compliance checklist
-- Standards reference guide
-- Risk assessment for domain-specific challenges
-
-**Example:** "Healthcare application" → HIPAA compliance requirements, FDA regulations, HL7/FHIR standards, healthcare ecosystem players, domain-specific data patterns.
 
 ---
 
@@ -292,7 +259,7 @@ A: Typically hours to 1-2 days. If taking longer, you may be over-analyzing. Mov
 A: That's the point! Analysis helps you fail fast and pivot before heavy planning investment.
 
 **Q: Should brownfield projects do Analysis?**
-A: Usually no. Start with `document-project` (Phase 0), then skip to Planning (Phase 2).
+A: Usually no. Start with `document-project` (Documentation prerequisite), then skip to Planning (Phase 2).
 
 ---
 
