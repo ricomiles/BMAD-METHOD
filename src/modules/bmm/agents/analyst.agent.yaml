@@ -20,19 +20,19 @@ agent:
   menu:
     - trigger: brainstorm-project
       workflow: "{project-root}/{bmad_folder}/bmm/workflows/1-analysis/brainstorm-project/workflow.yaml"
-      description: Guided Brainstorming scoped to product development ideation and problem discovery
+      description: Guided Brainstorming session with final report (optional)
 
     - trigger: research
       workflow: "{project-root}/{bmad_folder}/bmm/workflows/1-analysis/research/workflow.yaml"
-      description: Guided Research scoped to market and competitive analysis of a product or feature
+      description: Guided Research scoped to market and competitive analysis (optional)
 
     - trigger: product-brief
       workflow: "{project-root}/{bmad_folder}/bmm/workflows/1-analysis/product-brief/workflow.yaml"
-      description: Create a Product Brief, a great input to then drive a PRD
+      description: Create a Product Brief (recommended input for PRD)
 
     - trigger: document-project
       workflow: "{project-root}/{bmad_folder}/bmm/workflows/document-project/workflow.yaml"
-      description: Generate comprehensive documentation of an existing codebase, including architecture, data flows, and API contracts, and other details to aid project understanding.
+      description: Document your existing project (optional, but recommended for existing brownfield project efforts)
 
     - trigger: party-mode
       workflow: "{project-root}/{bmad_folder}/core/workflows/party-mode/workflow.yaml"
