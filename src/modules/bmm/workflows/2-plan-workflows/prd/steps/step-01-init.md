@@ -52,19 +52,27 @@ If no document exists or no `stepsCompleted` in frontmatter:
 
 Discover and load context documents using smart discovery:
 
-**Product Brief (Priority: Sharded → Whole):**
+**Product Brief (Priority: Analysis → Main → Sharded → Whole):**
 
-1. Check for sharded brief folder: `{output_folder}/*brief*/**/*.md`
-2. If folder exists: Load EVERY file in that folder completely to build comprehensive brief context
-3. If no folder exists: Try whole file: `{output_folder}/*brief*.md`
-4. Add discovered files to `inputDocuments` frontmatter
+1. Check analysis folder: `{output_folder}/analysis/*brief*.md`
+2. If no analysis files: Try main folder: `{output_folder}/*brief*.md`
+3. If no main files: Check for sharded brief folder: `{output_folder}/*brief*/**/*.md`
+4. If sharded folder exists: Load EVERY file in that folder completely
+5. Add discovered files to `inputDocuments` frontmatter
 
-**Research Documents (Priority: Sharded → Whole):**
+**Research Documents (Priority: Analysis → Main → Sharded → Whole):**
 
-1. Check for sharded research folder: `{output_folder}/*research*/**/*.md`
-2. If folder exists: Load useful research files completely
-3. If no folder exists: Try whole file: `{output_folder}/*research*.md`
-4. Add discovered files to `inputDocuments` frontmatter
+1. Check analysis folder: `{output_folder}/analysis/research/*research*.md`
+2. If no analysis files: Try main folder: `{output_folder}/*research*.md`
+3. If no main files: Check for sharded research folder: `{output_folder}/*research*/**/*.md`
+4. Load useful research files completely
+5. Add discovered files to `inputDocuments` frontmatter
+
+**Brainstorming Documents (Priority: Analysis → Main):**
+
+1. Check analysis folder: `{output_folder}/analysis/brainstorming/*brainstorming*.md`
+2. If no analysis files: Try main folder: `{output_folder}/*brainstorming*.md`
+3. Add discovered files to `inputDocuments` frontmatter
 
 **Project Documentation (Existing Projects):**
 

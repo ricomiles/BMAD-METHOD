@@ -1,10 +1,10 @@
-# Step 1: UX Design Workflow Initialization
+# Step 1: Product Brief Initialization
 
 ## MANDATORY EXECUTION RULES (READ FIRST):
 
 - 🛑 NEVER generate content without user input
-- ✅ ALWAYS treat this as collaborative discovery between UX facilitator and stakeholder
-- 📋 YOU ARE A UX FACILITATOR, not a content generator
+- ✅ ALWAYS treat this as collaborative discovery between PM peers
+- 📋 YOU ARE A FACILITATOR, not a content generator
 - 💬 FOCUS on initialization and setup only - don't look ahead to future steps
 - 🚪 DETECT existing workflow state and handle continuation properly
 
@@ -24,7 +24,7 @@
 
 ## YOUR TASK:
 
-Initialize the UX design workflow by detecting continuation state and setting up the design specification document.
+Initialize the product brief workflow by detecting continuation state and setting up the document.
 
 ## INITIALIZATION SEQUENCE:
 
@@ -32,7 +32,7 @@ Initialize the UX design workflow by detecting continuation state and setting up
 
 First, check if the output document already exists:
 
-- Look for file at `{output_folder}/ux-design-specification.md`
+- Look for file at `{output_folder}/product-brief-{{project_name}}-{{date}}.md`
 - If exists, read the complete file including frontmatter
 - If not exists, this is a fresh workflow
 
@@ -52,51 +52,44 @@ If no document exists or no `stepsCompleted` in frontmatter:
 
 Discover and load context documents using smart discovery:
 
-**PRD (Priority: Analysis → Main → Sharded → Whole):**
+**Research Documents (Priority: Sharded → Whole):**
 
-1. Check analysis folder: `{output_folder}/analysis/*prd*.md`
-2. If no analysis files: Try main folder: `{output_folder}/*prd*.md`
-3. If no main files: Check for sharded PRD folder: `{output_folder}/*prd*/**/*.md`
-4. If sharded folder exists: Load EVERY file in that folder completely for UX context
-5. Add discovered files to `inputDocuments` frontmatter
+1. Check for sharded research folder: `{output_folder}/*research*/**/*.md`
+2. If folder exists: Load EVERY file in that folder completely for comprehensive research context
+3. If no folder exists: Try whole file: `{output_folder}/*research*.md`
+4. Add discovered files to `inputDocuments` frontmatter
 
-**Product Brief (Priority: Analysis → Main → Sharded → Whole):**
+**Brainstorming Documents (Priority: Sharded → Whole):**
 
-1. Check analysis folder: `{output_folder}/analysis/*brief*.md`
-2. If no analysis files: Try main folder: `{output_folder}/*brief*.md`
-3. If no main files: Check for sharded brief folder: `{output_folder}/*brief*/**/*.md`
-4. If sharded folder exists: Load EVERY file in that folder completely
-5. Add discovered files to `inputDocuments` frontmatter
+1. Check for sharded brainstorming folder: `{output_folder}/*brainstorm*/**/*.md`
+2. If folder exists: Load useful brainstorming files completely
+3. If no folder exists: Try whole file: `{output_folder}/*brainstorm*.md`
+4. Add discovered files to `inputDocuments` frontmatter
 
-**Research Documents (Priority: Analysis → Main → Sharded → Whole):**
+**Project Documentation (Existing Projects):**
 
-1. Check analysis folder: `{output_folder}/analysis/research/*research*.md`
-2. If no analysis files: Try main folder: `{output_folder}/*research*.md`
-3. If no main files: Check for sharded research folder: `{output_folder}/*research*/**/*.md`
-4. Load useful research files completely
-5. Add discovered files to `inputDocuments` frontmatter
-
-**Other Context (Priority: Analysis → Main → Sharded):**
-
-- Epics: `{output_folder}/analysis/*epic*.md` or `{output_folder}/*epic*.md` or `{output_folder}/*epic*/**/*.md`
-- Brainstorming: `{output_folder}/analysis/brainstorming/*brainstorming*.md` or `{output_folder}/*brainstorming*.md`
+1. Look for index file: `{output_folder}/**/index.md`
+2. CRITICAL: Load index.md to understand what project files are available
+3. Read available files from index to understand existing project context
+4. Add discovered files to `inputDocuments` frontmatter
 
 **Loading Rules:**
 
 - Load ALL discovered files completely (no offset/limit)
 - For sharded folders, load ALL files to get complete picture
+- For existing projects, use index.md as guide to what's relevant and loading order
 - Track all successfully loaded files in frontmatter `inputDocuments` array
 
 #### B. Create Initial Document
 
-Copy the template from `{installed_path}/ux-design-template.md` to `{output_folder}/ux-design-specification.md`
+Copy the template from `{installed_path}/product-brief.template.md` to `{default_output_file}`
 Initialize frontmatter with:
 
 ```yaml
 ---
 stepsCompleted: []
 inputDocuments: []
-workflowType: 'ux-design'
+workflowType: 'product-brief'
 lastStep: 0
 project_name: '{{project_name}}'
 user_name: '{{user_name}}'
@@ -110,24 +103,24 @@ Complete setup and report to user:
 
 **Document Setup:**
 
-- Created: `{output_folder}/ux-design-specification.md` from template
+- Created: `{default_output_file}` from template
 - Initialized frontmatter with workflow state
 
 **Input Documents Discovered:**
 Report what was found:
-"Welcome {{user_name}}! I've set up your UX design workspace for {{project_name}}.
+"Welcome {{user_name}}! I've set up your product brief workspace for {{project_name}}.
 
 **Documents Found:**
 
-- PRD: {number of PRD files loaded or "None found"}
-- Product brief: {number of brief files loaded or "None found"}
-- Other context: {number of other files loaded or "None found"}
+- Research: {number of research files loaded or "None found"}
+- Brainstorming: {number of brainstorming files loaded or "None found"}
+- Project docs: {number of project files loaded or "None found"}
 
 **Files loaded:** {list of specific file names or "No additional documents found"}
 
 Do you have any other documents you'd like me to include, or shall we continue to the next step?
 
-[C] Continue to UX discovery"
+[C] Continue to product vision discovery"
 
 ## SUCCESS METRICS:
 
@@ -135,7 +128,6 @@ Do you have any other documents you'd like me to include, or shall we continue t
 ✅ Fresh workflow initialized with template and frontmatter
 ✅ Input documents discovered and loaded using sharded-first logic
 ✅ All discovered files tracked in frontmatter `inputDocuments`
-✅ User confirmed document setup and can proceed
 
 ## FAILURE MODES:
 
@@ -147,6 +139,6 @@ Do you have any other documents you'd like me to include, or shall we continue t
 
 ## NEXT STEP:
 
-After user selects [C] to continue, load `./step-02-discovery.md` to begin the UX discovery phase.
+After user selects [C] to continue, load `./step-02-vision.md` to begin the product vision discovery phase.
 
 Remember: Do NOT proceed to step-02 until user explicitly selects [C] to continue!

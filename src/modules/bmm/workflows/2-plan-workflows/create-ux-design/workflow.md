@@ -38,11 +38,13 @@ Load config from `{project-root}/{bmad_folder}/bmm/config.yaml` and resolve:
 
 ### Input Document Discovery
 
-Discover context documents for UX context:
+Discover context documents for UX context (Priority: Analysis folder first, then main folder, then sharded):
 
-- PRD: `{output_folder}/*prd*/**/*.md` or `{output_folder}/*prd*.md`
-- Product brief: `{output_folder}/*brief*/**/*.md` or `{output_folder}/*brief*.md`
-- Epics: `{output_folder}/*epic*/**/*.md` or `{output_folder}/*epic*.md`
+- PRD: `{output_folder}/analysis/*prd*.md` or `{output_folder}/*prd*.md` or `{output_folder}/*prd*/**/*.md`
+- Product brief: `{output_folder}/analysis/*brief*.md` or `{output_folder}/*brief*.md` or `{output_folder}/*brief*/**/*.md`
+- Epics: `{output_folder}/analysis/*epic*.md` or `{output_folder}/*epic*.md` or `{output_folder}/*epic*/**/*.md`
+- Research: `{output_folder}/analysis/research/*research*.md` or `{output_folder}/*research*.md` or `{output_folder}/*research*/**/*.md`
+- Brainstorming: `{output_folder}/analysis/brainstorming/*brainstorming*.md` or `{output_folder}/*brainstorming*.md`
 
 ---
 

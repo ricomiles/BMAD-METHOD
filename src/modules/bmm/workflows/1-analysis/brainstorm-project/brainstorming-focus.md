@@ -23,3 +23,49 @@ Brainstorming sessions typically feed into:
 - **PRDs** - Detailed requirements documents
 - **Technical Specifications** - Architecture and implementation plans
 - **Research Activities** - Areas requiring further investigation
+
+## Brainstorming Techniques for Projects
+
+### Problem-Solution Mapping
+
+- Identify core user problems
+- Brainstorm multiple solution approaches
+- Evaluate feasibility and impact
+
+### Feature Ideation
+
+- Must-have vs nice-to-have features
+- User journey mapping
+- Competitive differentiation opportunities
+
+### Technical Architecture Thinking
+
+- High-level system design considerations
+- Technology stack possibilities
+- Integration challenges and opportunities
+
+### Business Model Canvas
+
+- Value proposition identification
+- Customer segments and channels
+- Revenue streams and cost structures
+
+## Output Structure Guidance
+
+Brainstorming results should capture:
+
+1. **Problem Statements** - Clearly defined user challenges
+2. **Solution Concepts** - High-level approach descriptions
+3. **Feature Priorities** - Categorized by importance and feasibility
+4. **Technical Considerations** - Architecture and implementation thoughts
+5. **Next Steps** - Actions needed to advance concepts
+6. **Integration Points** - Connections to downstream workflows
+
+## Session Facilitation Notes
+
+This context will be passed to the core CIS brainstorming workflow to:
+
+- Provide project-specific framing for ideation techniques
+- Ensure results align with BMAD workflow expectations
+- Maintain focus on software/product development considerations
+- Facilitate smooth integration with subsequent workflows
