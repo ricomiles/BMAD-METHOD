@@ -31,6 +31,8 @@ Conduct comprehensive customer insights analysis using current {{current_year}} 
 
 ### 1. Begin Customer Insights Analysis
 
+**UTILIZE SUBPROCESSES AND SUBAGENTS**: Use research subagents, subprocesses or parallel processing if available to thoroughly analyze different customer areas simultaneously and thoroughly
+
 Start with customer research approach:
 "Now I'll conduct **customer insights analysis** using current {{current_year}} web data to understand customer behavior and needs.
 
@@ -43,9 +45,44 @@ Start with customer research approach:
 - Customer satisfaction drivers
 - Demographic and psychographic profiles
 
-**Let me search for current customer insights.**"
+**Let me search for current customer insights using parallel web searches for comprehensive coverage.**"
 
-### 2. Generate Customer Insights Content
+### 2. Parallel Customer Research Execution
+
+**Execute multiple web searches simultaneously:**
+
+`WebSearch: "[product/service/market] customer behavior patterns {{current_year}}"`
+`WebSearch: "[product/service/market] customer pain points challenges {{current_year}}"`
+`WebSearch: "[product/service/market] customer decision process {{current_year}}"`
+
+**Analysis approach:**
+
+- Look for customer behavior studies and surveys
+- Search for customer experience and interaction patterns
+- Research customer satisfaction methodologies
+- Note generational and cultural customer variations
+- Research customer pain points and frustrations
+- Analyze decision-making processes and criteria
+
+### 3. Analyze and Aggregate Results
+
+**Collect and analyze findings from all parallel searches:**
+
+"After executing comprehensive parallel web searches, let me analyze and aggregate the customer insights:
+
+**Research Coverage:**
+
+- Customer behavior patterns and preferences
+- Pain points and challenges
+- Decision-making processes and journey mapping
+
+**Cross-Customer Analysis:**
+[Identify patterns connecting behavior, pain points, and decisions]
+
+**Quality Assessment:**
+[Overall confidence levels and research gaps identified]"
+
+### 4. Generate Customer Insights Content
 
 Prepare customer analysis with web search citations:
 
@@ -92,7 +129,7 @@ _Source: [URL with {{current_year}} demographic data]_
 _Source: [URL with {{current_year}} psychographic data]_
 ```
 
-### 3. Present Analysis and Continue Option
+### 5. Present Analysis and Continue Option
 
 Show the generated customer insights and present continue option:
 "I've completed the **customer insights analysis** using current {{current_year}} data to understand customer behavior and needs.
@@ -108,7 +145,7 @@ Show the generated customer insights and present continue option:
 **Ready to proceed to competitive analysis?**
 [C] Continue - Save this to the document and proceed to competitive analysis
 
-### 4. Handle Continue Selection
+### 6. Handle Continue Selection
 
 #### If 'C' (Continue):
 
@@ -118,7 +155,7 @@ Show the generated customer insights and present continue option:
 
 ## APPEND TO DOCUMENT:
 
-When user selects 'C', append the content directly to the research document using the structure from step 2.
+When user selects 'C', append the content directly to the research document using the structure from step 4.
 
 ## SUCCESS METRICS:
 

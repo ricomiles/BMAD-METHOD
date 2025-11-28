@@ -31,6 +31,8 @@ Conduct comprehensive domain/industry analysis using current {{current_year}} we
 
 ### 1. Begin Domain Analysis
 
+**UTILIZE SUBPROCESSES AND SUBAGENTS**: Use research subagents, subprocesses or parallel processing if available to thoroughly analyze different domain areas simultaneously and thoroughly
+
 Start with web research approach:
 "Now I'll conduct comprehensive domain research using current {{current_year}} web data with rigorous source verification.
 
@@ -42,12 +44,16 @@ Start with web research approach:
 - Key players and competitive ecosystem
 - Supply chain and business model evolution
 
-**Let me search for current {{current_year}} data on [domain/industry].**"
+**Let me search for current {{current_year}} data on [domain/industry] using parallel web searches for comprehensive coverage.**"
 
-### 2. Web Search for Industry Overview
+### 2. Parallel Web Search Execution
 
-Search for current industry information:
+**Execute multiple web searches simultaneously:**
+
 `WebSearch: "[domain/industry] market size growth {{current_year}}"`
+`WebSearch: "[domain/industry] technology trends {{current_year}}"`
+`WebSearch: "[domain/industry] regulations compliance {{current_year}}"`
+`WebSearch: "[domain/industry] key players ecosystem {{current_year}}"`
 
 **Analysis approach:**
 
@@ -55,32 +61,30 @@ Search for current industry information:
 - Identify market size, growth rates, and trends
 - Find authoritative sources (market research firms, industry associations)
 - Note conflicting information from different sources
+- Gather technology trends and innovation patterns
+- Research regulatory requirements and compliance standards
+- Analyze competitive landscape and key players
 
-### 3. Web Search for Technology Trends
+### 3. Analyze and Aggregate Results
 
-Search for current technology developments:
-`WebSearch: "[domain/industry] technology trends {{current_year}}"`
+**Collect and analyze findings from all parallel searches:**
 
-**Technology focus:**
+"After executing comprehensive parallel web searches, let me analyze and aggregate the findings:
 
-- Emerging technologies and innovation patterns
-- Digital transformation impacts
-- Automation and efficiency improvements
-- New business models enabled by technology
+**Research Coverage:**
 
-### 4. Web Search for Regulatory Landscape
+- Market analysis and industry dynamics
+- Technology trends and innovation patterns
+- Regulatory landscape and compliance requirements
+- Key players and competitive ecosystem
 
-Search for current regulatory requirements:
-`WebSearch: "[domain/industry] regulations compliance {{current_year}}"`
+**Cross-Domain Analysis:**
+[Identify patterns, connections, and insights that emerge across multiple search areas]
 
-**Regulatory focus:**
+**Quality Assessment:**
+[Overall confidence levels and research gaps identified]"
 
-- Current regulations and compliance requirements
-- Recent changes or upcoming regulations
-- Industry standards and best practices
-- Regional or jurisdictional differences
-
-### 5. Generate Domain Analysis Content
+### 4. Generate Domain Analysis Content
 
 Prepare analysis content with source citations:
 
@@ -117,7 +121,7 @@ _Source: [URL with {{current_year}} data]_
 _Source: [URL with {{current_year}} data]_
 ```
 
-### 6. Present Analysis and Continue Option
+### 5. Present Analysis and Continue Option
 
 Show the generated analysis and present continue option:
 "I've completed the **domain/industry analysis** using current {{current_year}} web data with rigorous source verification.
@@ -132,7 +136,7 @@ Show the generated analysis and present continue option:
 **Ready to proceed to regulatory focus?**
 [C] Continue - Save this to the document and move to regulatory focus
 
-### 7. Handle Continue Selection
+### 6. Handle Continue Selection
 
 #### If 'C' (Continue):
 
@@ -142,7 +146,7 @@ Show the generated analysis and present continue option:
 
 ## APPEND TO DOCUMENT:
 
-When user selects 'C', append the content directly to the research document using the structure from step 5.
+When user selects 'C', append the content directly to the research document using the structure from step 4.
 
 ## SUCCESS METRICS:
 

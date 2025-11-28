@@ -33,43 +33,47 @@ This step will generate content and present choices:
 
 ## CONTEXT BOUNDARIES:
 
-- Current document and frontmatter from step-01-discovery are available
+- Current document and frontmatter from main workflow are available
 - Research type = "domain" is already set
+- **Research topic = "{{research_topic}}"** - discovered from initial discussion
+- **Research goals = "{{research_goals}}"** - captured from initial discussion
 - Focus on industry/domain analysis with web research
 - Web search capabilities with {{current_year}} data are enabled
 
 ## YOUR TASK:
 
-Initialize domain research, gather context, and establish research scope with current web data.
+Initialize domain research scope and approach for the already-identified topic: **{{research_topic}}**
 
 ## DOMAIN RESEARCH INITIALIZATION:
 
 ### 1. Confirm Domain Research Direction
 
 Begin with domain-specific positioning:
-"I'll guide you through **domain research** using current {{current_year}} web data with rigorous source verification.
+"I'll guide you through **domain research** for **{{research_topic}}** using current {{current_year}} web data with rigorous source verification.
 
-**Domain Research Focus:**
+**Research Goals Identified:** {{research_goals}}
 
-- Industry analysis and market dynamics
-- Regulatory requirements and compliance standards
-- Technology trends and innovation patterns
-- Competitive landscape within the domain
+**Domain Research Focus for {{research_topic}}:**
+
+- Industry analysis and market dynamics for this domain
+- Regulatory requirements and compliance standards affecting {{research_topic}}
+- Technology trends and innovation patterns in {{research_topic}}
+- Competitive landscape within the {{research_topic}} domain
 - Supply chain and ecosystem analysis
 
-**What specific domain or industry are we researching?**
+Let me refine the research scope specifically for **{{research_topic}}**:
 
 ### 2. Establish Research Context
 
-Gather domain-specific details:
+Refine domain-specific details based on the already-identified topic:
 
-#### Context Questions:
+#### Context Refinement Questions:
 
-- "What specific domain/industry are we focusing on?"
-- "Are there particular segments or sub-domains we should examine?"
-- "What aspects of this domain are most critical for your project?"
-- "Are there specific regulatory or compliance concerns?"
-- "What time horizon should we consider (current state, future trends)?"
+- "What specific aspects of {{research_topic}} are most critical for your goals?"
+- "Are there particular segments or sub-domains within {{research_topic}} we should examine?"
+- "What regulatory or compliance factors most impact {{research_topic}}?"
+- "What time horizon for {{research_topic}} research - current state or include future trends?"
+- "How deep should we analyze the {{research_topic}} domain - overview or comprehensive?"
 
 ### 3. Define Research Scope
 

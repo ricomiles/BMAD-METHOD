@@ -5,9 +5,24 @@ description: Conduct comprehensive research across multiple domains using curren
 
 # Research Workflow
 
-**Goal:** Conduct comprehensive research across multiple domains using current web data and verified sources
+**Goal:** Conduct comprehensive, exhaustive research across multiple domains using current web data and verified sources to produce complete research documents with compelling narratives and proper citations.
+
+**Document Standards:**
+
+- **Comprehensive Coverage**: Exhaustive research with no critical gaps
+- **Source Verification**: Every factual claim cited with URLs from {{current_year}}
+- **Document Length**: As long as needed to fully cover the research topic
+- **Professional Structure**: Compelling narrative introduction, detailed TOC, and comprehensive summary
+- **Authoritative Sources**: Multiple independent sources for all critical claims
 
 **Your Role:** You are a research facilitator and web data analyst working with an expert partner. This is a collaboration where you bring research methodology and web search capabilities, while your partner brings domain knowledge and research direction.
+
+**Final Deliverable**: A complete research document that serves as an authoritative reference on the research topic with:
+
+- Compelling narrative introduction
+- Comprehensive table of contents
+- Detailed research sections with proper citations
+- Executive summary and conclusions
 
 ---
 
@@ -82,46 +97,82 @@ Execute research type discovery and routing:
 
 "Welcome {{user_name}}! I'm excited to work with you as your research partner. I bring web research capabilities with current {{current_year}} data and rigorous source verification, while you bring the domain expertise and research direction.
 
-\*\*What would you like to research today?"
+**Let me help you clarify what you'd like to research.**
+
+**First, tell me: What specific topic, problem, or area do you want to research?**
+
+For example:
+
+- 'The electric vehicle market in Europe'
+- 'Cloud migration strategies for healthcare'
+- 'AI implementation in financial services'
+- 'Sustainable packaging regulations'
+- 'Or anything else you have in mind...'
+
+### Topic Exploration and Clarification
+
+Based on the user's initial topic, explore and refine the research scope:
+
+#### Topic Clarification Questions:
+
+1. **Core Topic**: "What exactly about [topic] are you most interested in?"
+2. **Research Goals**: "What do you hope to achieve with this research?"
+3. **Scope**: "Should we focus broadly or dive deep into specific aspects?"
+4. **Timeline**: "Are you looking at current state, historical context, or future trends?"
+5. **Application**: "How will you use this research? (product development, strategy, academic, etc.)"
+
+#### Context Building:
+
+- **Initial Input**: User provides topic or research interest
+- **Collaborative Refinement**: Work together to clarify scope and objectives
+- **Goal Alignment**: Ensure research direction matches user needs
+- **Research Boundaries**: Establish clear focus areas and deliverables
 
 ### Research Type Identification
 
-Listen for research type indicators and present options:
+After understanding the research topic and goals, identify the most appropriate research approach:
 
-**Research Options:**
+**Research Type Options:**
 
 1. **Market Research** - Market size, growth, competition, customer insights
+   _Best for: Understanding market dynamics, customer behavior, competitive landscape_
+
 2. **Domain Research** - Industry analysis, regulations, technology trends in specific domain
+   _Best for: Understanding industry context, regulatory environment, ecosystem_
+
 3. **Technical Research** - Technology evaluation, architecture decisions, implementation approaches
-4. **Deep Research Prompt** - Creating structured research prompts for AI platforms
+   _Best for: Technical feasibility, technology selection, implementation strategies_
+
+**Recommendation**: Based on [topic] and [goals], I recommend [suggested research type] because [specific rationale].
+
+**What type of research would work best for your needs?**
 
 ### Research Type Routing
 
-Based on user selection, route to appropriate sub-workflow:
+Based on user selection, route to appropriate sub-workflow with the discovered topic:
 
 #### If Market Research:
 
 - Set `research_type = "market"`
-- Set output file: `{output_folder}/analysis/research/market-{{topic}}-research-{{date}}.md`
-- Load: `./market-steps/step-01-init.md`
+- Set `research_topic = [discovered topic from discussion]`
+- Set output file: `{output_folder}/analysis/research/market-{{research_topic}}-research-{{date}}.md`
+- Load: `./market-steps/step-01-init.md` with topic context
 
 #### If Domain Research:
 
 - Set `research_type = "domain"`
-- Set output file: `{output_folder}/analysis/research/domain-{{topic}}-research-{{date}}.md`
-- Load: `./domain-steps/step-01-init.md`
+- Set `research_topic = [discovered topic from discussion]`
+- Set output file: `{output_folder}/analysis/research/domain-{{research_topic}}-research-{{date}}.md`
+- Load: `./domain-steps/step-01-init.md` with topic context
 
 #### If Technical Research:
 
 - Set `research_type = "technical"`
-- Set output file: `{output_folder}/analysis/research/technical-{{topic}}-research-{{date}}.md`
-- Load: `./technical-steps/step-01-init.md`
+- Set `research_topic = [discovered topic from discussion]`
+- Set output file: `{output_folder}/analysis/research/technical-{{research_topic}}-research-{{date}}.md`
+- Load: `./technical-steps/step-01-init.md` with topic context
 
-#### If Deep Research Prompt:
-
-- Set `research_type = "deep-prompt"`
-- Set output file: `{output_folder}/analysis/research/deep-prompt-{{topic}}-research-{{date}}.md`
-- Load: `./deep-prompt-steps/step-01-init.md`
+**Important**: The discovered topic from the collaborative discussion should be passed to the research initialization steps, so they don't need to ask "What do you want to research?" again - they can focus on refining the scope for their specific research type.
 
 ### Document Initialization
 
@@ -134,6 +185,8 @@ inputDocuments: []
 workflowType: 'research'
 lastStep: 1
 research_type: '{{research_type}}'
+research_topic: '{{research_topic}}'
+research_goals: '{{research_goals}}'
 user_name: '{{user_name}}'
 date: '{{date}}'
 current_year: '{{current_year}}'

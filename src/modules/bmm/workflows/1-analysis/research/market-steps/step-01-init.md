@@ -20,29 +20,47 @@
 
 - Current document and frontmatter from main workflow discovery are available
 - Research type = "market" is already set
+- **Research topic = "{{research_topic}}"** - discovered from initial discussion
+- **Research goals = "{{research_goals}}"** - captured from initial discussion
 - Focus on market research with current {{current_year}} data
 - Web search capabilities with source verification are enabled
 
 ## YOUR TASK:
 
-Conduct comprehensive market analysis using current {{current_year}} web data with rigorous source verification.
+Initialize market research scope and approach for the already-identified topic: **{{research_topic}}** with goals: {{research_goals}}
 
 ## MARKET ANALYSIS SEQUENCE:
 
-### 1. Begin Market Analysis
+### 1. Initialize Market Research
 
-Start with market research approach:
-"I'll conduct comprehensive **market analysis** using current {{current_year}} web data with rigorous source verification.
+Start with market-specific positioning:
+"I'll guide you through **market research** for **{{research_topic}}** using current {{current_year}} web data with rigorous source verification.
 
-**Market Analysis Focus:**
+**Research Goals Identified:** {{research_goals}}
 
-- Market size and growth projections
-- Customer segments and demographics
-- Competitive landscape analysis
-- Pricing strategies and business models
-- Market trends and consumer behavior
+**Market Research Focus for {{research_topic}}:**
 
-**Let me search for current market data.**"
+- Market size and growth projections for {{research_topic}}
+- Customer segments and demographics interested in {{research_topic}}
+- Competitive landscape analysis in {{research_topic}} market
+- Pricing strategies and business models for {{research_topic}}
+- Market trends and consumer behavior around {{research_topic}}
+
+Let me refine the market research scope specifically for **{{research_topic}}**:
+
+### 2. Establish Market Research Context
+
+#### Market Context Questions:
+
+- "What specific market aspects of {{research_topic}} are most critical for your goals?"
+- "Are there particular customer segments or demographics within {{research_topic}} we should focus on?"
+- "Should we analyze the global {{research_topic}} market or specific regions?"
+- "What time horizon for {{research_topic}} market research - current state or future projections?"
+- "How comprehensive should the {{research_topic}} competitive analysis be?"
+
+### 3. Begin Market Research Execution
+
+After scope refinement, proceed with:
 
 ### 2. Generate Market Analysis Content
 

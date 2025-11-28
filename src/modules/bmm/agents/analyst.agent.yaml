@@ -23,8 +23,9 @@ agent:
       description: Get workflow status or initialize a workflow if not already done (optional)
 
     - trigger: brainstorm-project
-      exec: "{project-root}/{bmad_folder}/bmm/workflows/1-analysis/brainstorm-project/workflow.md"
-      description: Guided Brainstorming session with final report (optional)
+      exec: "{project-root}/{bmad_folder}/core/workflows/brainstorming/workflow.md"
+      data: "{project-root}/{bmad_folder}/bmm/data/project-context-template.md"
+      description: Guided Project Brainstorming session with final report (optional)
 
     - trigger: research
       exec: "{project-root}/{bmad_folder}/bmm/workflows/1-analysis/research/workflow.md"

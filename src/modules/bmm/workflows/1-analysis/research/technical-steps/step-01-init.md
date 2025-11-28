@@ -1,8 +1,8 @@
-# Technical Research Step 2: Technical Overview
+# Technical Research Step 1: Technical Initialization
 
 ## MANDATORY EXECUTION RULES (READ FIRST):
 
-- 🛑 NEVER generate content without web search verification
+- 🛑 NEVER generate content without user input
 - ✅ ALWAYS use {{current_year}} web searches for current technical data
 - 📋 YOU ARE A TECHNICAL ANALYST, not content generator
 - 💬 FOCUS on technical architecture and implementation patterns
@@ -13,74 +13,92 @@
 - 🎯 Show web search analysis before presenting findings
 - ⚠️ Present [C] continue option after technical overview content generation
 - 💾 ONLY save when user chooses C (Continue)
-- 📖 Update frontmatter `stepsCompleted: [1, 2]` before loading next step
+- 📖 Update frontmatter `stepsCompleted: [1]` before loading next step
 - 🚫 FORBIDDEN to load next step until C is selected
 
 ## CONTEXT BOUNDARIES:
 
-- Current document and frontmatter from step-01 are available
-- Focus on technical architecture and implementation landscape
+- Current document and frontmatter from main workflow discovery are available
+- Research type = "technical" is already set
+- **Research topic = "{{research_topic}}"** - discovered from initial discussion
+- **Research goals = "{{research_goals}}"** - captured from initial discussion
+- Focus on technical research with current {{current_year}} data
 - Web search capabilities with source verification are enabled
-- May need to search for current technical trends and frameworks
 
 ## YOUR TASK:
 
-Conduct comprehensive technical overview using current {{current_year}} web data with emphasis on architecture patterns and implementation approaches.
+Initialize technical research scope and approach for the already-identified topic: **{{research_topic}}** with goals: {{research_goals}}
 
 ## TECHNICAL OVERVIEW SEQUENCE:
 
-### 1. Begin Technical Overview
+### 1. Initialize Technical Research
 
-**UTILIZE SUBPROCESSES AND SUBAGENTS**: Use research subagents, subprocesses or parallel processing if available to thoroughly analyze different technical areas simultaneously and thoroughly
+Start with technical-specific positioning:
+"I'll guide you through **technical research** for **{{research_topic}}** using current {{current_year}} web data with rigorous source verification.
 
-Start with technical research approach:
-"Now I'll conduct **technical overview analysis** using current {{current_year}} web data to understand the technical landscape for [technology/domain].
+**Research Goals Identified:** {{research_goals}}
 
-**Technical Overview Focus:**
+**Technical Research Focus for {{research_topic}}:**
 
-- Current technical architecture patterns and frameworks
-- Implementation approaches and best practices
-- Technology stack evolution and trends
-- Integration patterns and interoperability
-- Performance and scalability considerations
+- Technical architecture patterns and frameworks relevant to {{research_topic}}
+- Implementation approaches and best practices for {{research_topic}}
+- Technology stack evolution and trends affecting {{research_topic}}
+- Integration patterns and interoperability for {{research_topic}}
+- Performance and scalability considerations for {{research_topic}}
 
-**Let me search for current technical landscape information using parallel web searches for comprehensive coverage.**"
+Let me refine the technical research scope specifically for **{{research_topic}}**:
 
-### 2. Parallel Technical Research Execution
+### 2. Establish Technical Research Context
 
-**Execute multiple web searches simultaneously:**
+#### Technical Context Questions:
 
+- "What technical aspects of {{research_topic}} are most critical for your goals?"
+- "Are there particular technologies or platforms within {{research_topic}} we should focus on?"
+- "Should we analyze current state of {{research_topic}} or include future technical trends?"
+- "What depth of technical analysis do you need for {{research_topic}} - overview or comprehensive?"
+- "Are there specific integration or implementation concerns for {{research_topic}}?"
+
+### 3. Begin Technical Research Execution
+
+After scope refinement, proceed with:
+
+### 2. Web Search for Technical Architecture
+
+Search for current architecture patterns:
 `WebSearch: "[technology/domain] architecture patterns frameworks {{current_year}}"`
+
+**Architecture focus:**
+
+- Current architectural patterns and design principles
+- Frameworks and platforms commonly used
+- Microservices, monolith, and hybrid approaches
+- Cloud-native and edge computing patterns
+
+### 3. Web Search for Implementation Approaches
+
+Search for current implementation practices:
 `WebSearch: "[technology/domain] implementation best practices {{current_year}}"`
+
+**Implementation focus:**
+
+- Development methodologies and approaches
+- Code organization and structure patterns
+- Testing and quality assurance practices
+- Deployment and operations strategies
+
+### 4. Web Search for Technology Stack Trends
+
+Search for current technology trends:
 `WebSearch: "[technology/domain] technology stack trends {{current_year}}"`
 
-**Analysis approach:**
+**Stack focus:**
 
-- Look for recent technical documentation and architecture guides
-- Search for technical publications and conference proceedings
-- Research open-source projects and their architectures
-- Note technology adoption patterns and migration trends
-- Research performance benchmarking and optimization techniques
+- Programming languages and frameworks popularity
+- Database and storage technologies
+- APIs and communication protocols
+- Development tools and platforms
 
-### 3. Analyze and Aggregate Results
-
-**Collect and analyze findings from all parallel searches:**
-
-"After executing comprehensive parallel web searches, let me analyze and aggregate the technical findings:
-
-**Research Coverage:**
-
-- Architecture patterns and design principles
-- Implementation approaches and methodologies
-- Technology stack evolution and current trends
-
-**Technical Integration Analysis:**
-[Identify how architecture patterns influence implementation approaches and technology choices]
-
-**Quality Assessment:**
-[Overall confidence levels and research gaps identified]"
-
-### 4. Generate Technical Overview Content
+### 5. Generate Technical Overview Content
 
 Prepare technical analysis with web search citations:
 
@@ -122,7 +140,7 @@ _Source: [URL with {{current_year}} performance data]_
 _Source: [URL with {{current_year}} DevOps data]_
 ```
 
-### 5. Present Analysis and Continue Option
+### 6. Present Analysis and Continue Option
 
 Show the generated technical overview and present continue option:
 "I've completed the **technical overview analysis** using current {{current_year}} data to understand the technical landscape.
@@ -138,17 +156,17 @@ Show the generated technical overview and present continue option:
 **Ready to proceed to architectural patterns?**
 [C] Continue - Save this to the document and move to architectural patterns
 
-### 6. Handle Continue Selection
+### 7. Handle Continue Selection
 
 #### If 'C' (Continue):
 
 - Append the final content to the research document
-- Update frontmatter: `stepsCompleted: [1, 2]`
-- Load: `./step-03-architectural-patterns.md`
+- Update frontmatter: `stepsCompleted: [1]`
+- Load: `./step-02-technical-overview.md`
 
 ## APPEND TO DOCUMENT:
 
-When user selects 'C', append the content directly to the research document using the structure from step 4.
+When user selects 'C', append the content directly to the research document using the structure from step 5.
 
 ## SUCCESS METRICS:
 
@@ -180,6 +198,6 @@ When user selects 'C', append the content directly to the research document usin
 
 ## NEXT STEP:
 
-After user selects 'C' and content is saved to document, load `./step-03-architectural-patterns.md` to focus on specific architectural patterns and design decisions.
+After user selects 'C', load `./step-02-technical-overview.md` to focus on specific architectural patterns and design decisions.
 
 Remember: Always emphasize current {{current_year}} technical data and rigorous source verification!
