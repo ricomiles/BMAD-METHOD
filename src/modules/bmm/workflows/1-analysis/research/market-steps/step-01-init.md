@@ -1,18 +1,20 @@
-# Market Research Step 1: Market Analysis
+# Market Research Step 1: Market Research Initialization
 
 ## MANDATORY EXECUTION RULES (READ FIRST):
 
-- 🛑 NEVER generate content without web search verification
-- ✅ ALWAYS use {{current_year}} web searches for current market data
-- 📋 YOU ARE A MARKET ANALYST, not content generator
-- 💬 FOCUS on market size, growth, and competitive analysis
-- 🔍 WEB RESEARCH REQUIRED - Use {{current_year}} data and verify sources
+- 🛑 NEVER generate research content in init step
+- ✅ ALWAYS confirm understanding of user's research goals
+- 📋 YOU ARE A MARKET RESEARCH FACILITATOR, not content generator
+- 💬 FOCUS on clarifying scope and approach
+- 🔍 NO WEB RESEARCH in init - that's for later steps
+- 📖 CRITICAL: ALWAYS read the complete step file before taking any action - partial understanding leads to incomplete research
+- 🔄 CRITICAL: When loading next step with 'C', ensure the entire file is read and understood before proceeding
 
 ## EXECUTION PROTOCOLS:
 
-- 🎯 Show web search analysis before presenting findings
-- ⚠️ Present [C] continue option after market analysis content generation
-- 💾 ONLY save when user chooses C (Continue)
+- 🎯 Confirm research understanding before proceeding
+- ⚠️ Present [C] continue option after scope clarification
+- 💾 Write initial scope document immediately
 - 📖 Update frontmatter `stepsCompleted: [1]` before loading next step
 - 🚫 FORBIDDEN to load next step until C is selected
 
@@ -22,144 +24,159 @@
 - Research type = "market" is already set
 - **Research topic = "{{research_topic}}"** - discovered from initial discussion
 - **Research goals = "{{research_goals}}"** - captured from initial discussion
-- Focus on market research with current {{current_year}} data
-- Web search capabilities with source verification are enabled
+- Focus on market research scope clarification
+- Web search capabilities are enabled for later steps
 
 ## YOUR TASK:
 
-Initialize market research scope and approach for the already-identified topic: **{{research_topic}}** with goals: {{research_goals}}
+Initialize market research by confirming understanding of {{research_topic}} and establishing clear research scope.
 
-## MARKET ANALYSIS SEQUENCE:
+## MARKET RESEARCH INITIALIZATION:
 
-### 1. Initialize Market Research
+### 1. Confirm Research Understanding
 
-Start with market-specific positioning:
-"I'll guide you through **market research** for **{{research_topic}}** using current {{current_year}} web data with rigorous source verification.
+**INITIALIZE - DO NOT RESEARCH YET**
 
-**Research Goals Identified:** {{research_goals}}
+Start with research confirmation:
+"I understand you want to conduct **market research** for **{{research_topic}}** with these goals: {{research_goals}}
 
-**Market Research Focus for {{research_topic}}:**
+**My Understanding of Your Research Needs:**
 
-- Market size and growth projections for {{research_topic}}
-- Customer segments and demographics interested in {{research_topic}}
-- Competitive landscape analysis in {{research_topic}} market
-- Pricing strategies and business models for {{research_topic}}
-- Market trends and consumer behavior around {{research_topic}}
+- **Research Topic**: {{research_topic}}
+- **Research Goals**: {{research_goals}}
+- **Research Type**: Market Research using current {{current_year}} data
+- **Approach**: Comprehensive market analysis with rigorous source verification
 
-Let me refine the market research scope specifically for **{{research_topic}}**:
+**Market Research Areas We'll Cover:**
 
-### 2. Establish Market Research Context
+- Market size, growth dynamics, and trends
+- Customer insights and behavior analysis
+- Competitive landscape and positioning
+- Strategic recommendations and implementation guidance
 
-#### Market Context Questions:
+**Does this accurately capture what you're looking for?**"
 
-- "What specific market aspects of {{research_topic}} are most critical for your goals?"
-- "Are there particular customer segments or demographics within {{research_topic}} we should focus on?"
-- "Should we analyze the global {{research_topic}} market or specific regions?"
-- "What time horizon for {{research_topic}} market research - current state or future projections?"
-- "How comprehensive should the {{research_topic}} competitive analysis be?"
+### 2. Refine Research Scope
 
-### 3. Begin Market Research Execution
+Gather any clarifications needed:
 
-After scope refinement, proceed with:
+#### Scope Clarification Questions:
 
-### 2. Generate Market Analysis Content
+- "Are there specific customer segments or aspects of {{research_topic}} we should prioritize?"
+- "Should we focus on specific geographic regions or global market?"
+- "Is this for market entry, expansion, product development, or other business purpose?"
+- "Any competitors or market segments you specifically want us to analyze?"
 
-Prepare market analysis with web search citations:
+### 3. Document Initial Scope
 
-#### Content Structure:
+**WRITE IMMEDIATELY TO DOCUMENT**
 
-When saving to document, append these Level 2 and Level 3 sections:
+Write initial research scope to document:
 
 ```markdown
-## Market Analysis
+# Market Research: {{research_topic}}
 
-### Market Size and Growth
+## Research Initialization
 
-[Market size and growth data with source citations]
-_Source: [URL with {{current_year}} market data]_
+### Research Understanding Confirmed
 
-### Customer Segments
+**Topic**: {{research_topic}}
+**Goals**: {{research_goals}}
+**Research Type**: Market Research
+**Data Currency**: {{current_year}} with rigorous source verification
+**Date**: {{date}}
 
-[Customer segments analysis with source citations]
-_Source: [URL with {{current_year}} segment data]_
+### Research Scope
 
-### Competitive Landscape
+**Market Analysis Focus Areas:**
 
-[Competitive landscape analysis with source citations]
-_Source: [URL with {{current_year}} competitive data]_
+- Market size, growth projections, and dynamics
+- Customer segments, behavior patterns, and insights
+- Competitive landscape and positioning analysis
+- Strategic recommendations and implementation guidance
 
-### Market Trends
+**Research Methodology:**
 
-[Market trends analysis with source citations]
-_Source: [URL with {{current_year}} trends data]_
+- Current {{current_year}} web data with source verification
+- Multiple independent sources for critical claims
+- Confidence level assessment for uncertain data
+- Comprehensive coverage with no critical gaps
 
-### Pricing and Business Models
+### Next Steps
 
-[Pricing analysis with source citations]
-_Source: [URL with {{current_year}} pricing data]_
+**Research Workflow:**
 
-### Market Opportunities
+1. ✅ Initialization and scope setting (current step)
+2. Customer Insights and Behavior Analysis
+3. Competitive Landscape Analysis
+4. Strategic Synthesis and Recommendations
 
-[Market opportunities analysis with source citations]
-_Source: [URL with {{current_year}} opportunity data]_
+**Research Status**: Scope confirmed, ready to proceed with detailed market analysis
 ```
 
-### 3. Present Analysis and Continue Option
+### 4. Present Confirmation and Continue Option
 
-Show the generated market analysis and present continue option:
-"I've completed the **market analysis** using current {{current_year}} web data with rigorous source verification.
+Show initial scope document and present continue option:
+"I've documented our understanding and initial scope for **{{research_topic}}** market research.
 
-**Key Market Findings:**
+**What I've established:**
 
-- Market size and growth projections identified
-- Customer segments clearly defined
-- Competitive landscape thoroughly analyzed
-- Market trends and opportunities documented
+- Research topic and goals confirmed
+- Market analysis focus areas defined
+- Research methodology with {{current_year}} data verification
+- Clear workflow progression
 
-**Ready to proceed to customer insights?**
-[C] Continue - Save this to the document and proceed to customer insights
+**Document Status:** Initial scope written to research file for your review
 
-### 4. Handle Continue Selection
+**Ready to begin detailed market research?**
+[C] Continue - Confirm scope and proceed to customer insights analysis
+[Modify] Suggest changes to research scope before proceeding
+
+### 5. Handle User Response
 
 #### If 'C' (Continue):
 
-- Append the final content to the research document
 - Update frontmatter: `stepsCompleted: [1]`
+- Add confirmation note to document: "Scope confirmed by user on {{date}}"
 - Load: `./step-02-customer-insights.md`
 
-## APPEND TO DOCUMENT:
+#### If 'Modify':
 
-When user selects 'C', append the content directly to the research document using the structure from step 2.
+- Gather user changes to scope
+- Update document with modifications
+- Re-present updated scope for confirmation
 
 ## SUCCESS METRICS:
 
-✅ Market size and growth data with current {{current_year}} citations
-✅ Customer segments clearly identified and analyzed
-✅ Competitive landscape thoroughly mapped
-✅ Market trends and opportunities documented
+✅ Research topic and goals accurately understood
+✅ Market research scope clearly defined
+✅ Initial scope document written immediately
+✅ User opportunity to review and modify scope
 ✅ [C] continue option presented and handled correctly
-✅ Content properly appended to document when C selected
-✅ Proper routing to customer insights step
+✅ Document properly updated with scope confirmation
 
 ## FAILURE MODES:
 
-❌ Not using {{current_year}} in market web searches
-❌ Missing critical market size or growth data
-❌ Not identifying key customer segments
-❌ Incomplete competitive landscape analysis
-❌ Not presenting [C] continue option after content generation
-❌ Appending content without user selecting 'C'
+❌ Not confirming understanding of research topic and goals
+❌ Generating research content instead of just scope clarification
+❌ Not writing initial scope document to file
+❌ Not providing opportunity for user to modify scope
+❌ Proceeding to next step without user confirmation
+❌ **CRITICAL**: Reading only partial step file - leads to incomplete understanding and poor research decisions
+❌ **CRITICAL**: Proceeding with 'C' without fully reading and understanding the next step file
+❌ **CRITICAL**: Making decisions without complete understanding of step requirements and protocols
 
-## MARKET RESEARCH PROTOCOLS:
+## INITIALIZATION PRINCIPLES:
 
-- Search for authoritative market research reports
-- Use industry association and trade publication sources
-- Cross-reference multiple sources for critical market data
-- Note regional and demographic market variations
-- Research market validation and sizing methodologies
+This step ensures:
+
+- Clear mutual understanding of research objectives
+- Well-defined research scope and approach
+- Immediate documentation for user review
+- User control over research direction before detailed work begins
 
 ## NEXT STEP:
 
-After user selects 'C' and content is saved to document, load `./step-02-customer-insights.md` to focus on customer behavior and insights.
+After user confirmation and scope finalization, load `./step-02-customer-insights.md` to begin detailed market research with customer insights analysis using {{current_year}} data and rigorous source verification.
 
-Remember: Always emphasize current {{current_year}} market data and rigorous source verification!
+Remember: Init steps confirm understanding and scope, not generate research content!

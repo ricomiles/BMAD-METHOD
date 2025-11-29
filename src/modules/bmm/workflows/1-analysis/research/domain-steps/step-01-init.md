@@ -1,39 +1,26 @@
-# Domain Research Step 1: Initialization and Context
+# Domain Research Step 1: Domain Research Scope Confirmation
 
 ## MANDATORY EXECUTION RULES (READ FIRST):
 
-- 🛑 NEVER generate content without user input
-- ✅ ALWAYS treat this as collaborative research partnership
-- 📋 YOU ARE A RESEARCH FACILITATOR, not content generator
-- 💬 FOCUS on domain/industry research with current web data
-- 🔍 WEB RESEARCH REQUIRED - Use {{current_year}} data and verify sources
+- 🛑 NEVER generate content without user confirmation
+
+- 📖 CRITICAL: ALWAYS read the complete step file before taking any action - partial understanding leads to incomplete decisions
+- 🔄 CRITICAL: When loading next step with 'C', ensure the entire file is read and understood before proceeding
+- ✅ FOCUS EXCLUSIVELY on confirming domain research scope and approach
+- 📋 YOU ARE A DOMAIN RESEARCH PLANNER, not content generator
+- 💬 ACKNOWLEDGE and CONFIRM understanding of domain research goals
+- 🔍 This is SCOPE CONFIRMATION ONLY - no web research yet
 
 ## EXECUTION PROTOCOLS:
 
 - 🎯 Show your analysis before taking any action
-- ⚠️ Present A/P/C menu after initial context generation
-- 💾 ONLY save when user chooses C (Continue)
+- ⚠️ Present [C] continue option after scope confirmation
+- 💾 ONLY proceed when user chooses C (Continue)
 - 📖 Update frontmatter `stepsCompleted: [1]` before loading next step
 - 🚫 FORBIDDEN to load next step until C is selected
 
-## COLLABORATION MENUS (A/P/C):
-
-This step will generate content and present choices:
-
-- **A (Advanced Elicitation)**: Use discovery protocols to develop deeper domain insights
-- **P (Party Mode)**: Bring multiple perspectives to validate domain scope
-- **C (Continue)**: Save the content to the document and proceed to next step
-
-## PROTOCOL INTEGRATION:
-
-- When 'A' selected: Execute {project-root}/{bmad_folder}/core/tasks/advanced-elicitation.xml
-- When 'P' selected: Execute {project-root}/{bmad_folder}/core/workflows/party-mode
-- PROTOCOLS always return to this step's A/P/C menu
-- User accepts/rejects protocol changes before proceeding
-
 ## CONTEXT BOUNDARIES:
 
-- Current document and frontmatter from main workflow are available
 - Research type = "domain" is already set
 - **Research topic = "{{research_topic}}"** - discovered from initial discussion
 - **Research goals = "{{research_goals}}"** - captured from initial discussion
@@ -42,157 +29,108 @@ This step will generate content and present choices:
 
 ## YOUR TASK:
 
-Initialize domain research scope and approach for the already-identified topic: **{{research_topic}}**
+Confirm domain research scope and approach for **{{research_topic}}** with the user's goals in mind.
 
-## DOMAIN RESEARCH INITIALIZATION:
+## DOMAIN SCOPE CONFIRMATION:
 
-### 1. Confirm Domain Research Direction
+### 1. Begin Scope Confirmation
 
-Begin with domain-specific positioning:
-"I'll guide you through **domain research** for **{{research_topic}}** using current {{current_year}} web data with rigorous source verification.
+Start with domain scope understanding:
+"I understand you want to conduct **domain research** for **{{research_topic}}** with these goals: {{research_goals}}
 
-**Research Goals Identified:** {{research_goals}}
+**Domain Research Scope:**
 
-**Domain Research Focus for {{research_topic}}:**
+- **Industry Analysis**: Industry structure, market dynamics, and competitive landscape
+- **Regulatory Environment**: Compliance requirements, regulations, and standards
+- **Technology Patterns**: Innovation trends, technology adoption, and digital transformation
+- **Economic Factors**: Market size, growth trends, and economic impact
+- **Supply Chain**: Value chain analysis and ecosystem relationships
 
-- Industry analysis and market dynamics for this domain
-- Regulatory requirements and compliance standards affecting {{research_topic}}
-- Technology trends and innovation patterns in {{research_topic}}
-- Competitive landscape within the {{research_topic}} domain
-- Supply chain and ecosystem analysis
+**Research Approach:**
 
-Let me refine the research scope specifically for **{{research_topic}}**:
+- Current {{current_year}} web data with rigorous source verification
+- Multi-source validation for critical domain claims
+- Confidence levels for uncertain domain information
+- Comprehensive domain coverage with industry-specific insights
 
-### 2. Establish Research Context
+### 2. Scope Confirmation
 
-Refine domain-specific details based on the already-identified topic:
+Present clear scope confirmation:
+"**Domain Research Scope Confirmation:**
 
-#### Context Refinement Questions:
+For **{{research_topic}}**, I will research:
 
-- "What specific aspects of {{research_topic}} are most critical for your goals?"
-- "Are there particular segments or sub-domains within {{research_topic}} we should examine?"
-- "What regulatory or compliance factors most impact {{research_topic}}?"
-- "What time horizon for {{research_topic}} research - current state or include future trends?"
-- "How deep should we analyze the {{research_topic}} domain - overview or comprehensive?"
+✅ **Industry Analysis** - market structure, key players, competitive dynamics
+✅ **Regulatory Requirements** - compliance standards, legal frameworks
+✅ **Technology Trends** - innovation patterns, digital transformation
+✅ **Economic Factors** - market size, growth projections, economic impact
+✅ **Supply Chain Analysis** - value chain, ecosystem, partnerships
 
-### 3. Define Research Scope
+**All using current {{current_year}} web data with source verification.**
 
-Collaboratively establish research boundaries:
+**Does this domain research scope and approach align with your goals?**
+[C] Continue - Begin domain research with this scope
 
-#### Scope Definition:
-
-- "How broad should our domain analysis be?"
-- "Are we looking at global markets or specific regions?"
-- "Should we focus on current state or include future projections?"
-- "What depth of research do you need (overview vs deep dive)?"
-
-### 4. Generate Research Overview Content
-
-Prepare initial content to append to the document:
-
-#### Content Structure:
-
-When saving to document, append these Level 2 and Level 3 sections:
-
-```markdown
-## Research Overview
-
-### Research Objectives
-
-[Domain research objectives based on conversation]
-
-### Scope and Boundaries
-
-[Research scope definition based on conversation]
-
-### Research Methodology
-
-[Research methodology approach with {{current_year}} web data emphasis]
-
-### Source Verification Standards
-
-[Source verification approach and confidence level framework]
-```
-
-### 5. Present Content and Menu
-
-Show the generated overview and present choices:
-"I've established the foundation for our **domain research** with {{current_year}} web data and rigorous source verification.
-
-**Here's what I'll add to the document:**
-
-[Show the complete markdown content from step 4]
-
-**Research Standards:**
-
-- Always using {{current_year}} web searches
-- Requiring multiple sources for critical claims
-- Citing all factual claims with URLs
-- Presenting conflicting information when sources disagree
-- Using confidence levels for uncertain data
-
-**What would you like to do?**
-[A] Advanced Elicitation - Let's deepen our understanding of the domain scope
-[P] Party Mode - Bring different perspectives on domain research approach
-[C] Continue - Save this to the document and begin domain analysis
-
-### 6. Handle Menu Selection
-
-#### If 'A' (Advanced Elicitation):
-
-- Execute advanced-elicitation.xml with current domain overview
-- Process enhanced domain insights that come back
-- Ask user: "Accept these improvements to the research overview? (y/n)"
-- If yes: Update content with improvements, then return to A/P/C menu
-- If no: Keep original content, then return to A/P/C menu
-
-#### If 'P' (Party Mode):
-
-- Execute party-mode workflow with current domain overview
-- Process collaborative domain expertise and additional insights
-- Ask user: "Accept these changes to the research overview? (y/n)"
-- If yes: Update content with improvements, then return to A/P/C menu
-- If no: Keep original content, then return to A/P/C menu
+### 3. Handle Continue Selection
 
 #### If 'C' (Continue):
 
-- Append the final content to the research document
+- Document scope confirmation in research file
 - Update frontmatter: `stepsCompleted: [1]`
-- Load: `./step-02-domain-analysis.md`
+- Load: `./step-02-industry-analysis.md`
 
 ## APPEND TO DOCUMENT:
 
-When user selects 'C', append the content directly to the research document using the structure from step 4.
+When user selects 'C', append scope confirmation:
+
+```markdown
+## Domain Research Scope Confirmation
+
+**Research Topic:** {{research_topic}}
+**Research Goals:** {{research_goals}}
+
+**Domain Research Scope:**
+
+- Industry Analysis - market structure, competitive landscape
+- Regulatory Environment - compliance requirements, legal frameworks
+- Technology Trends - innovation patterns, digital transformation
+- Economic Factors - market size, growth projections
+- Supply Chain Analysis - value chain, ecosystem relationships
+
+**Research Methodology:**
+
+- Current {{current_year}} web data with rigorous source verification
+- Multi-source validation for critical domain claims
+- Confidence level framework for uncertain information
+- Comprehensive domain coverage with industry-specific insights
+
+**Scope Confirmed:** {{date}}
+```
 
 ## SUCCESS METRICS:
 
-✅ Domain research scope clearly defined and confirmed
-✅ Research methodology established with {{current_year}} emphasis
-✅ Source verification standards communicated and documented
-✅ A/P/C menu presented and handled correctly
-✅ Content properly appended to document when C selected
+✅ Domain research scope clearly confirmed with user
+✅ All domain analysis areas identified and explained
+✅ Research methodology with {{current_year}} data emphasized
+✅ [C] continue option presented and handled correctly
+✅ Scope confirmation documented when user proceeds
 ✅ Proper routing to next domain research step
 
 ## FAILURE MODES:
 
-❌ Not confirming specific domain/industry to research
-❌ Missing research scope boundaries
+❌ Not clearly confirming domain research scope with user
+❌ Missing critical domain analysis areas
 ❌ Not emphasizing {{current_year}} web data requirement
-❌ Not communicating source verification protocols
-❌ Not presenting A/P/C menu after content generation
-❌ Appending content without user selecting 'C'
+❌ Not presenting [C] continue option
+❌ Proceeding without user scope confirmation
+❌ Not routing to next domain research step
 
-## WEB RESEARCH READINESS:
-
-This step prepares for web research by:
-
-- Establishing {{current_year}} search query framework
-- Defining source verification protocols
-- Setting confidence level methodology
-- Preparing for multiple source verification of critical claims
+❌ **CRITICAL**: Reading only partial step file - leads to incomplete understanding and poor decisions
+❌ **CRITICAL**: Proceeding with 'C' without fully reading and understanding the next step file
+❌ **CRITICAL**: Making decisions without complete understanding of step requirements and protocols
 
 ## NEXT STEP:
 
-After user selects 'C' and content is saved to document, load `./step-02-domain-analysis.md` to begin web-based domain analysis with current {{current_year}} data.
+After user selects 'C', load `./step-02-industry-analysis.md` to begin industry analysis with current {{current_year}} web data.
 
-Remember: Always emphasize current {{current_year}} data and rigorous source verification in domain research!
+Remember: This is SCOPE CONFIRMATION ONLY - no actual domain research yet, just confirming the research approach and scope!

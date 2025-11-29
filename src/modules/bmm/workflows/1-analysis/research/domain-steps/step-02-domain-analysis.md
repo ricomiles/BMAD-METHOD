@@ -3,189 +3,226 @@
 ## MANDATORY EXECUTION RULES (READ FIRST):
 
 - 🛑 NEVER generate content without web search verification
-- ✅ ALWAYS use {{current_year}} web searches for current data
-- 📋 YOU ARE A RESEARCH ANALYST, not content generator
-- 💬 FOCUS on industry/domain analysis with verified sources
+
+- 📖 CRITICAL: ALWAYS read the complete step file before taking any action - partial understanding leads to incomplete decisions
+- 🔄 CRITICAL: When loading next step with 'C', ensure the entire file is read and understood before proceeding
+- ✅ ALWAYS use {{current_year}} web searches for current industry data
+- 📋 YOU ARE AN INDUSTRY ANALYST, not content generator
+- 💬 FOCUS on market size, growth, and industry dynamics
 - 🔍 WEB RESEARCH REQUIRED - Use {{current_year}} data and verify sources
+- 📝 WRITE CONTENT IMMEDIATELY TO DOCUMENT
 
 ## EXECUTION PROTOCOLS:
 
 - 🎯 Show web search analysis before presenting findings
-- ⚠️ Present [C] continue option after domain analysis content generation
-- 💾 ONLY save when user chooses C (Continue)
+- ⚠️ Present [C] continue option after industry analysis content generation
+- 📝 WRITE INDUSTRY ANALYSIS TO DOCUMENT IMMEDIATELY
+- 💾 ONLY proceed when user chooses C (Continue)
 - 📖 Update frontmatter `stepsCompleted: [1, 2]` before loading next step
 - 🚫 FORBIDDEN to load next step until C is selected
 
 ## CONTEXT BOUNDARIES:
 
 - Current document and frontmatter from step-01 are available
-- Research type = "domain" is already set
-- Focus on industry/domain web research with {{current_year}} data
+- **Research topic = "{{research_topic}}"** - established from initial discussion
+- **Research goals = "{{research_goals}}"** - established from initial discussion
+- Focus on market size, growth, and industry dynamics
 - Web search capabilities with source verification are enabled
 
 ## YOUR TASK:
 
-Conduct comprehensive domain/industry analysis using current {{current_year}} web data with rigorous source verification.
+Conduct industry analysis focusing on market size, growth, and industry dynamics using current {{current_year}} web data with rigorous source verification.
 
-## DOMAIN ANALYSIS SEQUENCE:
+## INDUSTRY ANALYSIS SEQUENCE:
 
-### 1. Begin Domain Analysis
+### 1. Begin Industry Analysis
 
-**UTILIZE SUBPROCESSES AND SUBAGENTS**: Use research subagents, subprocesses or parallel processing if available to thoroughly analyze different domain areas simultaneously and thoroughly
+**UTILIZE SUBPROCESSES AND SUBAGENTS**: Use research subagents, subprocesses or parallel processing if available to thoroughly analyze different industry areas simultaneously and thoroughly.
 
-Start with web research approach:
-"Now I'll conduct comprehensive domain research using current {{current_year}} web data with rigorous source verification.
+Start with industry research approach:
+"Now I'll conduct **industry analysis** for **{{research_topic}}** using current {{current_year}} web data to understand market dynamics.
 
-**Domain Analysis Focus:**
+**Industry Analysis Focus:**
 
-- Industry size, growth, and market dynamics
-- Technology trends and innovation patterns
-- Regulatory landscape and compliance requirements
-- Key players and competitive ecosystem
-- Supply chain and business model evolution
+- Market size and valuation metrics
+- Growth rates and market dynamics
+- Market segmentation and structure
+- Industry trends and evolution patterns
+- Economic impact and value creation
 
-**Let me search for current {{current_year}} data on [domain/industry] using parallel web searches for comprehensive coverage.**"
+**Let me search for current industry insights.**"
 
-### 2. Parallel Web Search Execution
+### 2. Parallel Industry Research Execution
 
 **Execute multiple web searches simultaneously:**
 
-`WebSearch: "[domain/industry] market size growth {{current_year}}"`
-`WebSearch: "[domain/industry] technology trends {{current_year}}"`
-`WebSearch: "[domain/industry] regulations compliance {{current_year}}"`
-`WebSearch: "[domain/industry] key players ecosystem {{current_year}}"`
+`WebSearch: "{{research_topic}} market size value {{current_year}}"`
+`WebSearch: "{{research_topic}} market growth rate dynamics {{current_year}}"`
+`WebSearch: "{{research_topic}} market segmentation structure {{current_year}}"`
+`WebSearch: "{{research_topic}} industry trends evolution {{current_year}}"`
 
 **Analysis approach:**
 
 - Look for recent market research reports and industry analyses
-- Identify market size, growth rates, and trends
-- Find authoritative sources (market research firms, industry associations)
-- Note conflicting information from different sources
-- Gather technology trends and innovation patterns
-- Research regulatory requirements and compliance standards
-- Analyze competitive landscape and key players
+- Search for authoritative sources (market research firms, industry associations)
+- Identify market size, growth rates, and segmentation data
+- Research industry trends and evolution patterns
+- Analyze economic impact and value creation metrics
 
 ### 3. Analyze and Aggregate Results
 
 **Collect and analyze findings from all parallel searches:**
 
-"After executing comprehensive parallel web searches, let me analyze and aggregate the findings:
+"After executing comprehensive parallel web searches, let me analyze and aggregate industry findings:
 
 **Research Coverage:**
 
-- Market analysis and industry dynamics
-- Technology trends and innovation patterns
-- Regulatory landscape and compliance requirements
-- Key players and competitive ecosystem
+- Market size and valuation analysis
+- Growth rates and market dynamics
+- Market segmentation and structure
+- Industry trends and evolution patterns
 
-**Cross-Domain Analysis:**
-[Identify patterns, connections, and insights that emerge across multiple search areas]
+**Cross-Industry Analysis:**
+[Identify patterns connecting market dynamics, segmentation, and trends]
 
 **Quality Assessment:**
 [Overall confidence levels and research gaps identified]"
 
-### 4. Generate Domain Analysis Content
+### 4. Generate Industry Analysis Content
 
-Prepare analysis content with source citations:
+**WRITE IMMEDIATELY TO DOCUMENT**
+
+Prepare industry analysis with web search citations:
 
 #### Content Structure:
 
 When saving to document, append these Level 2 and Level 3 sections:
 
 ```markdown
-## Industry Overview
+## Industry Analysis
 
-### Market Size and Growth
+### Market Size and Valuation
 
-[Market size and growth data with source citations]
-_Source: [URL with {{current_year}} data]_
+[Market size analysis with source citations]
+_Total Market Size: [Current market valuation with {{current_year}} data]_
+_Growth Rate: [CAGR and market growth projections]_
+_Market Segments: [Size and value of key market segments]_
+_Economic Impact: [Economic contribution and value creation]_
+_Source: [URL with {{current_year}} market size data]_
 
-### Technology Trends
+### Market Dynamics and Growth
 
-[Technology trends analysis with source citations]
-_Source: [URL with {{current_year}} data]_
+[Market dynamics analysis with source citations]
+_Growth Drivers: [Key factors driving market growth]_
+_Growth Barriers: [Factors limiting market expansion]_
+_Cyclical Patterns: [Industry seasonality and cycles]_
+_Market Maturity: [Life cycle stage and development phase]_
+_Source: [URL with {{current_year}} market dynamics data]_
 
-### Regulatory Landscape
+### Market Structure and Segmentation
 
-[Regulatory analysis with source citations]
-_Source: [URL with {{current_year}} data]_
+[Market structure analysis with source citations]
+_Primary Segments: [Key market segments and their characteristics]_
+_Sub-segment Analysis: [Detailed breakdown of market sub-segments]_
+_Geographic Distribution: [Regional market variations and concentrations]_
+_Vertical Integration: [Supply chain and value chain structure]_
+_Source: [URL with {{current_year}} market structure data]_
 
-### Key Players and Ecosystem
+### Industry Trends and Evolution
 
-[Key players analysis with source citations]
-_Source: [URL with {{current_year}} data]_
+[Industry trends analysis with source citations]
+_Emerging Trends: [Current industry developments and transformations]_
+_Historical Evolution: [Industry development over recent years]_
+_Technology Integration: [How technology is changing the industry]_
+_Future Outlook: [Projected industry developments and changes]_
+_Source: [URL with {{current_year}} industry trends data]_
 
-### Growth Drivers and Challenges
+### Competitive Dynamics
 
-[Growth drivers and challenges with source citations]
-_Source: [URL with {{current_year}} data]_
+[Competitive dynamics analysis with source citations]
+_Market Concentration: [Level of market consolidation and competition]_
+_Competitive Intensity: [Degree of competition and rivalry]_
+_Barriers to Entry: [Obstacles for new market entrants]_
+_Innovation Pressure: [Rate of innovation and change]_
+_Source: [URL with {{current_year}} competitive dynamics data]_
 ```
 
 ### 5. Present Analysis and Continue Option
 
-Show the generated analysis and present continue option:
-"I've completed the **domain/industry analysis** using current {{current_year}} web data with rigorous source verification.
+**Show analysis and present continue option:**
 
-**Key Findings:**
+"I've completed **industry analysis** using current {{current_year}} data to understand market dynamics for {{research_topic}}.
 
-- Multiple sources verified for critical market data
-- Conflicting information noted where sources disagree
-- Confidence levels applied to uncertain data
-- All factual claims include source citations
+**Key Industry Findings:**
 
-**Ready to proceed to regulatory focus?**
-[C] Continue - Save this to the document and move to regulatory focus
+- Market size and valuation thoroughly analyzed
+- Growth dynamics and market structure documented
+- Industry trends and evolution patterns identified
+- Competitive dynamics clearly mapped
+- Multiple sources verified for critical insights
+
+**Ready to proceed to competitive landscape analysis?**
+[C] Continue - Save this to document and proceed to competitive landscape
 
 ### 6. Handle Continue Selection
 
 #### If 'C' (Continue):
 
-- Append the final content to the research document
+- **CONTENT ALREADY WRITTEN TO DOCUMENT**
 - Update frontmatter: `stepsCompleted: [1, 2]`
-- Load: `./step-03-regulatory-focus.md`
+- Load: `./step-03-competitive-landscape.md`
 
 ## APPEND TO DOCUMENT:
 
-When user selects 'C', append the content directly to the research document using the structure from step 4.
+Content is already written to document when generated in step 4. No additional append needed.
 
 ## SUCCESS METRICS:
 
-✅ Industry size and growth data with current {{current_year}} citations
-✅ Technology trends identified with current developments
-✅ Regulatory landscape analysis with current requirements
-✅ Key players and ecosystem mapped with current data
+✅ Market size and valuation thoroughly analyzed
+✅ Growth dynamics and market structure documented
+✅ Industry trends and evolution patterns identified
+✅ Competitive dynamics clearly mapped
+✅ Multiple sources verified for critical insights
+✅ Content written immediately to document
 ✅ [C] continue option presented and handled correctly
-✅ Content properly appended to document when C selected
-✅ Web searches properly structured with {{current_year}} parameter
+✅ Proper routing to next step (competitive landscape)
+✅ Research goals alignment maintained
 
 ## FAILURE MODES:
 
-❌ Not using {{current_year}} in web search queries
-❌ Not requiring source citations for factual claims
-❌ Not presenting conflicting information when sources disagree
-❌ Not applying confidence levels to uncertain data
+❌ Not using {{current_year}} in industry web searches
+❌ Missing critical market size or growth data
+❌ Incomplete market structure analysis
+❌ Not identifying key industry trends
+❌ Not writing content immediately to document
 ❌ Not presenting [C] continue option after content generation
-❌ Appending content without user selecting 'C'
+❌ Not routing to competitive landscape step
 
-## WEB RESEARCH PROTOCOLS:
+❌ **CRITICAL**: Reading only partial step file - leads to incomplete understanding and poor decisions
+❌ **CRITICAL**: Proceeding with 'C' without fully reading and understanding the next step file
+❌ **CRITICAL**: Making decisions without complete understanding of step requirements and protocols
 
-All web searches must:
+## INDUSTRY RESEARCH PROTOCOLS:
 
-- Include {{current_year}} for current data
-- Require multiple sources for critical claims
-- Present conflicting information when found
-- Include source URLs for all factual claims
+- Research market research reports and industry analyses
+- Use authoritative sources (market research firms, industry associations)
+- Analyze market size, growth rates, and segmentation data
+- Study industry trends and evolution patterns
+- Focus on current {{current_year}} industry data
+- Present conflicting information when sources disagree
 - Apply confidence levels appropriately
 
-## SOURCE VERIFICATION:
+## INDUSTRY ANALYSIS STANDARDS:
 
 - Always cite URLs for web search results
-- Use authoritative sources (market research firms, industry associations)
+- Use authoritative industry research sources
 - Note data currency and potential limitations
 - Present multiple perspectives when sources conflict
+- Apply confidence levels to uncertain data
+- Focus on actionable industry insights
 
 ## NEXT STEP:
 
-After user selects 'C' and content is saved to document, load `./step-03-regulatory-focus.md` to focus on specific regulatory and compliance requirements.
+After user selects 'C', load `./step-03-competitive-landscape.md` to analyze competitive landscape, key players, and ecosystem analysis for {{research_topic}}.
 
-Remember: Always emphasize current {{current_year}} data and rigorous source verification in domain research!
+Remember: Always write research content to document immediately and emphasize current {{current_year}} industry data with rigorous source verification!

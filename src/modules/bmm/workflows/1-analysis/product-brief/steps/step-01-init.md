@@ -3,6 +3,9 @@
 ## MANDATORY EXECUTION RULES (READ FIRST):
 
 - 🛑 NEVER generate content without user input
+
+- 📖 CRITICAL: ALWAYS read the complete step file before taking any action - partial understanding leads to incomplete decisions
+- 🔄 CRITICAL: When loading next step with 'C', ensure the entire file is read and understood before proceeding
 - ✅ ALWAYS treat this as collaborative discovery between PM peers
 - 📋 YOU ARE A FACILITATOR, not a content generator
 - 💬 FOCUS on initialization and setup only - don't look ahead to future steps
@@ -32,7 +35,7 @@ Initialize the product brief workflow by detecting continuation state and settin
 
 First, check if the output document already exists:
 
-- Look for file at `{output_folder}/product-brief-{{project_name}}-{{date}}.md`
+- Look for file at `{output_folder}/analysis/*product-brief*.md`
 - If exists, read the complete file including frontmatter
 - If not exists, this is a fresh workflow
 
@@ -54,16 +57,16 @@ Discover and load context documents using smart discovery:
 
 **Research Documents (Priority: Sharded → Whole):**
 
-1. Check for sharded research folder: `{output_folder}/*research*/**/*.md`
+1. Check for sharded research folder: `{output_folder}/analysis/research/**/*.md`
 2. If folder exists: Load EVERY file in that folder completely for comprehensive research context
-3. If no folder exists: Try whole file: `{output_folder}/*research*.md`
+3. If no folder exists: Try whole file: `{output_folder}/analysis/research/*research*.md`
 4. Add discovered files to `inputDocuments` frontmatter
 
 **Brainstorming Documents (Priority: Sharded → Whole):**
 
-1. Check for sharded brainstorming folder: `{output_folder}/*brainstorm*/**/*.md`
+1. Check for sharded brainstorming folder: `{output_folder}/analysis/*brainstorm*/**/*.md`
 2. If folder exists: Load useful brainstorming files completely
-3. If no folder exists: Try whole file: `{output_folder}/*brainstorm*.md`
+3. If no folder exists: Try whole file: `{output_folder}/analysis/*brainstorm*.md`
 4. Add discovered files to `inputDocuments` frontmatter
 
 **Project Documentation (Existing Projects):**
@@ -136,6 +139,10 @@ Do you have any other documents you'd like me to include, or shall we continue t
 ❌ Creating document without proper template
 ❌ Not checking sharded folders first before whole files
 ❌ Not reporting what documents were found to user
+
+❌ **CRITICAL**: Reading only partial step file - leads to incomplete understanding and poor decisions
+❌ **CRITICAL**: Proceeding with 'C' without fully reading and understanding the next step file
+❌ **CRITICAL**: Making decisions without complete understanding of step requirements and protocols
 
 ## NEXT STEP:
 

@@ -3,6 +3,9 @@
 ## MANDATORY EXECUTION RULES (READ FIRST):
 
 - 🛑 NEVER generate content without user input
+
+- 📖 CRITICAL: ALWAYS read the complete step file before taking any action - partial understanding leads to incomplete decisions
+- 🔄 CRITICAL: When loading next step with 'C', ensure the entire file is read and understood before proceeding
 - ✅ ALWAYS treat this as collaborative discovery between UX facilitator and stakeholder
 - 📋 YOU ARE A UX FACILITATOR, not a content generator
 - 💬 FOCUS on initialization and setup only - don't look ahead to future steps
@@ -144,6 +147,10 @@ Do you have any other documents you'd like me to include, or shall we continue t
 ❌ Creating document without proper template
 ❌ Not checking sharded folders first before whole files
 ❌ Not reporting what documents were found to user
+
+❌ **CRITICAL**: Reading only partial step file - leads to incomplete understanding and poor decisions
+❌ **CRITICAL**: Proceeding with 'C' without fully reading and understanding the next step file
+❌ **CRITICAL**: Making decisions without complete understanding of step requirements and protocols
 
 ## NEXT STEP:
 

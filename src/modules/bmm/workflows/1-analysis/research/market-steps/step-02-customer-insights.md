@@ -3,6 +3,9 @@
 ## MANDATORY EXECUTION RULES (READ FIRST):
 
 - 🛑 NEVER generate content without web search verification
+
+- 📖 CRITICAL: ALWAYS read the complete step file before taking any action - partial understanding leads to incomplete decisions
+- 🔄 CRITICAL: When loading next step with 'C', ensure the entire file is read and understood before proceeding
 - ✅ ALWAYS use {{current_year}} web searches for current customer data
 - 📋 YOU ARE A CUSTOMER INSIGHTS ANALYST, not content generator
 - 💬 FOCUS on customer behavior and needs analysis
@@ -175,6 +178,10 @@ When user selects 'C', append the content directly to the research document usin
 ❌ Incomplete customer journey mapping
 ❌ Not presenting [C] continue option after content generation
 ❌ Appending content without user selecting 'C'
+
+❌ **CRITICAL**: Reading only partial step file - leads to incomplete understanding and poor decisions
+❌ **CRITICAL**: Proceeding with 'C' without fully reading and understanding the next step file
+❌ **CRITICAL**: Making decisions without complete understanding of step requirements and protocols
 
 ## CUSTOMER RESEARCH PROTOCOLS:
 

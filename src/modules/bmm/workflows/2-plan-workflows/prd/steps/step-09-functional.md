@@ -1,8 +1,13 @@
-# Step 8: Functional Requirements Synthesis
+# Step 9: Functional Requirements Synthesis
+
+**Progress: Step 9 of 11** - Next: Non-Functional Requirements
 
 ## MANDATORY EXECUTION RULES (READ FIRST):
 
 - 🛑 NEVER generate content without user input
+
+- 📖 CRITICAL: ALWAYS read the complete step file before taking any action - partial understanding leads to incomplete decisions
+- 🔄 CRITICAL: When loading next step with 'C', ensure the entire file is read and understood before proceeding
 - ✅ ALWAYS treat this as collaborative discovery between PM peers
 - 📋 YOU ARE A FACILITATOR, not a content generator
 - 💬 FOCUS on creating comprehensive capability inventory for the product
@@ -27,7 +32,7 @@ This step will generate content and present choices:
 ## PROTOCOL INTEGRATION:
 
 - When 'A' selected: Execute {project-root}/{bmad_folder}/core/tasks/advanced-elicitation.xml
-- When 'P' selected: Execute {project-root}/{bmad_folder}/core/workflows/party-mode
+- When 'P' selected: Execute {project-root}/{bmad_folder}/core/workflows/party-mode/workflow.md
 - PROTOCOLS always return to this step's A/P/C menu
 - User accepts/rejects protocol changes before proceeding
 
@@ -180,13 +185,13 @@ Show the generated functional requirements and present choices:
 **What would you like to do?**
 [A] Advanced Elicitation - Let's ensure we haven't missed any capabilities
 [P] Party Mode - Bring different perspectives to validate complete coverage
-[C] Continue - Save this to the document and move to next step"
+[C] Continue - Save this and move to Non-Functional Requirements (Step 10 of 11)"
 
 ### 8. Handle Menu Selection
 
 #### If 'A' (Advanced Elicitation):
 
-- Execute advanced-elicitation.xml with the current FR list
+- Execute {project-root}/{bmad_folder}/core/tasks/advanced-elicitation.xml with the current FR list
 - Process the enhanced capability coverage that comes back
 - Ask user: "Accept these additions to the functional requirements? (y/n)"
 - If yes: Update content with improvements, then return to A/P/C menu
@@ -194,7 +199,7 @@ Show the generated functional requirements and present choices:
 
 #### If 'P' (Party Mode):
 
-- Execute party-mode workflow with the current FR list
+- Execute {project-root}/{bmad_folder}/core/workflows/party-mode/workflow.md with the current FR list
 - Process the collaborative capability validation and additions
 - Ask user: "Accept these changes to the functional requirements? (y/n)"
 - If yes: Update content with improvements, then return to A/P/C menu
@@ -203,8 +208,8 @@ Show the generated functional requirements and present choices:
 #### If 'C' (Continue):
 
 - Append the final content to `{output_folder}/prd.md`
-- Update frontmatter: `stepsCompleted: [1, 2, 3, 4, 5, 6, 7, 8]`
-- Load `./step-09-nonfunctional.md`
+- Update frontmatter: `stepsCompleted: [1, 2, 3, 4, 5, 6, 7, 8, 9]`
+- Load `{project-root}/{bmad_folder}/bmm/workflows/2-plan-workflows/prd/steps/step-10-nonfunctional.md`
 
 ## APPEND TO DOCUMENT:
 
@@ -231,12 +236,16 @@ When user selects 'C', append the content directly to the document using the str
 ❌ Not presenting A/P/C menu after content generation
 ❌ Appending content without user selecting 'C'
 
+❌ **CRITICAL**: Reading only partial step file - leads to incomplete understanding and poor decisions
+❌ **CRITICAL**: Proceeding with 'C' without fully reading and understanding the next step file
+❌ **CRITICAL**: Making decisions without complete understanding of step requirements and protocols
+
 ## CAPABILITY CONTRACT REMINDER:
 
 Emphasize to user: "This FR list is now binding. Any feature not listed here will not exist in the final product unless we explicitly add it. This is why it's critical to ensure completeness now."
 
 ## NEXT STEP:
 
-After user selects 'C' and content is saved to document, load `./step-09-nonfunctional.md` to define non-functional requirements.
+After user selects 'C' and content is saved to document, load `{project-root}/{bmad_folder}/bmm/workflows/2-plan-workflows/prd/steps/step-10-nonfunctional.md` to define non-functional requirements.
 
-Remember: Do NOT proceed to step-09 until user explicitly selects 'C' from the A/P/C menu and content is saved!
+Remember: Do NOT proceed to step-10 until user explicitly selects 'C' from the A/P/C menu and content is saved!

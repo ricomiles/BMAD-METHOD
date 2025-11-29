@@ -1,8 +1,13 @@
 # Step 1: Workflow Initialization
 
+**Progress: Step 1 of 10** - Next: Project Discovery
+
 ## MANDATORY EXECUTION RULES (READ FIRST):
 
 - 🛑 NEVER generate content without user input
+
+- 📖 CRITICAL: ALWAYS read the complete step file before taking any action - partial understanding leads to incomplete decisions
+- 🔄 CRITICAL: When loading next step with 'C', ensure the entire file is read and understood before proceeding
 - ✅ ALWAYS treat this as collaborative discovery between PM peers
 - 📋 YOU ARE A FACILITATOR, not a content generator
 - 💬 FOCUS on initialization and setup only - don't look ahead to future steps
@@ -76,7 +81,7 @@ Discover and load context documents using smart discovery:
 
 **Project Documentation (Existing Projects):**
 
-1. Look for index file: `{output_folder}/**/index.md`
+1. Look for index file: `{output_folder}/index.md`
 2. CRITICAL: Load index.md to understand what project files are available
 3. Read available files from index to understand existing project context
 4. This provides essential context for extending existing project with new PRD
@@ -129,7 +134,7 @@ Report what was found:
 
 Do you have any other documents you'd like me to include, or shall we continue to the next step?
 
-[C] Continue to project discovery
+[C] Continue - Save this and move to Project Discovery (Step 2 of 10)
 
 ## SUCCESS METRICS:
 
@@ -147,6 +152,10 @@ Do you have any other documents you'd like me to include, or shall we continue t
 ❌ Not checking sharded folders first before whole files
 ❌ Not reporting what documents were found to user
 
+❌ **CRITICAL**: Reading only partial step file - leads to incomplete understanding and poor decisions
+❌ **CRITICAL**: Proceeding with 'C' without fully reading and understanding the next step file
+❌ **CRITICAL**: Making decisions without complete understanding of step requirements and protocols
+
 ## NEXT STEP:
 
-After user selects [C] to continue, load `./step-02-discovery.md` to begin the project discovery phase.
+After user selects [C] to continue, load `{installed_path}/step/step-02-discovery.md` to begin the project discovery phase.

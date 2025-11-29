@@ -3,6 +3,9 @@
 ## MANDATORY EXECUTION RULES (READ FIRST):
 
 - 🛑 NEVER generate content without user input
+
+- 📖 CRITICAL: ALWAYS read the complete step file before taking any action - partial understanding leads to incomplete decisions
+- 🔄 CRITICAL: When loading next step with 'C', ensure the entire file is read and understood before proceeding
 - ✅ ALWAYS treat this as collaborative discovery between UX facilitator and stakeholder
 - 📋 YOU ARE A UX FACILITATOR, not a content generator
 - 💬 FOCUS on generating and evaluating design direction variations
@@ -27,7 +30,7 @@ This step will generate content and present choices:
 ## PROTOCOL INTEGRATION:
 
 - When 'A' selected: Execute {project-root}/{bmad_folder}/core/tasks/advanced-elicitation.xml
-- When 'P' selected: Execute {project-root}/{bmad_folder}/core/workflows/party-mode
+- When 'P' selected: Execute {project-root}/{bmad_folder}/core/workflows/party-mode/workflow.md
 - PROTOCOLS always return to this step's A/P/C menu
 - User accepts/rejects protocol changes before proceeding
 
@@ -165,7 +168,7 @@ Show the generated design direction content and present choices:
 
 #### If 'A' (Advanced Elicitation):
 
-- Execute advanced-elicitation.xml with the current design direction content
+- Execute {project-root}/{bmad_folder}/core/tasks/advanced-elicitation.xml with the current design direction content
 - Process the enhanced design insights that come back
 - Ask user: "Accept these improvements to the design direction? (y/n)"
 - If yes: Update content with improvements, then return to A/P/C menu
@@ -173,7 +176,7 @@ Show the generated design direction content and present choices:
 
 #### If 'P' (Party Mode):
 
-- Execute party-mode workflow with the current design direction
+- Execute {project-root}/{bmad_folder}/core/workflows/party-mode/workflow.md with the current design direction
 - Process the collaborative design insights that come back
 - Ask user: "Accept these changes to the design direction? (y/n)"
 - If yes: Update content with improvements, then return to A/P/C menu
@@ -208,6 +211,10 @@ When user selects 'C', append the content directly to the document using the str
 ❌ Rushing decision without thorough exploration
 ❌ Not presenting A/P/C menu after content generation
 ❌ Appending content without user selecting 'C'
+
+❌ **CRITICAL**: Reading only partial step file - leads to incomplete understanding and poor decisions
+❌ **CRITICAL**: Proceeding with 'C' without fully reading and understanding the next step file
+❌ **CRITICAL**: Making decisions without complete understanding of step requirements and protocols
 
 ## NEXT STEP:
 

@@ -1,8 +1,11 @@
-# Market Research Step 4: Research Completion
+# Market Research Step 6: Research Completion
 
 ## MANDATORY EXECUTION RULES (READ FIRST):
 
 - 🛑 NEVER generate content without web search verification
+
+- 📖 CRITICAL: ALWAYS read the complete step file before taking any action - partial understanding leads to incomplete decisions
+- 🔄 CRITICAL: When loading next step with 'C', ensure the entire file is read and understood before proceeding
 - ✅ ALWAYS use {{current_year}} web searches for current market data
 - 📋 YOU ARE A MARKET RESEARCH STRATEGIST, not content generator
 - 💬 FOCUS on strategic recommendations and actionable insights
@@ -13,7 +16,7 @@
 - 🎯 Show web search analysis before presenting findings
 - ⚠️ Present [C] complete option after completion content generation
 - 💾 ONLY save when user chooses C (Complete)
-- 📖 Update frontmatter `stepsCompleted: [1, 2, 3, 4]` before completing workflow
+- 📖 Update frontmatter `stepsCompleted: [1, 2, 3, 4, 5, 6]` before completing workflow
 - 🚫 FORBIDDEN to complete workflow until C is selected
 - 📚 GENERATE COMPLETE DOCUMENT STRUCTURE with intro, TOC, and summary
 
@@ -22,7 +25,7 @@
 - Current document and frontmatter from previous steps are available
 - **Research topic = "{{research_topic}}"** - comprehensive market analysis
 - **Research goals = "{{research_goals}}"** - achieved through exhaustive market research
-- All market research sections have been completed (customer insights, competitive analysis)
+- All market research sections have been completed (customer behavior, pain points, decisions, competitive analysis)
 - Web search capabilities with source verification are enabled
 - This is the final synthesis step producing the complete market research document
 
@@ -416,6 +419,10 @@ When user selects 'C', append the content directly to the research document usin
 ❌ Not using {{current_year}} market sources for all factual claims
 ❌ Producing market document without professional structure
 ❌ Not presenting completion option for final market document
+
+❌ **CRITICAL**: Reading only partial step file - leads to incomplete understanding and poor decisions
+❌ **CRITICAL**: Proceeding with 'C' without fully reading and understanding the next step file
+❌ **CRITICAL**: Making decisions without complete understanding of step requirements and protocols
 
 ## STRATEGIC RESEARCH PROTOCOLS:
 

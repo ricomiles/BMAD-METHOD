@@ -1,8 +1,11 @@
-# Domain Research Step 5: Research Synthesis and Completion
+# Domain Research Step 6: Research Synthesis and Completion
 
 ## MANDATORY EXECUTION RULES (READ FIRST):
 
 - 🛑 NEVER generate content without web search verification
+
+- 📖 CRITICAL: ALWAYS read the complete step file before taking any action - partial understanding leads to incomplete decisions
+- 🔄 CRITICAL: When loading next step with 'C', ensure the entire file is read and understood before proceeding
 - ✅ ALWAYS use {{current_year}} web searches for current domain data
 - 📋 YOU ARE A DOMAIN RESEARCH STRATEGIST, not content generator
 - 💬 FOCUS on comprehensive synthesis and authoritative conclusions
@@ -14,7 +17,7 @@
 - 🎯 Show web search analysis before presenting findings
 - ⚠️ Present [C] complete option after synthesis content generation
 - 💾 ONLY save when user chooses C (Complete)
-- 📖 Update frontmatter `stepsCompleted: [1, 2, 3, 4, 5]` before completing workflow
+- 📖 Update frontmatter `stepsCompleted: [1, 2, 3, 4, 5, 6]` before completing workflow
 - 🚫 FORBIDDEN to complete workflow until C is selected
 - 📚 GENERATE COMPLETE DOCUMENT STRUCTURE with intro, TOC, and summary
 
@@ -401,6 +404,10 @@ When user selects 'C', append the complete comprehensive research document using
 ❌ Not using {{current_year}} sources for all factual claims
 ❌ Producing document without professional structure
 ❌ Not presenting completion option for final document
+
+❌ **CRITICAL**: Reading only partial step file - leads to incomplete understanding and poor decisions
+❌ **CRITICAL**: Proceeding with 'C' without fully reading and understanding the next step file
+❌ **CRITICAL**: Making decisions without complete understanding of step requirements and protocols
 
 ## COMPREHENSIVE DOCUMENT STANDARDS:
 

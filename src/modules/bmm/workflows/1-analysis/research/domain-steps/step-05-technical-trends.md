@@ -1,38 +1,44 @@
-# Domain Research Step 4: Technical Trends
+# Domain Research Step 5: Technical Trends
 
 ## MANDATORY EXECUTION RULES (READ FIRST):
 
 - 🛑 NEVER generate content without web search verification
+
+- 📖 CRITICAL: ALWAYS read the complete step file before taking any action - partial understanding leads to incomplete decisions
+- 🔄 CRITICAL: When loading next step with 'C', ensure the entire file is read and understood before proceeding
 - ✅ ALWAYS use {{current_year}} web searches for current technical data
 - 📋 YOU ARE A TECHNOLOGY ANALYST, not content generator
 - 💬 FOCUS on emerging technologies and innovation patterns
 - 🔍 WEB RESEARCH REQUIRED - Use {{current_year}} data and verify sources
+- 📝 WRITE CONTENT IMMEDIATELY TO DOCUMENT
 
 ## EXECUTION PROTOCOLS:
 
 - 🎯 Show web search analysis before presenting findings
-- ⚠️ Present [C] complete option after technical trends content generation
-- 💾 ONLY save when user chooses C (Complete)
-- 📖 Update frontmatter `stepsCompleted: [1, 2, 3, 4]` before completing workflow
-- 🚫 FORBIDDEN to complete workflow until C is selected
+- ⚠️ Present [C] continue option after technical trends content generation
+- 📝 WRITE TECHNICAL TRENDS ANALYSIS TO DOCUMENT IMMEDIATELY
+- 💾 ONLY proceed when user chooses C (Continue)
+- 📖 Update frontmatter `stepsCompleted: [1, 2, 3, 4, 5]` before loading next step
+- 🚫 FORBIDDEN to load next step until C is selected
 
 ## CONTEXT BOUNDARIES:
 
 - Current document and frontmatter from previous steps are available
+- **Research topic = "{{research_topic}}"** - established from initial discussion
+- **Research goals = "{{research_goals}}"** - established from initial discussion
 - Focus on emerging technologies and innovation patterns in the domain
 - Web search capabilities with source verification are enabled
-- This is the final step in the domain research workflow
 
 ## YOUR TASK:
 
-Conduct comprehensive technical trends analysis using current {{current_year}} web data with emphasis on innovations and emerging technologies impacting the domain.
+Conduct comprehensive technical trends analysis using current {{current_year}} web data with emphasis on innovations and emerging technologies impacting {{research_topic}}.
 
 ## TECHNICAL TRENDS SEQUENCE:
 
 ### 1. Begin Technical Trends Analysis
 
 Start with technology research approach:
-"Now I'll complete our domain research with **technical trends and emerging technologies** analysis using current {{current_year}} data.
+"Now I'll conduct **technical trends and emerging technologies** analysis for **{{research_topic}}** using current {{current_year}} data.
 
 **Technical Trends Focus:**
 
@@ -47,7 +53,7 @@ Start with technology research approach:
 ### 2. Web Search for Emerging Technologies
 
 Search for current technology information:
-`WebSearch: "[domain/industry] emerging technologies innovations {{current_year}}"`
+`WebSearch: "{{research_topic}} emerging technologies innovations {{current_year}}"`
 
 **Technology focus:**
 
@@ -59,7 +65,7 @@ Search for current technology information:
 ### 3. Web Search for Digital Transformation
 
 Search for current transformation trends:
-`WebSearch: "[domain/industry] digital transformation {{current_year}}"`
+`WebSearch: "{{research_topic}} digital transformation {{current_year}}"`
 
 **Transformation focus:**
 
@@ -71,7 +77,7 @@ Search for current transformation trends:
 ### 4. Web Search for Future Outlook
 
 Search for future projections:
-`WebSearch: "[domain/industry] future outlook {{current_year}} 2025"`
+`WebSearch: "{{research_topic}} future outlook {{current_year}} 2025"`
 
 **Future focus:**
 
@@ -81,6 +87,8 @@ Search for future projections:
 - Long-term industry transformation
 
 ### 5. Generate Technical Trends Content
+
+**WRITE IMMEDIATELY TO DOCUMENT**
 
 Prepare technical analysis with source citations:
 
@@ -139,7 +147,7 @@ _Source: [URL with {{current_year}} risk data]_
 ### 6. Present Analysis and Complete Option
 
 Show the generated technical analysis and present complete option:
-"I've completed the **technical trends and innovation analysis** using current {{current_year}} data, finalizing our comprehensive domain research.
+"I've completed **technical trends and innovation analysis** using current {{current_year}} data to understand technology patterns for {{research_topic}}.
 
 **Technical Highlights:**
 
@@ -149,27 +157,27 @@ Show the generated technical analysis and present complete option:
 - Implementation opportunities and challenges documented
 - Practical recommendations provided
 
-**This completes our domain research covering:**
+**Technical Trends Research Completed:**
 
-- Industry overview and market dynamics
-- Regulatory requirements and compliance
-- Technical trends and innovations
-- Strategic recommendations for your project
+- Emerging technologies and innovations identified
+- Digital transformation trends mapped
+- Future outlook and projections analyzed
+- Implementation opportunities and challenges documented
 
-**Ready to complete the domain research report?**
-[C] Complete Research - Save final document and conclude
+**Ready to proceed to research synthesis and recommendations?**
+[C] Continue - Save this to document and proceed to synthesis
 
-### 7. Handle Complete Selection
+### 7. Handle Continue Selection
 
-#### If 'C' (Complete Research):
+#### If 'C' (Continue):
 
-- Append the final content to the research document
-- Update frontmatter: `stepsCompleted: [1, 2, 3, 4]`
-- Complete the domain research workflow
+- **CONTENT ALREADY WRITTEN TO DOCUMENT**
+- Update frontmatter: `stepsCompleted: [1, 2, 3, 4, 5]`
+- Load: `./step-06-research-synthesis.md`
 
 ## APPEND TO DOCUMENT:
 
-When user selects 'C', append the content directly to the research document using the structure from step 5.
+Content is already written to document when generated in step 5. No additional append needed.
 
 ## SUCCESS METRICS:
 
@@ -178,9 +186,10 @@ When user selects 'C', append the content directly to the research document usin
 ✅ Future outlook and projections analyzed
 ✅ Implementation opportunities and challenges mapped
 ✅ Strategic recommendations provided
-✅ [C] complete option presented and handled correctly
-✅ Content properly appended to document when C selected
-✅ Research workflow completed successfully
+✅ Content written immediately to document
+✅ [C] continue option presented and handled correctly
+✅ Proper routing to next step (research synthesis)
+✅ Research goals alignment maintained
 
 ## FAILURE MODES:
 
@@ -190,6 +199,10 @@ When user selects 'C', append the content directly to the research document usin
 ❌ Not completing strategic recommendations
 ❌ Not presenting completion option for research workflow
 ❌ Appending content without user selecting 'C'
+
+❌ **CRITICAL**: Reading only partial step file - leads to incomplete understanding and poor decisions
+❌ **CRITICAL**: Proceeding with 'C' without fully reading and understanding the next step file
+❌ **CRITICAL**: Making decisions without complete understanding of step requirements and protocols
 
 ## TECHNICAL RESEARCH PROTOCOLS:
 

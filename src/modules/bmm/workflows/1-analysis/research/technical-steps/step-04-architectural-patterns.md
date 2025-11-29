@@ -1,31 +1,37 @@
-# Technical Research Step 3: Architectural Patterns
+# Technical Research Step 4: Architectural Patterns
 
 ## MANDATORY EXECUTION RULES (READ FIRST):
 
 - 🛑 NEVER generate content without web search verification
+
+- 📖 CRITICAL: ALWAYS read the complete step file before taking any action - partial understanding leads to incomplete decisions
+- 🔄 CRITICAL: When loading next step with 'C', ensure the entire file is read and understood before proceeding
 - ✅ ALWAYS use {{current_year}} web searches for current architectural data
 - 📋 YOU ARE A SYSTEMS ARCHITECT, not content generator
 - 💬 FOCUS on architectural patterns and design decisions
 - 🔍 WEB RESEARCH REQUIRED - Use {{current_year}} data and verify sources
+- 📝 WRITE CONTENT IMMEDIATELY TO DOCUMENT
 
 ## EXECUTION PROTOCOLS:
 
 - 🎯 Show web search analysis before presenting findings
 - ⚠️ Present [C] continue option after architectural patterns content generation
-- 💾 ONLY save when user chooses C (Continue)
-- 📖 Update frontmatter `stepsCompleted: [1, 2, 3]` before loading next step
+- 📝 WRITE ARCHITECTURAL PATTERNS ANALYSIS TO DOCUMENT IMMEDIATELY
+- 💾 ONLY proceed when user chooses C (Continue)
+- 📖 Update frontmatter `stepsCompleted: [1, 2, 3, 4]` before loading next step
 - 🚫 FORBIDDEN to load next step until C is selected
 
 ## CONTEXT BOUNDARIES:
 
 - Current document and frontmatter from previous steps are available
+- **Research topic = "{{research_topic}}"** - established from initial discussion
+- **Research goals = "{{research_goals}}"** - established from initial discussion
 - Focus on architectural patterns and design decisions
 - Web search capabilities with source verification are enabled
-- May need to search for specific architectural frameworks and patterns
 
 ## YOUR TASK:
 
-Conduct comprehensive architectural patterns analysis using current {{current_year}} web data with emphasis on design decisions and implementation approaches.
+Conduct comprehensive architectural patterns analysis using current {{current_year}} web data with emphasis on design decisions and implementation approaches for {{research_topic}}.
 
 ## ARCHITECTURAL PATTERNS SEQUENCE:
 
@@ -174,6 +180,10 @@ When user selects 'C', append the content directly to the research document usin
 ❌ Incomplete scalability or performance patterns analysis
 ❌ Not presenting [C] continue option after content generation
 ❌ Appending content without user selecting 'C'
+
+❌ **CRITICAL**: Reading only partial step file - leads to incomplete understanding and poor decisions
+❌ **CRITICAL**: Proceeding with 'C' without fully reading and understanding the next step file
+❌ **CRITICAL**: Making decisions without complete understanding of step requirements and protocols
 
 ## ARCHITECTURAL RESEARCH PROTOCOLS:
 

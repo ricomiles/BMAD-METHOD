@@ -3,6 +3,9 @@
 ## MANDATORY EXECUTION RULES (READ FIRST):
 
 - ✅ THIS IS A FINAL STEP - Workflow completion required
+
+- 📖 CRITICAL: ALWAYS read the complete step file before taking any action - partial understanding leads to incomplete decisions
+- 🔄 CRITICAL: When loading next step with 'C', ensure the entire file is read and understood before proceeding
 - 🛑 NO content generation - this is a wrap-up step
 - 📋 FINALIZE document and update workflow status
 - 💬 FOCUS on completion, validation, and next steps
@@ -158,6 +161,10 @@ Confirm completion with user:
 ❌ Not confirming document completeness with user
 ❌ Workflow not properly marked as complete in status tracking
 ❌ User unclear about what happens next
+
+❌ **CRITICAL**: Reading only partial step file - leads to incomplete understanding and poor decisions
+❌ **CRITICAL**: Proceeding with 'C' without fully reading and understanding the next step file
+❌ **CRITICAL**: Making decisions without complete understanding of step requirements and protocols
 
 ## WORKFLOW COMPLETION CHECKLIST:
 

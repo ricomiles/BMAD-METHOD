@@ -1,8 +1,13 @@
-# Step 10: Workflow Completion
+# Step 11: Workflow Completion
+
+**Final Step - Complete the PRD**
 
 ## MANDATORY EXECUTION RULES (READ FIRST):
 
 - ✅ THIS IS A FINAL STEP - Workflow completion required
+
+- 📖 CRITICAL: ALWAYS read the complete step file before taking any action - partial understanding leads to incomplete decisions
+- 🔄 CRITICAL: When loading next step with 'C', ensure the entire file is read and understood before proceeding
 - 🛑 NO content generation - this is a wrap-up step
 - 📋 FINALIZE document and update workflow status
 - 💬 FOCUS on completion, next steps, and suggestions
@@ -77,14 +82,14 @@ Provide guidance on logical next workflows:
 
 1. `workflow create-ux-design` - UX Design (if UI exists)
    - User journey insights from step-04 will inform interaction design
-   - Functional requirements from step-08 define design scope
+   - Functional requirements from step-09 define design scope
 
 2. `workflow create-architecture` - Technical architecture
    - Project-type requirements from step-07 guide technical decisions
-   - Non-functional requirements from step-09 inform architecture choices
+   - Non-functional requirements from step-10 inform architecture choices
 
 3. `workflow create-epics-and-stories` - Epic breakdown
-   - Functional requirements from step-08 become epics and stories
+   - Functional requirements from step-09 become epics and stories
    - Scope definition from step-03 guides sprint planning
 
 **Strategic Considerations:**
@@ -151,6 +156,10 @@ The document contains everything needed to guide:
 ❌ Workflow not properly marked as complete in status tracking
 ❌ User unclear about what happens next
 
+❌ **CRITICAL**: Reading only partial step file - leads to incomplete understanding and poor decisions
+❌ **CRITICAL**: Proceeding with 'C' without fully reading and understanding the next step file
+❌ **CRITICAL**: Making decisions without complete understanding of step requirements and protocols
+
 ## WORKFLOW COMPLETION CHECKLIST:
 
 ### Document Structure Complete:
@@ -189,7 +198,7 @@ Consider team capacity and timeline constraints
 
 ## WORKFLOW FINALIZATION:
 
-- Set `lastStep = 10` in document frontmatter
+- Set `lastStep = 11` in document frontmatter
 - Update workflow status file with completion timestamp
 - Provide completion summary to user
 - Do NOT load any additional steps

@@ -1,38 +1,44 @@
-# Domain Research Step 3: Regulatory Focus
+# Domain Research Step 4: Regulatory Focus
 
 ## MANDATORY EXECUTION RULES (READ FIRST):
 
 - 🛑 NEVER generate content without web search verification
+
+- 📖 CRITICAL: ALWAYS read the complete step file before taking any action - partial understanding leads to incomplete decisions
+- 🔄 CRITICAL: When loading next step with 'C', ensure the entire file is read and understood before proceeding
 - ✅ ALWAYS use {{current_year}} web searches for current regulatory data
 - 📋 YOU ARE A REGULATORY ANALYST, not content generator
 - 💬 FOCUS on compliance requirements and regulatory landscape
 - 🔍 WEB RESEARCH REQUIRED - Use {{current_year}} data and verify sources
+- 📝 WRITE CONTENT IMMEDIATELY TO DOCUMENT
 
 ## EXECUTION PROTOCOLS:
 
 - 🎯 Show web search analysis before presenting findings
 - ⚠️ Present [C] continue option after regulatory content generation
+- 📝 WRITE REGULATORY ANALYSIS TO DOCUMENT IMMEDIATELY
 - 💾 ONLY save when user chooses C (Continue)
-- 📖 Update frontmatter `stepsCompleted: [1, 2, 3]` before loading next step
+- 📖 Update frontmatter `stepsCompleted: [1, 2, 3, 4]` before loading next step
 - 🚫 FORBIDDEN to load next step until C is selected
 
 ## CONTEXT BOUNDARIES:
 
 - Current document and frontmatter from previous steps are available
+- **Research topic = "{{research_topic}}"** - established from initial discussion
+- **Research goals = "{{research_goals}}"** - established from initial discussion
 - Focus on regulatory and compliance requirements for the domain
 - Web search capabilities with source verification are enabled
-- May need to search for specific regulations and compliance frameworks
 
 ## YOUR TASK:
 
-Conduct focused regulatory and compliance analysis using current {{current_year}} web data with emphasis on requirements that impact your project.
+Conduct focused regulatory and compliance analysis using current {{current_year}} web data with emphasis on requirements that impact {{research_topic}}.
 
 ## REGULATORY FOCUS SEQUENCE:
 
 ### 1. Begin Regulatory Analysis
 
 Start with regulatory research approach:
-"Now I'll focus on **regulatory and compliance requirements** that impact the [domain/industry] using current {{current_year}} data.
+"Now I'll focus on **regulatory and compliance requirements** that impact **{{research_topic}}** using current {{current_year}} data.
 
 **Regulatory Focus Areas:**
 
@@ -47,7 +53,7 @@ Start with regulatory research approach:
 ### 2. Web Search for Specific Regulations
 
 Search for current regulatory information:
-`WebSearch: "[domain/industry] regulations compliance requirements {{current_year}}"`
+`WebSearch: "{{research_topic}} regulations compliance requirements {{current_year}}"`
 
 **Regulatory focus:**
 
@@ -59,7 +65,7 @@ Search for current regulatory information:
 ### 3. Web Search for Industry Standards
 
 Search for current industry standards:
-`WebSearch: "[domain/industry] standards best practices {{current_year}}"`
+`WebSearch: "{{research_topic}} standards best practices {{current_year}}"`
 
 **Standards focus:**
 
@@ -71,7 +77,7 @@ Search for current industry standards:
 ### 4. Web Search for Data Privacy Requirements
 
 Search for current privacy regulations:
-`WebSearch: "data privacy regulations [domain/industry] {{current_year}}"`
+`WebSearch: "data privacy regulations {{research_topic}} {{current_year}}"`
 
 **Privacy focus:**
 
@@ -129,7 +135,7 @@ _Source: [URL with {{current_year}} implementation data]_
 ### 6. Present Analysis and Continue Option
 
 Show the generated regulatory analysis and present continue option:
-"I've completed the **regulatory requirements analysis** focusing on compliance requirements that impact your [domain/industry] project.
+"I've completed **regulatory requirements analysis** using current {{current_year}} data to understand compliance requirements for {{research_topic}}.
 
 **Key Regulatory Findings:**
 
@@ -146,13 +152,13 @@ Show the generated regulatory analysis and present continue option:
 
 #### If 'C' (Continue):
 
-- Append the final content to the research document
-- Update frontmatter: `stepsCompleted: [1, 2, 3]`
-- Load: `./step-04-technical-trends.md`
+- **CONTENT ALREADY WRITTEN TO DOCUMENT**
+- Update frontmatter: `stepsCompleted: [1, 2, 3, 4]`
+- Load: `./step-05-technical-trends.md`
 
 ## APPEND TO DOCUMENT:
 
-When user selects 'C', append the content directly to the research document using the structure from step 5.
+Content is already written to document when generated in step 5. No additional append needed.
 
 ## SUCCESS METRICS:
 
@@ -172,6 +178,10 @@ When user selects 'C', append the content directly to the research document usin
 ❌ Not completing risk assessment for regulatory compliance
 ❌ Not presenting [C] continue option after content generation
 ❌ Appending content without user selecting 'C'
+
+❌ **CRITICAL**: Reading only partial step file - leads to incomplete understanding and poor decisions
+❌ **CRITICAL**: Proceeding with 'C' without fully reading and understanding the next step file
+❌ **CRITICAL**: Making decisions without complete understanding of step requirements and protocols
 
 ## REGULATORY RESEARCH PROTOCOLS:
 

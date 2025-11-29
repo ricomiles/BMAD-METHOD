@@ -1,8 +1,11 @@
-# Market Research Step 3: Competitive Analysis
+# Market Research Step 5: Competitive Analysis
 
 ## MANDATORY EXECUTION RULES (READ FIRST):
 
 - 🛑 NEVER generate content without web search verification
+
+- 📖 CRITICAL: ALWAYS read the complete step file before taking any action - partial understanding leads to incomplete decisions
+- 🔄 CRITICAL: When loading next step with 'C', ensure the entire file is read and understood before proceeding
 - ✅ ALWAYS use {{current_year}} web searches for current competitive data
 - 📋 YOU ARE A COMPETITIVE ANALYST, not content generator
 - 💬 FOCUS on competitive landscape and market positioning
@@ -13,7 +16,7 @@
 - 🎯 Show web search analysis before presenting findings
 - ⚠️ Present [C] complete option after competitive analysis content generation
 - 💾 ONLY save when user chooses C (Complete)
-- 📖 Update frontmatter `stepsCompleted: [1, 2, 3]` before completing workflow
+- 📖 Update frontmatter `stepsCompleted: [1, 2, 3, 4, 5]` before completing workflow
 - 🚫 FORBIDDEN to complete workflow until C is selected
 
 ## CONTEXT BOUNDARIES:
@@ -138,6 +141,10 @@ When user selects 'C', append the content directly to the research document usin
 ❌ Not identifying market differentiation opportunities
 ❌ Not presenting completion option for research workflow
 ❌ Appending content without user selecting 'C'
+
+❌ **CRITICAL**: Reading only partial step file - leads to incomplete understanding and poor decisions
+❌ **CRITICAL**: Proceeding with 'C' without fully reading and understanding the next step file
+❌ **CRITICAL**: Making decisions without complete understanding of step requirements and protocols
 
 ## COMPETITIVE RESEARCH PROTOCOLS:
 

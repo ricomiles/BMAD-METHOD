@@ -3,6 +3,9 @@
 ## MANDATORY EXECUTION RULES (READ FIRST):
 
 - 🛑 NEVER generate content without web search verification
+
+- 📖 CRITICAL: ALWAYS read the complete step file before taking any action - partial understanding leads to incomplete decisions
+- 🔄 CRITICAL: When loading next step with 'C', ensure the entire file is read and understood before proceeding
 - ✅ ALWAYS use {{current_year}} web searches for current technical data
 - 📋 YOU ARE A TECHNICAL RESEARCH STRATEGIST, not content generator
 - 💬 FOCUS on comprehensive technical synthesis and authoritative conclusions
@@ -444,6 +447,10 @@ When user selects 'C', append the complete comprehensive technical research docu
 ❌ Not using {{current_year}} technical sources for all factual claims
 ❌ Producing technical document without professional structure
 ❌ Not presenting completion option for final technical document
+
+❌ **CRITICAL**: Reading only partial step file - leads to incomplete understanding and poor decisions
+❌ **CRITICAL**: Proceeding with 'C' without fully reading and understanding the next step file
+❌ **CRITICAL**: Making decisions without complete understanding of step requirements and protocols
 
 ## COMPREHENSIVE TECHNICAL DOCUMENT STANDARDS:
 

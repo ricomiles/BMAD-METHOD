@@ -1,203 +1,136 @@
-# Technical Research Step 1: Technical Initialization
+# Technical Research Step 1: Technical Research Scope Confirmation
 
 ## MANDATORY EXECUTION RULES (READ FIRST):
 
-- 🛑 NEVER generate content without user input
-- ✅ ALWAYS use {{current_year}} web searches for current technical data
-- 📋 YOU ARE A TECHNICAL ANALYST, not content generator
-- 💬 FOCUS on technical architecture and implementation patterns
-- 🔍 WEB RESEARCH REQUIRED - Use {{current_year}} data and verify sources
+- 🛑 NEVER generate content without user confirmation
+
+- 📖 CRITICAL: ALWAYS read the complete step file before taking any action - partial understanding leads to incomplete decisions
+- 🔄 CRITICAL: When loading next step with 'C', ensure the entire file is read and understood before proceeding
+- ✅ FOCUS EXCLUSIVELY on confirming technical research scope and approach
+- 📋 YOU ARE A TECHNICAL RESEARCH PLANNER, not content generator
+- 💬 ACKNOWLEDGE and CONFIRM understanding of technical research goals
+- 🔍 This is SCOPE CONFIRMATION ONLY - no web research yet
 
 ## EXECUTION PROTOCOLS:
 
-- 🎯 Show web search analysis before presenting findings
-- ⚠️ Present [C] continue option after technical overview content generation
-- 💾 ONLY save when user chooses C (Continue)
+- 🎯 Show your analysis before taking any action
+- ⚠️ Present [C] continue option after scope confirmation
+- 💾 ONLY proceed when user chooses C (Continue)
 - 📖 Update frontmatter `stepsCompleted: [1]` before loading next step
 - 🚫 FORBIDDEN to load next step until C is selected
 
 ## CONTEXT BOUNDARIES:
 
-- Current document and frontmatter from main workflow discovery are available
 - Research type = "technical" is already set
 - **Research topic = "{{research_topic}}"** - discovered from initial discussion
 - **Research goals = "{{research_goals}}"** - captured from initial discussion
-- Focus on technical research with current {{current_year}} data
-- Web search capabilities with source verification are enabled
+- Focus on technical architecture and implementation research
+- Web search capabilities with {{current_year}} data are enabled
 
 ## YOUR TASK:
 
-Initialize technical research scope and approach for the already-identified topic: **{{research_topic}}** with goals: {{research_goals}}
+Confirm technical research scope and approach for **{{research_topic}}** with the user's goals in mind.
 
-## TECHNICAL OVERVIEW SEQUENCE:
+## TECHNICAL SCOPE CONFIRMATION:
 
-### 1. Initialize Technical Research
+### 1. Begin Scope Confirmation
 
-Start with technical-specific positioning:
-"I'll guide you through **technical research** for **{{research_topic}}** using current {{current_year}} web data with rigorous source verification.
+Start with technical scope understanding:
+"I understand you want to conduct **technical research** for **{{research_topic}}** with these goals: {{research_goals}}
 
-**Research Goals Identified:** {{research_goals}}
+**Technical Research Scope:**
 
-**Technical Research Focus for {{research_topic}}:**
+- **Architecture Analysis**: System design patterns, frameworks, and architectural decisions
+- **Implementation Approaches**: Development methodologies, coding patterns, and best practices
+- **Technology Stack**: Languages, frameworks, tools, and platforms relevant to {{research_topic}}
+- **Integration Patterns**: APIs, communication protocols, and system interoperability
+- **Performance Considerations**: Scalability, optimization, and performance patterns
 
-- Technical architecture patterns and frameworks relevant to {{research_topic}}
-- Implementation approaches and best practices for {{research_topic}}
-- Technology stack evolution and trends affecting {{research_topic}}
-- Integration patterns and interoperability for {{research_topic}}
-- Performance and scalability considerations for {{research_topic}}
+**Research Approach:**
 
-Let me refine the technical research scope specifically for **{{research_topic}}**:
+- Current {{current_year}} web data with rigorous source verification
+- Multi-source validation for critical technical claims
+- Confidence levels for uncertain technical information
+- Comprehensive technical coverage with architecture-specific insights
 
-### 2. Establish Technical Research Context
+### 2. Scope Confirmation
 
-#### Technical Context Questions:
+Present clear scope confirmation:
+"**Technical Research Scope Confirmation:**
 
-- "What technical aspects of {{research_topic}} are most critical for your goals?"
-- "Are there particular technologies or platforms within {{research_topic}} we should focus on?"
-- "Should we analyze current state of {{research_topic}} or include future technical trends?"
-- "What depth of technical analysis do you need for {{research_topic}} - overview or comprehensive?"
-- "Are there specific integration or implementation concerns for {{research_topic}}?"
+For **{{research_topic}}**, I will research:
 
-### 3. Begin Technical Research Execution
+✅ **Architecture Analysis** - design patterns, frameworks, system architecture
+✅ **Implementation Approaches** - development methodologies, coding patterns
+✅ **Technology Stack** - languages, frameworks, tools, platforms
+✅ **Integration Patterns** - APIs, protocols, interoperability
+✅ **Performance Considerations** - scalability, optimization, patterns
 
-After scope refinement, proceed with:
+**All using current {{current_year}} web data with source verification.**
 
-### 2. Web Search for Technical Architecture
+**Does this technical research scope and approach align with your goals?**
+[C] Continue - Begin technical research with this scope
 
-Search for current architecture patterns:
-`WebSearch: "[technology/domain] architecture patterns frameworks {{current_year}}"`
-
-**Architecture focus:**
-
-- Current architectural patterns and design principles
-- Frameworks and platforms commonly used
-- Microservices, monolith, and hybrid approaches
-- Cloud-native and edge computing patterns
-
-### 3. Web Search for Implementation Approaches
-
-Search for current implementation practices:
-`WebSearch: "[technology/domain] implementation best practices {{current_year}}"`
-
-**Implementation focus:**
-
-- Development methodologies and approaches
-- Code organization and structure patterns
-- Testing and quality assurance practices
-- Deployment and operations strategies
-
-### 4. Web Search for Technology Stack Trends
-
-Search for current technology trends:
-`WebSearch: "[technology/domain] technology stack trends {{current_year}}"`
-
-**Stack focus:**
-
-- Programming languages and frameworks popularity
-- Database and storage technologies
-- APIs and communication protocols
-- Development tools and platforms
-
-### 5. Generate Technical Overview Content
-
-Prepare technical analysis with web search citations:
-
-#### Content Structure:
-
-When saving to document, append these Level 2 and Level 3 sections:
-
-```markdown
-## Technical Overview
-
-### Current Architecture Patterns
-
-[Architecture patterns analysis with source citations]
-_Source: [URL with {{current_year}} architecture data]_
-
-### Implementation Approaches
-
-[Implementation approaches analysis with source citations]
-_Source: [URL with {{current_year}} implementation data]_
-
-### Technology Stack Evolution
-
-[Technology stack analysis with source citations]
-_Source: [URL with {{current_year}} technology data]_
-
-### Integration and Interoperability
-
-[Integration patterns analysis with source citations]
-_Source: [URL with {{current_year}} integration data]_
-
-### Performance and Scalability Patterns
-
-[Performance patterns analysis with source citations]
-_Source: [URL with {{current_year}} performance data]_
-
-### Development and Operations Practices
-
-[DevOps practices analysis with source citations]
-_Source: [URL with {{current_year}} DevOps data]_
-```
-
-### 6. Present Analysis and Continue Option
-
-Show the generated technical overview and present continue option:
-"I've completed the **technical overview analysis** using current {{current_year}} data to understand the technical landscape.
-
-**Key Technical Findings:**
-
-- Current architecture patterns and frameworks identified
-- Implementation approaches and best practices mapped
-- Technology stack evolution and trends documented
-- Integration patterns and interoperability analyzed
-- Performance and scalability considerations captured
-
-**Ready to proceed to architectural patterns?**
-[C] Continue - Save this to the document and move to architectural patterns
-
-### 7. Handle Continue Selection
+### 3. Handle Continue Selection
 
 #### If 'C' (Continue):
 
-- Append the final content to the research document
+- Document scope confirmation in research file
 - Update frontmatter: `stepsCompleted: [1]`
-- Load: `./step-02-technical-overview.md`
+- Load: `./step-02-technology-stack.md`
 
 ## APPEND TO DOCUMENT:
 
-When user selects 'C', append the content directly to the research document using the structure from step 5.
+When user selects 'C', append scope confirmation:
+
+```markdown
+## Technical Research Scope Confirmation
+
+**Research Topic:** {{research_topic}}
+**Research Goals:** {{research_goals}}
+
+**Technical Research Scope:**
+
+- Architecture Analysis - design patterns, frameworks, system architecture
+- Implementation Approaches - development methodologies, coding patterns
+- Technology Stack - languages, frameworks, tools, platforms
+- Integration Patterns - APIs, protocols, interoperability
+- Performance Considerations - scalability, optimization, patterns
+
+**Research Methodology:**
+
+- Current {{current_year}} web data with rigorous source verification
+- Multi-source validation for critical technical claims
+- Confidence level framework for uncertain information
+- Comprehensive technical coverage with architecture-specific insights
+
+**Scope Confirmed:** {{date}}
+```
 
 ## SUCCESS METRICS:
 
-✅ Architecture patterns identified with current {{current_year}} citations
-✅ Implementation approaches clearly documented
-✅ Technology stack evolution thoroughly analyzed
-✅ Integration patterns and interoperability mapped
-✅ Performance and scalability considerations captured
+✅ Technical research scope clearly confirmed with user
+✅ All technical analysis areas identified and explained
+✅ Research methodology with {{current_year}} data emphasized
 ✅ [C] continue option presented and handled correctly
-✅ Content properly appended to document when C selected
-✅ Proper routing to architectural patterns step
+✅ Scope confirmation documented when user proceeds
+✅ Proper routing to next technical research step
 
 ## FAILURE MODES:
 
-❌ Not using {{current_year}} in technical web searches
-❌ Missing critical architecture patterns or frameworks
-❌ Not identifying current implementation best practices
-❌ Incomplete technology stack evolution analysis
-❌ Not presenting [C] continue option after content generation
-❌ Appending content without user selecting 'C'
+❌ Not clearly confirming technical research scope with user
+❌ Missing critical technical analysis areas
+❌ Not emphasizing {{current_year}} web data requirement
+❌ Not presenting [C] continue option
+❌ Proceeding without user scope confirmation
+❌ Not routing to next technical research step
 
-## TECHNICAL RESEARCH PROTOCOLS:
-
-- Search for technical documentation and architecture guides
-- Use industry technical publications and conference proceedings
-- Research open-source projects and their architectures
-- Note technology adoption patterns and migration trends
-- Research performance benchmarking and optimization techniques
+❌ **CRITICAL**: Reading only partial step file - leads to incomplete understanding and poor decisions
+❌ **CRITICAL**: Proceeding with 'C' without fully reading and understanding the next step file
+❌ **CRITICAL**: Making decisions without complete understanding of step requirements and protocols
 
 ## NEXT STEP:
 
-After user selects 'C', load `./step-02-technical-overview.md` to focus on specific architectural patterns and design decisions.
+After user selects 'C', load `./step-02-technology-stack.md` to begin technology stack analysis with current {{current_year}} web data.
 
-Remember: Always emphasize current {{current_year}} technical data and rigorous source verification!
+Remember: This is SCOPE CONFIRMATION ONLY - no actual technical research yet, just confirming the research approach and scope!
