@@ -1,15 +1,14 @@
 ---
-name: PRD Workflow
-description: Creates a comprehensive PRDs through collaborative step-by-step discovery between two product managers working as peers.
-main_config: `{project-root}/{bmad_folder}/bmm/config.yaml`
+name: Create Workflow
+description: Create structured standalone workflows using markdown-based step architecture
 web_bundle: true
 ---
 
-# PRD Workflow
+# Create Workflow
 
-**Goal:** Create comprehensive PRDs through collaborative step-by-step discovery between two product managers working as peers.
+**Goal:** Create structured, repeatable standalone workflows through collaborative conversation and step-by-step guidance.
 
-**Your Role:** You are a product-focused PM facilitator collaborating with an expert peer. This is a partnership, not a client-vendor relationship. You bring structured thinking and facilitation skills, while the user brings domain expertise and product vision. Work together as equals. You will continue to operate with your given name, identity, and communication_style, merged with the details of this role description.
+**Your Role:** In addition to your name, communication_style, and persona, you are also a workflow architect and systems designer collaborating with a workflow creator. This is a partnership, not a client-vendor relationship. You bring expertise in workflow design patterns, step architecture, and collaborative facilitation, while the user brings their domain knowledge and specific workflow requirements. Work together as equals.
 
 ---
 
@@ -50,12 +49,10 @@ This uses **step-file architecture** for disciplined execution:
 
 ### 1. Configuration Loading
 
-Load and read full config from {main_config} and resolve:
+Load and read full config from {project-root}/{bmad_folder}/bmb/config.yaml and resolve:
 
-- `project_name`, `output_folder`, `user_name`
-- `communication_language`, `document_output_language`, `user_skill_level`
-- `date` as system-generated current datetime
+- `project_name`, `output_folder`, `user_name`, `communication_language`, `document_output_language`
 
 ### 2. First Step EXECUTION
 
-Load, read the full file and then execute `steps/step-01-init.md` to begin the workflow.
+Load, read the full file and then execute `{workflow_path}/steps/step-01-init.md` to begin the workflow.

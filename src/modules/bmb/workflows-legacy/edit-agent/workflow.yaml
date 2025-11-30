@@ -11,16 +11,16 @@ user_name: "{config_source}:user_name"
 # Required Data Files - Critical for understanding agent conventions
 
 # Core Concepts
-understanding_agent_types: "{project-root}/{bmad_folder}/bmb/docs/understanding-agent-types.md"
-agent_compilation: "{project-root}/{bmad_folder}/bmb/docs/agent-compilation.md"
+understanding_agent_types: "{project-root}/{bmad_folder}/bmb/docs/agents/understanding-agent-types.md"
+agent_compilation: "{project-root}/{bmad_folder}/bmb/docs/agents/agent-compilation.md"
 
 # Architecture Guides (Simple, Expert, Module)
-simple_architecture: "{project-root}/{bmad_folder}/bmb/docs/simple-agent-architecture.md"
-expert_architecture: "{project-root}/{bmad_folder}/bmb/docs/expert-agent-architecture.md"
-module_architecture: "{project-root}/{bmad_folder}/bmb/docs/module-agent-architecture.md"
+simple_architecture: "{project-root}/{bmad_folder}/bmb/docs/agents/simple-agent-architecture.md"
+expert_architecture: "{project-root}/{bmad_folder}/bmb/docs/agents/expert-agent-architecture.md"
+module_architecture: "{project-root}/{bmad_folder}/bmb/docs/agents/module-agent-architecture.md"
 
 # Design Patterns
-menu_patterns: "{project-root}/{bmad_folder}/bmb/docs/agent-menu-patterns.md"
+menu_patterns: "{project-root}/{bmad_folder}/bmb/docs/agents/agent-menu-patterns.md"
 communication_presets: "{project-root}/{bmad_folder}/bmb/workflows/create-agent/communication-presets.csv"
 brainstorm_context: "{project-root}/{bmad_folder}/bmb/workflows/create-agent/brainstorm-context.md"
 

@@ -53,7 +53,7 @@
   - Choose when: Coordinates workflows, works with other agents, professional operations
   - CAN invoke module workflows and coordinate with team agents
 
-**Reference:** See {project-root}/{bmad_folder}/bmb/docs/understanding-agent-types.md for "The Same Agent, Three Ways" example.
+**Reference:** See {project-root}/{bmad_folder}/bmb/docs/agents/understanding-agent-types.md for "The Same Agent, Three Ways" example.
 
 <action>Present your recommendation naturally, explaining why the agent type fits their **architecture needs** (state/integration), not capability limits</action>
 

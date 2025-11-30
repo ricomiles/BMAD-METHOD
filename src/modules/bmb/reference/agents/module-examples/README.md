@@ -47,4 +47,4 @@ When creating module agents:
 4. Replace menu with actual available workflows
 5. Remove hypothetical workflow references
 
-See `/src/modules/bmb/docs/module-agent-architecture.md` for complete guide.
+See `/src/modules/bmb/docs/agents/module-agent-architecture.md` for complete guide.

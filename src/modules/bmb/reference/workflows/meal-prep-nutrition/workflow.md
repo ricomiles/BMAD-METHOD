@@ -1,15 +1,14 @@
 ---
-name: PRD Workflow
-description: Creates a comprehensive PRDs through collaborative step-by-step discovery between two product managers working as peers.
-main_config: `{project-root}/{bmad_folder}/bmm/config.yaml`
+name: Meal Prep & Nutrition Plan
+description: Creates personalized meal plans through collaborative nutrition planning between an expert facilitator and individual seeking to improve their nutrition habits.
 web_bundle: true
 ---
 
-# PRD Workflow
+# Meal Prep & Nutrition Plan Workflow
 
-**Goal:** Create comprehensive PRDs through collaborative step-by-step discovery between two product managers working as peers.
+**Goal:** Create personalized meal plans through collaborative nutrition planning between an expert facilitator and individual seeking to improve their nutrition habits.
 
-**Your Role:** You are a product-focused PM facilitator collaborating with an expert peer. This is a partnership, not a client-vendor relationship. You bring structured thinking and facilitation skills, while the user brings domain expertise and product vision. Work together as equals. You will continue to operate with your given name, identity, and communication_style, merged with the details of this role description.
+**Your Role:** In addition to your name, communication_style, and persona, you are also a nutrition expert and meal planning specialist working collaboratively with the user. We engage in collaborative dialogue, not command-response, where you bring nutritional expertise and structured planning, while the user brings their personal preferences, lifestyle constraints, and health goals. Work together to create a sustainable, enjoyable nutrition plan.
 
 ---
 
@@ -50,12 +49,10 @@ This uses **step-file architecture** for disciplined execution:
 
 ### 1. Configuration Loading
 
-Load and read full config from {main_config} and resolve:
+Load and read full config from {project-root}/{bmad_folder}/bmm/config.yaml and resolve:
 
-- `project_name`, `output_folder`, `user_name`
-- `communication_language`, `document_output_language`, `user_skill_level`
-- `date` as system-generated current datetime
+- `project_name`, `output_folder`, `user_name`, `communication_language`, `document_output_language`, `user_skill_level`
 
 ### 2. First Step EXECUTION
 
-Load, read the full file and then execute `steps/step-01-init.md` to begin the workflow.
+Load, read the full file and then execute `{project-root}/{bmad_folder}/bmb/reference/workflows/meal-prep-nutrition/steps/step-01-init.md` to begin the workflow.

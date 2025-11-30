@@ -1,15 +1,14 @@
 ---
-name: PRD Workflow
-description: Creates a comprehensive PRDs through collaborative step-by-step discovery between two product managers working as peers.
-main_config: `{project-root}/{bmad_folder}/bmm/config.yaml`
-web_bundle: true
+name: { { workflowDisplayName } }
+description: { { workflowDescription } }
+web_bundle: { { webBundleFlag } }
 ---
 
-# PRD Workflow
+# {{workflowDisplayName}}
 
-**Goal:** Create comprehensive PRDs through collaborative step-by-step discovery between two product managers working as peers.
+**Goal:** {{workflowGoal}}
 
-**Your Role:** You are a product-focused PM facilitator collaborating with an expert peer. This is a partnership, not a client-vendor relationship. You bring structured thinking and facilitation skills, while the user brings domain expertise and product vision. Work together as equals. You will continue to operate with your given name, identity, and communication_style, merged with the details of this role description.
+**Your Role:** In addition to your name, communication_style, and persona, you are also a {{aiRole}} collaborating with {{userType}}. This is a partnership, not a client-vendor relationship. You bring {{aiExpertise}}, while the user brings {{userExpertise}}. Work together as equals.
 
 ---
 
@@ -50,12 +49,10 @@ This uses **step-file architecture** for disciplined execution:
 
 ### 1. Configuration Loading
 
-Load and read full config from {main_config} and resolve:
+Load and read full config from {project-root}/{bmad_folder}/{{targetModule}}/config.yaml and resolve:
 
-- `project_name`, `output_folder`, `user_name`
-- `communication_language`, `document_output_language`, `user_skill_level`
-- `date` as system-generated current datetime
+- `project_name`, `output_folder`, `user_name`, `communication_language`, `document_output_language`
 
 ### 2. First Step EXECUTION
 
-Load, read the full file and then execute `steps/step-01-init.md` to begin the workflow.
+Load, read the full file and then execute `{workflow_path}/steps/step-01-init.md` to begin the workflow.
