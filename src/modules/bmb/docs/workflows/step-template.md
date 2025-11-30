@@ -100,15 +100,7 @@ Example: "To analyze user requirements and document functional specifications th
 
 ### N. Present MENU OPTIONS
 
-Display: **Select an Option:** [A] [Action Label] [P] Party Mode [C] Continue
-
-#### EXECUTION RULES:
-
-- ALWAYS halt and wait for user input after presenting menu
-- ONLY proceed to next step when user selects 'C'
-- After other menu items execution, return to this menu
-- User can chat or ask questions - always respond and then end with display again of the menu options
-- Use menu handling logic section below
+Display: "**Select an Option:** [A] Advanced Elicitation [P] Party Mode [C] Continue"
 
 #### Menu Handling Logic:
 
@@ -117,7 +109,12 @@ Display: **Select an Option:** [A] [Action Label] [P] Party Mode [C] Continue
 - IF C: Save content to {outputFile}, update frontmatter, then only then load, read entire file, then execute {nextStepFile}
 - IF Any other comments or queries: help user respond then [Redisplay Menu Options](#n-present-menu-options)
 
-Note: The menu number (N) should continue sequentially from previous sections (e.g., if the last section was "5. Content Analysis", use "6. Present MENU OPTIONS")
+#### EXECUTION RULES:
+
+- ALWAYS halt and wait for user input after presenting menu
+- ONLY proceed to next step when user selects 'C'
+- After other menu items execution, return to this menu
+- User can chat or ask questions - always respond and then end with display again of the menu options
 
 ## CRITICAL STEP COMPLETION NOTE
 
@@ -156,15 +153,7 @@ ONLY WHEN [C continue option] is selected and [completion requirements], will yo
 ```markdown
 ### N. Present MENU OPTIONS
 
-Display: **Select an Option:** [A] [Advanced Label] [P] Party Mode [C] Continue
-
-#### EXECUTION RULES:
-
-- ALWAYS halt and wait for user input after presenting menu
-- ONLY proceed to next step when user selects 'C'
-- After other menu items execution, return to this menu
-- User can chat or ask questions - always respond and then end with display again of the menu options
-- Use menu handling logic section below
+Display: "**Select an Option:** [A] [Advanced Elicitation] [P] Party Mode [C] Continue"
 
 #### Menu Handling Logic:
 
@@ -172,6 +161,13 @@ Display: **Select an Option:** [A] [Advanced Label] [P] Party Mode [C] Continue
 - IF P: Execute {partyModeWorkflow}
 - IF C: Save content to {outputFile}, update frontmatter, then only then load, read entire file, then execute {nextStepFile}
 - IF Any other comments or queries: help user respond then [Redisplay Menu Options](#n-present-menu-options)
+
+#### EXECUTION RULES:
+
+- ALWAYS halt and wait for user input after presenting menu
+- ONLY proceed to next step when user selects 'C'
+- After other menu items execution, return to this menu
+- User can chat or ask questions - always respond and then end with display again of the menu options
 ```
 
 ### Auto-Proceed Menu (No User Choice)
@@ -179,17 +175,16 @@ Display: **Select an Option:** [A] [Advanced Label] [P] Party Mode [C] Continue
 ```markdown
 ### N. Present MENU OPTIONS
 
-Display: **Proceeding to [next action]...**
+Display: "**Proceeding to [next action]...**"
+
+#### Menu Handling Logic:
+
+- After [completion condition], immediately load, read entire file, then execute {nextStepFile}
 
 #### EXECUTION RULES:
 
 - This is an [auto-proceed reason] step with no user choices
 - Proceed directly to next step after setup
-- Use menu handling logic section below
-
-#### Menu Handling Logic:
-
-- After [completion condition], immediately load, read entire file, then execute {nextStepFile}
 ```
 
 ### Custom Menu Options
@@ -197,15 +192,7 @@ Display: **Proceeding to [next action]...**
 ```markdown
 ### N. Present MENU OPTIONS
 
-Display: **Select an Option:** [A] [Custom Action 1] [B] [Custom Action 2] [C] Continue
-
-#### EXECUTION RULES:
-
-- ALWAYS halt and wait for user input after presenting menu
-- ONLY proceed to next step when user selects 'C'
-- After other menu items execution, return to this menu
-- User can chat or ask questions - always respond and then end with display again of the menu options
-- Use menu handling logic section below
+Display: "**Select an Option:** [A] [Custom Action 1] [B] [Custom Action 2] [C] Continue"
 
 #### Menu Handling Logic:
 
@@ -213,14 +200,6 @@ Display: **Select an Option:** [A] [Custom Action 1] [B] [Custom Action 2] [C] C
 - IF B: [Custom handler for option B]
 - IF C: Save content to {outputFile}, update frontmatter, then only then load, read entire file, then execute {nextStepFile}
 - IF Any other comments or queries: help user respond then [Redisplay Menu Options](#n-present-menu-options)
-```
-
-### Conditional Menu (Based on Workflow State)
-
-```markdown
-### N. Present MENU OPTIONS
-
-Display: **Select an Option:** [A] [Custom Label] [C] Continue
 
 #### EXECUTION RULES:
 
@@ -228,7 +207,14 @@ Display: **Select an Option:** [A] [Custom Label] [C] Continue
 - ONLY proceed to next step when user selects 'C'
 - After other menu items execution, return to this menu
 - User can chat or ask questions - always respond and then end with display again of the menu options
-- Use menu handling logic section below
+```
+
+### Conditional Menu (Based on Workflow State)
+
+```markdown
+### N. Present MENU OPTIONS
+
+Display: "**Select an Option:** [A] [Custom Label] [C] Continue"
 
 #### Menu Handling Logic:
 
@@ -237,6 +223,13 @@ Display: **Select an Option:** [A] [Custom Label] [C] Continue
   - IF [condition true]: load, read entire file, then execute {pathA}
   - IF [condition false]: load, read entire file, then execute {pathB}
 - IF Any other comments or queries: help user respond then [Redisplay Menu Options](#n-present-menu-options)
+
+#### EXECUTION RULES:
+
+- ALWAYS halt and wait for user input after presenting menu
+- ONLY proceed to next step when user selects 'C'
+- After other menu items execution, return to this menu
+- User can chat or ask questions - always respond and then end with display again of the menu options
 ```
 
 ## Example Step Implementations
@@ -284,7 +277,7 @@ See [step-06-prep-schedule.md](../reference/workflows/meal-prep-nutrition/steps/
 2. **Be explicit in instructions** - No ambiguity about what to do
 3. **Include all critical rules** - Don't assume anything from other steps
 4. **Use clear, concise language** - Avoid jargon unless necessary
-5. **Ensure all menu paths have handlers** - Ensure every option has clear instructions
-6. **Document dependencies** - Clearly state what this step needs
-7. **Define success clearly** - Both for the step and the workflow
+5. **Ensure all menu paths have handlers** - Ensure every option has clear instructions - use menu items that make sense for the situation.
+6. **Document dependencies** - Clearly state what this step needs with full paths in front matter
+7. **Define success and failure clearly** - Both for the step and the workflow
 8. **Mark completion clearly** - Ensure final steps update frontmatter to indicate workflow completion

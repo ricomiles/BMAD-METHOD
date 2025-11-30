@@ -1,13 +1,13 @@
 ---
-name: 'step-03-design'
-description: 'Design the workflow structure and step sequence based on gathered requirements'
+name: 'step-04-design'
+description: 'Design the workflow structure and step sequence based on gathered requirements and tools configuration'
 
 # Path Definitions
 workflow_path: '{project-root}/{bmad_folder}/bmb/workflows/create-workflow'
 
 # File References
-thisStepFile: '{workflow_path}/steps/step-03-design.md'
-nextStepFile: '{workflow_path}/steps/step-04-build.md'
+thisStepFile: '{workflow_path}/steps/step-04-design.md'
+nextStepFile: '{workflow_path}/steps/step-05-review-plan.md'
 workflowFile: '{workflow_path}/workflow.md'
 # Output files for workflow creation process
 workflowPlanFile: '{output_folder}/workflow-plan-{new_workflow_name}.md'

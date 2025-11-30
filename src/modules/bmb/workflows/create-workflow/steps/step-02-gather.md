@@ -7,7 +7,7 @@ workflow_path: '{project-root}/{bmad_folder}/bmb/workflows/create-workflow'
 
 # File References
 thisStepFile: '{workflow_path}/steps/step-02-gather.md'
-nextStepFile: '{workflow_path}/steps/step-03-design.md'
+nextStepFile: '{workflow_path}/steps/step-03-tools-overview.md'
 workflowFile: '{workflow_path}/workflow.md'
 # Output files for workflow creation process
 workflowPlanFile: '{output_folder}/workflow-plan-{new_workflow_name}.md'

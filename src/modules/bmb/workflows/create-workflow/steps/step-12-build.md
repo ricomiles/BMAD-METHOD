@@ -1,13 +1,13 @@
 ---
-name: 'step-05-build'
+name: 'step-06-build'
 description: 'Generate all workflow files based on the approved plan'
 
 # Path Definitions
 workflow_path: '{project-root}/{bmad_folder}/bmb/workflows/create-workflow'
 
 # File References
-thisStepFile: '{workflow_path}/steps/step-05-build.md'
-nextStepFile: '{workflow_path}/steps/step-06-review.md'
+thisStepFile: '{workflow_path}/steps/step-06-build.md'
+nextStepFile: '{workflow_path}/steps/step-07-review.md'
 workflowFile: '{workflow_path}/workflow.md'
 # Output files for workflow creation process
 workflowPlanFile: '{output_folder}/workflow-plan-{new_workflow_name}.md'

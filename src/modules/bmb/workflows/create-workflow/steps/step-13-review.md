@@ -1,16 +1,17 @@
 ---
-name: 'step-06-review'
+name: 'step-07-review'
 description: 'Review the generated workflow and provide final validation and next steps'
 
 # Path Definitions
 workflow_path: '{project-root}/{bmad_folder}/bmb/workflows/create-workflow'
 
 # File References
-thisStepFile: '{workflow_path}/steps/step-06-review.md'
+thisStepFile: '{workflow_path}/steps/step-07-review.md'
 workflowFile: '{workflow_path}/workflow.md'
 # Output files for workflow creation process
 workflowPlanFile: '{output_folder}/workflow-plan-{new_workflow_name}.md'
 targetWorkflowPath: '{custom_workflow_location}/{new_workflow_name}'
+nextStepFile: '{workflow_path}/steps/step-08-compliance-check.md'
 
 # Task References
 advancedElicitationTask: '{project-root}/{bmad_folder}/core/tasks/advanced-elicitation.xml'
@@ -203,12 +204,12 @@ Then load and append the content from {completionTemplate}
 
 ## FINAL MENU OPTIONS
 
-Display: **Workflow Creation Complete!** [A] Advanced Elicitation [P] Party Mode [F] Finish
+Display: **Workflow Review Complete!** [A] Advanced Elicitation [P] Party Mode [C] Continue to Compliance Check
 
 #### EXECUTION RULES:
 
 - ALWAYS halt and wait for user input after presenting menu
-- This is the final step - only 'F' will complete the process
+- Compliance check is required before workflow completion
 - After other menu items execution, return to this menu
 - User can chat or ask questions - always respond and then end with display again of the menu options
 - Use menu handling logic section below
@@ -217,12 +218,12 @@ Display: **Workflow Creation Complete!** [A] Advanced Elicitation [P] Party Mode
 
 - IF A: Execute {advancedElicitationTask}
 - IF P: Execute {partyModeWorkflow}
-- IF F: Mark workflow as complete, provide final summary, and end session
+- IF C: Save content to {workflowPlanFile}, update frontmatter, then only then load, read entire file, then execute {nextStepFile}
 - IF Any other comments or queries: help user respond then [Redisplay Menu Options](#final-menu-options)
 
-## FINAL STEP COMPLETION NOTE
+## CRITICAL STEP COMPLETION NOTE
 
-ONLY WHEN F is selected and workflow is marked as complete will the session end. Update frontmatter to mark the entire workflow creation process as complete and provide the user with their final deliverables.
+ONLY WHEN C is selected and content is saved to {workflowPlanFile} with frontmatter updated, will you then load and read fully {nextStepFile} to execute and begin compliance validation phase.
 
 ---
 
