@@ -228,7 +228,7 @@ Append to {complianceReportFile}:
 - Goal alignment and optimization assessment
 - Meta-workflow failure analysis and improvement recommendations
 
-**Select an Option:** [C] Continue to Holistic Analysis [X] Exit"
+**Select an Option:** [C] Continue to Web Subprocess Validation [X] Exit"
 
 ## Menu Handling Logic:
 
@@ -238,7 +238,7 @@ Append to {complianceReportFile}:
 
 ## CRITICAL STEP COMPLETION NOTE
 
-ONLY WHEN [C continue option] is selected and [spectrum position confirmed with user understanding], will you then load and read fully `{nextStepFile}` to execute and begin holistic analysis phase.
+ONLY WHEN [C continue option] is selected and [spectrum position confirmed with user understanding], will you then load and read fully `{nextStepFile}` to execute and begin Web Subprocess Validation phase.
 
 ---
 

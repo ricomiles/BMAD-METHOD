@@ -259,7 +259,7 @@ For each file with issues:
 - Meta-workflow failure analysis
 - Strategic recommendations and improvement planning
 
-**Select an Option:** [C] Continue to Holistic Analysis [X] Exit"
+**Select an Option:** [C] Continue to Intent Spectrum Validation [X] Exit"
 
 ## Menu Handling Logic:
 
@@ -269,7 +269,7 @@ For each file with issues:
 
 ## CRITICAL STEP COMPLETION NOTE
 
-ONLY WHEN [C continue option] is selected and [all file sizes analyzed, markdown formatting validated, and CSV files checked against standards], will you then load and read fully `{nextStepFile}` to execute and begin holistic analysis phase.
+ONLY WHEN [C continue option] is selected and [all file sizes analyzed, markdown formatting validated, and CSV files checked against standards], will you then load and read fully `{nextStepFile}` to execute and begin Intent Spectrum Validation phase.
 
 ---
 
