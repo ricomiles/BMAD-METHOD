@@ -7,7 +7,7 @@ workflow_path: '{project-root}/{bmad_folder}/bmb/workflows/create-workflow'
 
 # File References
 thisStepFile: '{workflow_path}/steps/step-08-tools-summary.md'
-nextStepFile: '{workflow_path}/steps/step-04-design.md'
+nextStepFile: '{workflow_path}/steps/step-09-design.md'
 workflowFile: '{workflow_path}/workflow.md'
 workflowPlanFile: '{output_folder}/workflow-plan-{new_workflow_name}.md'
 
@@ -136,13 +136,12 @@ All tools configured and ready for workflow design phase.
 
 ### 5. Menu Options
 
-Display: **Select an Option:** [C] Continue to Workflow Design [M] Modify Configuration [X] Exit
+Display: **Select an Option:** [C] Continue to Workflow Design [M] Modify Configuration
 
 #### Menu Handling Logic:
 
 - IF C: Save final summary, update frontmatter stepsCompleted: [3, 4, 5, 6, 7, 8], then load {nextStepFile}
 - IF M: Return to specific configuration step
-- IF X: Save current state and end session
 
 ## CRITICAL STEP COMPLETION NOTE
 

@@ -130,13 +130,12 @@ Append to {workflowPlanFile}:
 
 ### 6. Menu Options
 
-Display: **Select an Option:** [C] Continue to Tools Summary [M] Modify Installation Approach [X] Exit
+Display: **Select an Option:** [C] Continue to Tools Summary [M] Modify Installation Approach
 
 #### Menu Handling Logic:
 
-- IF C: Save installation configuration and load {nextStepFile}
+- IF C: Append installation configuration to {workflowPlanFile}, update frontmatter, then load {nextStepFile}
 - IF M: Refine installation approach
-- IF X: Save current state and end session
 
 ## CRITICAL STEP COMPLETION NOTE
 

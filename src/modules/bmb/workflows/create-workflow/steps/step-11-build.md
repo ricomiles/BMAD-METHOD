@@ -1,13 +1,13 @@
 ---
-name: 'step-06-build'
+name: 'step-11-build'
 description: 'Generate all workflow files based on the approved plan'
 
 # Path Definitions
 workflow_path: '{project-root}/{bmad_folder}/bmb/workflows/create-workflow'
 
 # File References
-thisStepFile: '{workflow_path}/steps/step-06-build.md'
-nextStepFile: '{workflow_path}/steps/step-07-review.md'
+thisStepFile: '{workflow_path}/steps/step-11-build.md'
+nextStepFile: '{workflow_path}/steps/step-12-review.md'
 workflowFile: '{workflow_path}/workflow.md'
 # Output files for workflow creation process
 workflowPlanFile: '{output_folder}/workflow-plan-{new_workflow_name}.md'
@@ -18,8 +18,8 @@ advancedElicitationTask: '{project-root}/{bmad_folder}/core/tasks/advanced-elici
 partyModeWorkflow: '{project-root}/{bmad_folder}/core/workflows/party-mode/workflow.md'
 
 # Template References
-workflowYamlTemplate: '{workflow_path}/templates/workflow-yaml.md'
-stepFileTemplate: '{workflow_path}/templates/step-file.md'
+workflowTemplate: '{project-root}/{bmad_folder}/bmb/docs/workflows/workflow-template.md'
+stepTemplate: '{project-root}/{bmad_folder}/bmb/docs/workflows/step-template.md'
 contentTemplate: '{workflow_path}/templates/content-template.md'
 buildSummaryTemplate: '{workflow_path}/templates/build-summary.md'
 ---
@@ -63,19 +63,16 @@ To generate all the workflow files (workflow.md, step files, templates, and supp
 
 ## CONTEXT BOUNDARIES:
 
-- Approved plan from step 4 guides implementation
+- Approved plan from step 10 guides implementation
 - Generate files in target workflow location
 - Load templates and documentation as needed during build
 - Follow step-file architecture principles
 
 ## BUILD REFERENCE MATERIALS:
 
-When building, you will need to load:
-
-- Template files from `{workflow_path}/templates/`
-- Step file structure from `{project-root}/{bmad_folder}/bmb/docs/workflows/step-template.md`
-- Workflow configuration from `{project-root}/{bmad_folder}/bmb/docs/workflows/workflow-template.md`
-- Example step files from the Meal Prep workflow as patterns
+- When building each step file, you must follow template `{project-root}/{bmad_folder}/bmb/docs/workflows/step-template.md`
+- When building the main workflow.md file, you must follow template `{project-root}/{bmad_folder}/bmb/docs/workflows/workflow-template.md`
+- Example step files from {project-root}/{bmad_folder}/bmb/reference/workflows/meal-prep-nutrition/workflow.md for patterns
 
 ## FILE GENERATION SEQUENCE:
 
@@ -115,10 +112,11 @@ For other modules, check their install-config.yaml for custom_workflow_location
 
 ### 3. Generate workflow.md
 
-Load and customize {workflowYamlTemplate}:
+Load and follow {workflowTemplate}:
 
+- Create workflow.md using template structure
 - Insert workflow name and description
-- Configure all path variables
+- Configure all path variables ({project-root}, {bmad_folder}, {workflow_path})
 - Set web_bundle flag to true unless user has indicated otherwise
 - Define role and goal
 - Include initialization path to step-01
@@ -127,11 +125,12 @@ Load and customize {workflowYamlTemplate}:
 
 For each step in the design:
 
-- Load {stepFileTemplate}
+- Load and follow {stepTemplate}
+- Create step file using template structure
 - Customize with step-specific content
 - Ensure proper frontmatter with path references
-- Include appropriate menu handling
-- Follow all mandatory rules and protocols
+- Include appropriate menu handling and universal rules
+- Follow all mandatory rules and protocols from template
 
 ### 5. Generate Templates (If Needed)
 
@@ -146,7 +145,7 @@ For document workflows:
 
 Based on design requirements:
 
-- Create data files with example content
+- Create data files (csv)
 - Generate README.md with usage instructions
 - Create any configuration files
 - Add validation checklists if designed
@@ -224,22 +223,18 @@ Load and append the content from {buildSummaryTemplate}
 
 ### 9. Present MENU OPTIONS
 
-Display: **Select an Option:** [A] Advanced Elicitation [P] Party Mode [C] Continue
+Display: **Build Complete - Select an Option:** [C] Continue to Review
 
 #### EXECUTION RULES:
 
-- ALWAYS halt and wait for user input after presenting menu
-- ONLY proceed to next step when user selects 'C'
-- After other menu items execution, return to this menu
-- User can chat or ask questions - always respond and then end with display again of the menu options
-- Use menu handling logic section below
+- Build complete - all files generated
+- Present simple completion status
+- User selects [C] to continue to review step
 
 #### Menu Handling Logic:
 
-- IF A: Execute {advancedElicitationTask}
-- IF P: Execute {partyModeWorkflow}
-- IF C: Save content to {workflowPlanFile}, update frontmatter, then only then load, read entire file, then execute {nextStepFile}
-- IF Any other comments or queries: help user respond then [Redisplay Menu Options](#9-present-menu-options)
+- IF C: Save build summary to {workflowPlanFile}, update frontmatter, then load, read entire file, then execute {nextStepFile}
+- IF Any other comments or queries: respond and redisplay menu
 
 ## CRITICAL STEP COMPLETION NOTE
 

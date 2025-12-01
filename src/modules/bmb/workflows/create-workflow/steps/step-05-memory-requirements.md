@@ -107,13 +107,12 @@ Append to {workflowPlanFile}:
 
 ### 6. Menu Options
 
-Display: **Select an Option:** [C] Continue to External Tools [M] Modify Memory [X] Exit
+Display: **Select an Option:** [C] Continue to External Tools [M] Modify Memory
 
 #### Menu Handling Logic:
 
-- IF C: Save memory configuration and load {nextStepFile}
+- IF C: Append memory configuration to {workflowPlanFile}, update frontmatter, then load {nextStepFile}
 - IF M: Refine memory requirements
-- IF X: Save current state and end session
 
 ## CRITICAL STEP COMPLETION NOTE
 

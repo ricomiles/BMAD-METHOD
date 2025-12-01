@@ -1,13 +1,13 @@
 ---
-name: 'step-05-review-plan'
+name: 'step-10-plan-review'
 description: 'Review the complete workflow plan before generating files'
 
 # Path Definitions
 workflow_path: '{project-root}/{bmad_folder}/bmb/workflows/create-workflow'
 
 # File References
-thisStepFile: '{workflow_path}/steps/step-05-review-plan.md'
-nextStepFile: '{workflow_path}/steps/step-06-build.md'
+thisStepFile: '{workflow_path}/steps/step-10-plan-review.md'
+nextStepFile: '{workflow_path}/steps/step-11-build.md'
 workflowFile: '{workflow_path}/workflow.md'
 # Output files for workflow creation process
 workflowPlanFile: '{output_folder}/workflow-plan-{new_workflow_name}.md'
@@ -82,26 +82,43 @@ Read the entire {workflowPlanFile} and present it to the user:
 - Implementation Plan
 - Target Location and file structure
 
-### 2. Walk Through Key Aspects
+### 2. Analyze Plan for Gaps and Issues
 
-Explain the plan's key components:
+Perform systematic analysis of the loaded plan:
 
-- **Workflow Flow**: Linear, looping, branching, or iterative
-- **Step Structure**: Number of steps and their purposes
-- **Instruction Style**: Intent-based vs prescriptive approach
-- **User Interaction**: How users will interact with the workflow
-- **Files to Generate**: Complete list of files that will be created
+**Logical Flow Check:**
 
-### 3. Address Questions and Concerns
+- Do requirements align with proposed solution?
+- Are tools appropriate for the workflow type?
+- Is step sequence logical and complete?
+- Are there missing transitions between steps?
 
-Answer any questions about:
+**Completeness Review:**
 
-- Why certain design decisions were made
-- How specific requirements will be met
-- Whether the workflow will handle edge cases
-- Any concerns about the implementation approach
+- All requirements captured and addressed?
+- Design covers all user scenarios?
+- Implementation plan includes all necessary files?
+- Are there unclear or ambiguous specifications?
 
-### 4. Gather Feedback
+**Architecture Validation:**
+
+- Follows BMAD step-file architecture?
+- Proper use of template patterns?
+- Menu flow is logical and complete?
+- Variable naming is consistent?
+
+**Issue Identification:**
+If gaps or issues found:
+
+- Clearly identify each issue
+- Propose specific solutions
+- Ask for user input on resolution approach
+
+### 3. Present Menu for Plan Approval
+
+Display: **Plan Review Complete - Select an Option:** [A] Advanced Elicitation [P] Party Mode [C] Continue to Build
+
+### 4. Address Questions and Concerns
 
 Ask for specific feedback:
 
@@ -149,20 +166,9 @@ Before proceeding to build, get explicit confirmation:
 "Based on this plan, I will generate:
 
 - [List of files]
-  in [target location]
+  in [target location]"
 
-Do you approve this plan and want me to proceed with building the workflow? [Y/N]"
-
-### If Approved
-
-- Update {workflowPlanFile} frontmatter: `stepsCompleted: [1, 2, 3, 4]`, `lastStep: "review"`
-- Proceed to step 5 (Build)
-
-### If Not Approved
-
-- Note specific concerns
-- Either revise the plan here or return to appropriate earlier step
-- Continue until user is satisfied
+Ready to proceed when you are! Select your option below to build or modify the plan.
 
 ### 6. Present MENU OPTIONS
 

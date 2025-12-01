@@ -19,6 +19,7 @@ partyModeWorkflow: '{project-root}/{bmad_folder}/core/workflows/party-mode/workf
 
 # Template References
 projectInfoTemplate: '{workflow_path}/templates/project-info.md'
+workflowPlanTemplate: '{workflow_path}/templates/workflow-plan.md'
 ---
 
 # Step 1: Workflow Creation Initialization
@@ -110,7 +111,7 @@ Ask conversationally:
 
 #### B. Create Workflow Plan Document
 
-Create the workflow plan document at `{workflowPlanFile}` using the workflow plan template.
+Create the workflow plan document at `{workflowPlanFile}` using the workflow plan template `{workflowPlanTemplate}`.
 Initialize frontmatter with:
 
 ```yaml

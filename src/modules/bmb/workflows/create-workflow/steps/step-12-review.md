@@ -1,17 +1,16 @@
 ---
-name: 'step-07-review'
+name: 'step-12-review'
 description: 'Review the generated workflow and provide final validation and next steps'
 
 # Path Definitions
 workflow_path: '{project-root}/{bmad_folder}/bmb/workflows/create-workflow'
 
 # File References
-thisStepFile: '{workflow_path}/steps/step-07-review.md'
+thisStepFile: '{workflow_path}/steps/step-12-review.md'
 workflowFile: '{workflow_path}/workflow.md'
 # Output files for workflow creation process
 workflowPlanFile: '{output_folder}/workflow-plan-{new_workflow_name}.md'
 targetWorkflowPath: '{custom_workflow_location}/{new_workflow_name}'
-nextStepFile: '{workflow_path}/steps/step-08-compliance-check.md'
 
 # Task References
 advancedElicitationTask: '{project-root}/{bmad_folder}/core/tasks/advanced-elicitation.xml'
@@ -204,26 +203,50 @@ Then load and append the content from {completionTemplate}
 
 ## FINAL MENU OPTIONS
 
-Display: **Workflow Review Complete!** [A] Advanced Elicitation [P] Party Mode [C] Continue to Compliance Check
+Display: **All Files Created Successfully!** [C] Complete & Get Validation Instructions
 
 #### EXECUTION RULES:
 
 - ALWAYS halt and wait for user input after presenting menu
-- Compliance check is required before workflow completion
+- Provide compliance check guidance for new context execution
 - After other menu items execution, return to this menu
 - User can chat or ask questions - always respond and then end with display again of the menu options
 - Use menu handling logic section below
 
 #### Menu Handling Logic:
 
-- IF A: Execute {advancedElicitationTask}
-- IF P: Execute {partyModeWorkflow}
-- IF C: Save content to {workflowPlanFile}, update frontmatter, then only then load, read entire file, then execute {nextStepFile}
-- IF Any other comments or queries: help user respond then [Redisplay Menu Options](#final-menu-options)
+- IF C: Save content to {workflowPlanFile}, update frontmatter, then provide validation instructions for running in new context
+- IF Any other comments or queries: respond and redisplay menu
 
-## CRITICAL STEP COMPLETION NOTE
+## COMPLIANCE CHECK INSTRUCTIONS
 
-ONLY WHEN C is selected and content is saved to {workflowPlanFile} with frontmatter updated, will you then load and read fully {nextStepFile} to execute and begin compliance validation phase.
+When user selects [C], provide these instructions:
+
+**🎯 Workflow Creation Complete! Your new workflow is ready at:**
+`{target_workflow_path}`
+
+**⚠️ IMPORTANT - Run Compliance Check in New Context:**
+To validate your workflow meets BMAD standards:
+
+1. **Start a new Claude conversation** (fresh context)
+2. **Use this command:** `/bmad:bmm:workflows:workflow-compliance-check`
+3. **Provide the path:** `{target_workflow_path}/workflow.md`
+4. **Follow the validation process** to identify and fix any violations
+
+**Why New Context?**
+
+- Compliance checking requires fresh analysis without workflow creation context
+- Ensures objective validation against template standards
+- Provides detailed violation reporting with specific fix recommendations
+
+**Your workflow will be checked for:**
+
+- Template compliance and structure
+- Step-by-step validation standards
+- File optimization and formatting
+- Meta-workflow best practices
+
+Ready to validate when you are! [Start new context and run compliance check]
 
 ---
 

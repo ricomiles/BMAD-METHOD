@@ -59,6 +59,11 @@ Load and read full config from {project-root}/{bmad_folder}/[module such as core
 
 - `project_name`, `output_folder`, `user_name`, `communication_language`, `document_output_language`, [any additional variables]
 
+**Note:** Use variable substitution patterns for flexible installation paths:
+- `{project-root}` - Root directory of the project
+- `{bmad_folder}` - Name of the BMAD folder (usually `.bmad`)
+- `[module]` - Module name (core, bmm, bmb, or custom)
+
 ### 2. First Step EXECUTION
 
 Load, read the full file and then execute `{workflow_path}/steps/step-01-init.md` to begin the workflow.

@@ -132,15 +132,16 @@ For each deviation:
 
 "**Initialization Validation:**"
 
-- Configuration Loading uses correct path format: `{project-root}/{bmad_folder}/[module]/config.yaml`
+- Configuration Loading uses correct path format: `{project-root}/{bmad_folder}/[module]/config.yaml` (variable substitution pattern)
 - First step follows pattern: `step-01-init.md` OR documented deviation
 - Required config variables properly listed
+- Variables use proper substitution pattern: {project-root}, {bmad_folder}, {workflow_path}, etc.
 
 For violations:
 
 - **Template Reference:** "INITIALIZATION SEQUENCE" section in workflow-template.md
-- **Severity:** Major (incorrect paths) or Minor (missing variables)
-- **Specific Fix:** Correct path format and step reference
+- **Severity:** Major (incorrect paths or missing variables) or Minor (format issues)
+- **Specific Fix:** Use proper variable substitution patterns for flexible installation
 
 ### 6. Document Workflow.md Findings
 

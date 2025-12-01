@@ -116,13 +116,12 @@ Append to {workflowPlanFile}:
 
 ### 5. Menu Options
 
-Display: **Select an Option:** [C] Continue to Memory Configuration [M] Modify Core Tools [X] Exit
+Display: **Select an Option:** [C] Continue to Memory Configuration [M] Modify Core Tools
 
 #### Menu Handling Logic:
 
-- IF C: Save configuration and load {nextStepFile}
+- IF C: Append core tools configuration to {workflowPlanFile}, update frontmatter, then load {nextStepFile}
 - IF M: Return to tool configuration
-- IF X: Save current state and end session
 
 ## CRITICAL STEP COMPLETION NOTE
 

@@ -98,13 +98,12 @@ Append to {workflowPlanFile}:
 
 ### 5. Menu Options
 
-Display: **Select an Option:** [C] Continue to Core Tools [M] Modify Requirements [X] Exit
+Display: **Select an Option:** [C] Continue to Core Tools [M] Modify Requirements
 
 #### Menu Handling Logic:
 
-- IF C: Save requirements and load {nextStepFile}
+- IF C: Append tools overview to {workflowPlanFile}, update frontmatter, then load {nextStepFile}
 - IF M: Refine requirements discussion
-- IF X: Save current state and end session
 
 ## CRITICAL STEP COMPLETION NOTE
 

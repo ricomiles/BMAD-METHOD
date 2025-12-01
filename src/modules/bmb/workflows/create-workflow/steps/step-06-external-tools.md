@@ -125,13 +125,12 @@ Append to {workflowPlanFile}:
 
 ### 6. Menu Options
 
-Display: **Select an Option:** [C] Continue to Installation Guidance [M] Modify External Tools [X] Exit
+Display: **Select an Option:** [C] Continue to Installation Guidance [M] Modify External Tools
 
 #### Menu Handling Logic:
 
-- IF C: Save selections and load {nextStepFile}
+- IF C: Append external tools configuration to {workflowPlanFile}, update frontmatter, then load {nextStepFile}
 - IF M: Refine external tool requirements
-- IF X: Save current state and end session
 
 ## CRITICAL STEP COMPLETION NOTE
 
