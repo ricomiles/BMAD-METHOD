@@ -70,8 +70,10 @@ To collaboratively design the workflow structure, step sequence, and interaction
 
 When designing, you may load these documents as needed:
 
-- `{project-root}/{bmad_folder}/bmb/docs/workflows/step-template.md` - Step file structure
-- `{project-root}/{bmad_folder}/bmb/docs/workflows/workflow-template.md` - Workflow configuration
+- `{project-root}/{bmad_folder}/bmb/docs/workflows/templates/step-template.md` - Step file structure
+- `{project-root}/{bmad_folder}/bmb/docs/workflows/templates/step-01-init-continuable-template.md` - Continuable init step template
+- `{project-root}/{bmad_folder}/bmb/docs/workflows/templates/step-1b-template.md` - Continuation step template
+- `{project-root}/{bmad_folder}/bmb/docs/workflows/templates/workflow-template.md` - Workflow configuration
 - `{project-root}/{bmad_folder}/bmb/docs/workflows/architecture.md` - Architecture principles
 - `{project-root}/{bmad_folder}/bmb/reference/workflows/meal-prep-nutrition/workflow.md` - Complete example
 
@@ -84,16 +86,43 @@ Let's reference our step creation documentation for best practices:
 Load and reference step-file architecture guide:
 
 ```
-Read: {project-root}/{bmad_folder}/bmb/docs/workflows/step-template.md
+Read: {project-root}/{bmad_folder}/bmb/docs/workflows/templates/step-template.md
 ```
 
-This shows the standard structure for step files. Based on the requirements, collaboratively design:
+This shows the standard structure for step files. Also reference:
+
+```
+Read: {project-root}/{bmad_folder}/bmb/docs/workflows/templates/step-1b-template.md
+```
+
+This shows the continuation step pattern for workflows that might take multiple sessions.
+
+Based on the requirements, collaboratively design:
 
 - How many major steps does this workflow need? (Recommend 3-7)
 - What is the goal of each step?
 - Which steps are optional vs required?
 - Should any steps repeat or loop?
 - What are the decision points within steps?
+
+### 1a. Continuation Support Assessment
+
+**Ask the user:**
+"Will this workflow potentially take multiple sessions to complete? Consider:
+
+- Does this workflow generate a document/output file?
+- Might users need to pause and resume the workflow?
+- Does the workflow involve extensive data collection or analysis?
+- Are there complex decisions that might require multiple sessions?
+
+If **YES** to any of these, we should include continuation support using step-01b-continue.md."
+
+**If continuation support is needed:**
+
+- Include step-01-init.md (with continuation detection logic)
+- Include step-01b-continue.md (for resuming workflows)
+- Ensure every step updates `stepsCompleted` in output frontmatter
+- Design the workflow to persist state between sessions
 
 ### 2. Interaction Pattern Design
 

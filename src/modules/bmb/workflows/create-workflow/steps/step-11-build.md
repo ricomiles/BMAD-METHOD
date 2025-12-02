@@ -18,8 +18,10 @@ advancedElicitationTask: '{project-root}/{bmad_folder}/core/tasks/advanced-elici
 partyModeWorkflow: '{project-root}/{bmad_folder}/core/workflows/party-mode/workflow.md'
 
 # Template References
-workflowTemplate: '{project-root}/{bmad_folder}/bmb/docs/workflows/workflow-template.md'
-stepTemplate: '{project-root}/{bmad_folder}/bmb/docs/workflows/step-template.md'
+workflowTemplate: '{project-root}/{bmad_folder}/bmb/docs/workflows/templates/workflow-template.md'
+stepTemplate: '{project-root}/{bmad_folder}/bmb/docs/workflows/templates/step-template.md'
+stepInitContinuableTemplate: '{project-root}/{bmad_folder}/bmb/docs/workflows/templates/step-01-init-continuable-template.md'
+step1bTemplate: '{project-root}/{bmad_folder}/bmb/docs/workflows/templates/step-1b-template.md'
 contentTemplate: '{workflow_path}/templates/content-template.md'
 buildSummaryTemplate: '{workflow_path}/templates/build-summary.md'
 ---
@@ -70,8 +72,10 @@ To generate all the workflow files (workflow.md, step files, templates, and supp
 
 ## BUILD REFERENCE MATERIALS:
 
-- When building each step file, you must follow template `{project-root}/{bmad_folder}/bmb/docs/workflows/step-template.md`
-- When building the main workflow.md file, you must follow template `{project-root}/{bmad_folder}/bmb/docs/workflows/workflow-template.md`
+- When building each step file, you must follow template `{project-root}/{bmad_folder}/bmb/docs/workflows/templates/step-template.md`
+- When building continuable step-01-init.md files, use template `{project-root}/{bmad_folder}/bmb/docs/workflows/templates/step-01-init-continuable-template.md`
+- When building continuation steps, use template `{project-root}/{bmad_folder}/bmb/docs/workflows/templates/step-1b-template.md`
+- When building the main workflow.md file, you must follow template `{project-root}/{bmad_folder}/bmb/docs/workflows/templates/workflow-template.md`
 - Example step files from {project-root}/{bmad_folder}/bmb/reference/workflows/meal-prep-nutrition/workflow.md for patterns
 
 ## FILE GENERATION SEQUENCE:
@@ -99,6 +103,7 @@ Create the workflow folder structure in the target location:
 ├── workflow.md
 ├── steps/
 │   ├── step-01-init.md
+│   ├── step-01b-continue.md (if continuation support needed)
 │   ├── step-02-[name].md
 │   └── ...
 ├── templates/
@@ -123,7 +128,47 @@ Load and follow {workflowTemplate}:
 
 ### 4. Generate Step Files
 
-For each step in the design:
+#### 4a. Check for Continuation Support
+
+**Check the workflow plan for continuation support:**
+
+- Look for "continuation support: true" or similar flag
+- Check if step-01b-continue.md was included in the design
+- If workflow generates output documents, continuation is typically needed
+
+#### 4b. Generate step-01-init.md (with continuation logic)
+
+If continuation support is needed:
+
+- Load and follow {stepInitContinuableTemplate}
+- This template automatically includes all required continuation detection logic
+- Customize with workflow-specific information:
+  - Update workflow_path references
+  - Set correct outputFile and templateFile paths
+  - Adjust role and persona to match workflow type
+  - Customize welcome message for workflow context
+  - Configure input document discovery patterns (if any)
+- Template automatically handles:
+  - continueFile reference in frontmatter
+  - Logic to check for existing output files with stepsCompleted
+  - Routing to step-01b-continue.md for continuation
+  - Fresh workflow initialization
+
+#### 4c. Generate step-01b-continue.md (if needed)
+
+**If continuation support is required:**
+
+- Load and follow {step1bTemplate}
+- Customize with workflow-specific information:
+  - Update workflow_path references
+  - Set correct outputFile path
+  - Adjust role and persona to match workflow type
+  - Customize welcome back message for workflow context
+- Ensure proper nextStep detection logic based on step numbers
+
+#### 4d. Generate Remaining Step Files
+
+For each remaining step in the design:
 
 - Load and follow {stepTemplate}
 - Create step file using template structure
@@ -131,6 +176,7 @@ For each step in the design:
 - Ensure proper frontmatter with path references
 - Include appropriate menu handling and universal rules
 - Follow all mandatory rules and protocols from template
+- **Critical**: Ensure each step updates `stepsCompleted` array when completing
 
 ### 5. Generate Templates (If Needed)
 
