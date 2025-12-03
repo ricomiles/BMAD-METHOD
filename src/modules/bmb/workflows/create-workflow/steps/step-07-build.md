@@ -1,36 +1,32 @@
 ---
-name: 'step-11-build'
+name: 'step-07-build'
 description: 'Generate all workflow files based on the approved plan'
 
 # Path Definitions
 workflow_path: '{project-root}/{bmad_folder}/bmb/workflows/create-workflow'
 
 # File References
-thisStepFile: '{workflow_path}/steps/step-11-build.md'
-nextStepFile: '{workflow_path}/steps/step-12-review.md'
+thisStepFile: '{workflow_path}/steps/step-07-build.md'
+nextStepFile: '{workflow_path}/steps/step-08-review.md'
 workflowFile: '{workflow_path}/workflow.md'
 # Output files for workflow creation process
-workflowPlanFile: '{output_folder}/workflow-plan-{new_workflow_name}.md'
 targetWorkflowPath: '{custom_workflow_location}/{new_workflow_name}'
-
-# Task References
-advancedElicitationTask: '{project-root}/{bmad_folder}/core/tasks/advanced-elicitation.xml'
-partyModeWorkflow: '{project-root}/{bmad_folder}/core/workflows/party-mode/workflow.md'
+workflowPlanFile: '{targetWorkflowPath}/workflow-plan-{new_workflow_name}.md'
 
 # Template References
 workflowTemplate: '{project-root}/{bmad_folder}/bmb/docs/workflows/templates/workflow-template.md'
 stepTemplate: '{project-root}/{bmad_folder}/bmb/docs/workflows/templates/step-template.md'
 stepInitContinuableTemplate: '{project-root}/{bmad_folder}/bmb/docs/workflows/templates/step-01-init-continuable-template.md'
 step1bTemplate: '{project-root}/{bmad_folder}/bmb/docs/workflows/templates/step-1b-template.md'
-contentTemplate: '{workflow_path}/templates/content-template.md'
-buildSummaryTemplate: '{workflow_path}/templates/build-summary.md'
+# No content templates needed - will create content as needed during build
+# No build summary template needed - will append summary directly to workflow plan
 ---
 
-# Step 5: Workflow File Generation
+# Step 7: Workflow File Generation
 
 ## STEP GOAL:
 
-To generate all the workflow files (workflow.md, step files, templates, and supporting files) based on the approved plan from the previous review step.
+To generate all the workflow files (workflow.md, step files, templates, and supporting files) based on the approved plan from the previous design step.
 
 ## MANDATORY EXECUTION RULES (READ FIRST):
 
@@ -60,12 +56,12 @@ To generate all the workflow files (workflow.md, step files, templates, and supp
 
 - 🎯 Generate files systematically from design
 - 💾 Document all generated files and their locations
-- 📖 Update frontmatter `stepsCompleted: [1, 2, 3, 4]` before loading next step
+- 📖 Update frontmatter `stepsCompleted: [1, 2, 3, 4, 5, 6, 7]` before loading next step
 - 🚫 FORBIDDEN to load next step until user selects 'C' and build is complete
 
 ## CONTEXT BOUNDARIES:
 
-- Approved plan from step 10 guides implementation
+- Approved plan from step 6 guides implementation
 - Generate files in target workflow location
 - Load templates and documentation as needed during build
 - Follow step-file architecture principles
@@ -182,7 +178,6 @@ For each remaining step in the design:
 
 For document workflows:
 
-- Load {contentTemplate}
 - Create template.md with proper structure
 - Include all variables from design
 - Ensure variable naming consistency
@@ -265,7 +260,12 @@ Create a summary of what was generated:
 
 After generating all files, append to {workflowPlanFile}:
 
-Load and append the content from {buildSummaryTemplate}
+Create a build summary including:
+
+- List of all files created with full paths
+- Any customizations from templates
+- Manual steps needed
+- Next steps for testing
 
 ### 9. Present MENU OPTIONS
 
