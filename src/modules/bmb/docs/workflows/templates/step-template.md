@@ -11,7 +11,7 @@ description: '[Brief description of what this step accomplishes]'
 
 <!-- Path Definitions -->
 
-workflow_path: '{project-root}/{bmad_folder}/bmb/reference/workflows/[workflow-name]' # the folder the workflow.md file is in
+workflow*path: '{project-root}/{\_bmad_folder*}/bmb/reference/workflows/[workflow-name]' # the folder the workflow.md file is in
 
 # File References (all use {variable} format in file)
 
@@ -23,8 +23,8 @@ outputFile: '{output_folder}/[output-file-name]-{project_name}.md'
 
 # Task References (IF THE workflow uses and it makes sense in this step to have these )
 
-advancedElicitationTask: '{project-root}/{bmad_folder}/core/tasks/advanced-elicitation.xml'
-partyModeWorkflow: '{project-root}/{bmad_folder}/core/workflows/party-mode/workflow.md'
+advancedElicitationTask: '{project-root}/{_bmad_folder_}/core/tasks/advanced-elicitation.xml'
+partyModeWorkflow: '{project-root}/{_bmad_folder_}/core/workflows/party-mode/workflow.md'
 
 # Template References (if this step uses a specific templates)
 
