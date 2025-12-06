@@ -34,9 +34,13 @@ class ManifestGenerator {
 
     // Store modules list (all modules including preserved ones)
     const preservedModules = options.preservedModules || [];
+
+    // Scan the bmad directory to find all actually installed modules
+    const installedModules = await this.scanInstalledModules(bmadDir);
+
     // Deduplicate modules list to prevent duplicates
-    this.modules = [...new Set(['core', ...selectedModules, ...preservedModules])];
-    this.updatedModules = [...new Set(['core', ...selectedModules])]; // Only these get rescanned
+    this.modules = [...new Set(['core', ...selectedModules, ...preservedModules, ...installedModules])];
+    this.updatedModules = [...new Set(['core', ...selectedModules, ...installedModules])]; // All installed modules get rescanned
     this.preservedModules = preservedModules; // These stay as-is in CSVs
     this.bmadDir = bmadDir;
     this.bmadFolderName = path.basename(bmadDir); // Get the actual folder name (e.g., '.bmad' or 'bmad')
@@ -699,6 +703,42 @@ class ManifestGenerator {
 
     await fs.writeFile(csvPath, csv);
     return csvPath;
+  }
+
+  /**
+   * Scan the bmad directory to find all installed modules
+   * @param {string} bmadDir - Path to bmad directory
+   * @returns {Array} List of module names
+   */
+  async scanInstalledModules(bmadDir) {
+    const modules = [];
+
+    try {
+      const entries = await fs.readdir(bmadDir, { withFileTypes: true });
+
+      for (const entry of entries) {
+        // Skip if not a directory or is a special directory
+        if (!entry.isDirectory() || entry.name.startsWith('.') || entry.name === '_cfg') {
+          continue;
+        }
+
+        // Check if this looks like a module (has agents, workflows, or tasks directory)
+        const modulePath = path.join(bmadDir, entry.name);
+        const hasAgents = await fs.pathExists(path.join(modulePath, 'agents'));
+        const hasWorkflows = await fs.pathExists(path.join(modulePath, 'workflows'));
+        const hasTasks = await fs.pathExists(path.join(modulePath, 'tasks'));
+        const hasTools = await fs.pathExists(path.join(modulePath, 'tools'));
+
+        // If it has any of these directories, it's likely a module
+        if (hasAgents || hasWorkflows || hasTasks || hasTools) {
+          modules.push(entry.name);
+        }
+      }
+    } catch (error) {
+      console.warn(`Warning: Could not scan for installed modules: ${error.message}`);
+    }
+
+    return modules;
   }
 }
 
