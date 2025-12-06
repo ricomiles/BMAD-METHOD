@@ -220,18 +220,23 @@ class ManifestGenerator {
   }
 
   /**
-   * Get agents from a directory
+   * Get agents from a directory recursively
    * Only includes compiled .md files (not .agent.yaml source files)
    */
-  async getAgentsFromDir(dirPath, moduleName) {
+  async getAgentsFromDir(dirPath, moduleName, relativePath = '') {
     const agents = [];
-    const files = await fs.readdir(dirPath);
+    const entries = await fs.readdir(dirPath, { withFileTypes: true });
 
-    for (const file of files) {
-      // Only include .md files, skip .agent.yaml source files and README.md
-      if (file.endsWith('.md') && !file.endsWith('.agent.yaml') && file.toLowerCase() !== 'readme.md') {
-        const filePath = path.join(dirPath, file);
-        const content = await fs.readFile(filePath, 'utf8');
+    for (const entry of entries) {
+      const fullPath = path.join(dirPath, entry.name);
+
+      if (entry.isDirectory()) {
+        // Recurse into subdirectories
+        const newRelativePath = relativePath ? `${relativePath}/${entry.name}` : entry.name;
+        const subDirAgents = await this.getAgentsFromDir(fullPath, moduleName, newRelativePath);
+        agents.push(...subDirAgents);
+      } else if (entry.name.endsWith('.md') && !entry.name.endsWith('.agent.yaml') && entry.name.toLowerCase() !== 'readme.md') {
+        const content = await fs.readFile(fullPath, 'utf8');
 
         // Skip files that don't contain <agent> tag (e.g., README files)
         if (!content.includes('<agent')) {
@@ -255,8 +260,11 @@ class ManifestGenerator {
         const principlesMatch = content.match(/<principles>([\s\S]*?)<\/principles>/);
 
         // Build relative path for installation
+        const fileRelativePath = relativePath ? `${relativePath}/${file}` : file;
         const installPath =
-          moduleName === 'core' ? `${this.bmadFolderName}/core/agents/${file}` : `${this.bmadFolderName}/${moduleName}/agents/${file}`;
+          moduleName === 'core'
+            ? `${this.bmadFolderName}/core/agents/${fileRelativePath}`
+            : `${this.bmadFolderName}/${moduleName}/agents/${fileRelativePath}`;
 
         const agentName = file.replace('.md', '');
 
