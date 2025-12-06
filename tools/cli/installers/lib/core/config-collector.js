@@ -182,14 +182,24 @@ class ConfigCollector {
     }
 
     // Load module's install config schema
-    const installerConfigPath = path.join(getModulePath(moduleName), '_module-installer', 'install-config.yaml');
-    const legacyConfigPath = path.join(getModulePath(moduleName), 'config.yaml');
+    // First, try the standard src/modules location
+    let installerConfigPath = path.join(getModulePath(moduleName), '_module-installer', 'install-config.yaml');
+
+    // If not found in src/modules, we need to find it by searching the project
+    if (!(await fs.pathExists(installerConfigPath))) {
+      // Use the module manager to find the module source
+      const { ModuleManager } = require('../modules/manager');
+      const moduleManager = new ModuleManager();
+      const moduleSourcePath = await moduleManager.findModuleSource(moduleName);
+
+      if (moduleSourcePath) {
+        installerConfigPath = path.join(moduleSourcePath, '_module-installer', 'install-config.yaml');
+      }
+    }
 
     let configPath = null;
     if (await fs.pathExists(installerConfigPath)) {
       configPath = installerConfigPath;
-    } else if (await fs.pathExists(legacyConfigPath)) {
-      configPath = legacyConfigPath;
     } else {
       // No config schema for this module - use existing values
       if (this.existingConfig && this.existingConfig[moduleName]) {
@@ -396,32 +406,25 @@ class ConfigCollector {
     if (!this.allAnswers) {
       this.allAnswers = {};
     }
-    // Load module's config.yaml (check custom modules first, then regular modules)
-    let installerConfigPath;
-    let legacyConfigPath;
+    // Load module's config
+    // First, try the standard src/modules location
+    let installerConfigPath = path.join(getModulePath(moduleName), '_module-installer', 'install-config.yaml');
 
-    if (moduleName.startsWith('custom-')) {
-      // Handle custom modules
-      const actualModuleName = moduleName.replace('custom-', '');
+    // If not found in src/modules, we need to find it by searching the project
+    if (!(await fs.pathExists(installerConfigPath))) {
+      // Use the module manager to find the module source
+      const { ModuleManager } = require('../modules/manager');
+      const moduleManager = new ModuleManager();
+      const moduleSourcePath = await moduleManager.findModuleSource(moduleName);
 
-      // Custom modules are in the BMAD-METHOD source directory, not the installation directory
-      const bmadMethodRoot = getProjectRoot(); // This gets the BMAD-METHOD root
-      const customSrcPath = path.join(bmadMethodRoot, 'bmad-custom-src', 'modules', actualModuleName);
-      installerConfigPath = path.join(customSrcPath, '_module-installer', 'install-config.yaml');
-      legacyConfigPath = path.join(customSrcPath, 'config.yaml');
-
-      console.log(chalk.dim(`[DEBUG] Looking for custom module config in: ${installerConfigPath}`));
-    } else {
-      // Regular modules
-      installerConfigPath = path.join(getModulePath(moduleName), '_module-installer', 'install-config.yaml');
-      legacyConfigPath = path.join(getModulePath(moduleName), 'config.yaml');
+      if (moduleSourcePath) {
+        installerConfigPath = path.join(moduleSourcePath, '_module-installer', 'install-config.yaml');
+      }
     }
 
     let configPath = null;
     if (await fs.pathExists(installerConfigPath)) {
       configPath = installerConfigPath;
-    } else if (await fs.pathExists(legacyConfigPath)) {
-      configPath = legacyConfigPath;
     } else {
       // No config for this module
       return;

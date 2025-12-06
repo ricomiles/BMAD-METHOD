@@ -98,62 +98,213 @@ class ModuleManager {
   }
 
   /**
-   * List all available modules
+   * Find all modules in the project by searching for install-config.yaml files
+   * @returns {Array} List of module paths
+   */
+  async findModulesInProject() {
+    const projectRoot = getProjectRoot();
+    const modulePaths = new Set();
+
+    // Helper function to recursively scan directories
+    async function scanDirectory(dir, excludePaths = []) {
+      try {
+        const entries = await fs.readdir(dir, { withFileTypes: true });
+
+        for (const entry of entries) {
+          const fullPath = path.join(dir, entry.name);
+
+          // Skip hidden directories and node_modules
+          if (entry.name.startsWith('.') || entry.name === 'node_modules' || entry.name === 'dist' || entry.name === 'build') {
+            continue;
+          }
+
+          // Skip excluded paths
+          if (excludePaths.some((exclude) => fullPath.startsWith(exclude))) {
+            continue;
+          }
+
+          if (entry.isDirectory()) {
+            // Skip core module - it's always installed first and not selectable
+            if (entry.name === 'core') {
+              continue;
+            }
+
+            // Check if this directory contains a module (only install-config.yaml is valid now)
+            const installerConfigPath = path.join(fullPath, '_module-installer', 'install-config.yaml');
+
+            if (await fs.pathExists(installerConfigPath)) {
+              modulePaths.add(fullPath);
+              // Don't scan inside modules - they might have their own nested structures
+              continue;
+            }
+
+            // Recursively scan subdirectories
+            await scanDirectory(fullPath, excludePaths);
+          }
+        }
+      } catch {
+        // Ignore errors (e.g., permission denied)
+      }
+    }
+
+    // Scan the entire project, but exclude src/modules since we handle it separately
+    await scanDirectory(projectRoot, [this.modulesSourcePath]);
+
+    return [...modulePaths];
+  }
+
+  /**
+   * List all available modules (excluding core which is always installed)
    * @returns {Array} List of available modules with metadata
    */
   async listAvailable() {
     const modules = [];
 
-    if (!(await fs.pathExists(this.modulesSourcePath))) {
-      console.warn(chalk.yellow('Warning: src/modules directory not found'));
-      return modules;
-    }
+    // First, scan src/modules (the standard location)
+    if (await fs.pathExists(this.modulesSourcePath)) {
+      const entries = await fs.readdir(this.modulesSourcePath, { withFileTypes: true });
 
-    const entries = await fs.readdir(this.modulesSourcePath, { withFileTypes: true });
+      for (const entry of entries) {
+        if (entry.isDirectory()) {
+          const modulePath = path.join(this.modulesSourcePath, entry.name);
+          // Check for module structure (only install-config.yaml is valid now)
+          const installerConfigPath = path.join(modulePath, '_module-installer', 'install-config.yaml');
 
-    for (const entry of entries) {
-      if (entry.isDirectory()) {
-        const modulePath = path.join(this.modulesSourcePath, entry.name);
-        // Check for new structure first
-        const installerConfigPath = path.join(modulePath, '_module-installer', 'install-config.yaml');
-        // Fallback to old structure
-        const configPath = path.join(modulePath, 'config.yaml');
+          // Skip if this doesn't look like a module
+          if (!(await fs.pathExists(installerConfigPath))) {
+            continue;
+          }
 
-        const moduleInfo = {
-          id: entry.name,
-          path: modulePath,
-          name: entry.name.toUpperCase(),
-          description: 'BMAD Module',
-          version: '5.0.0',
-        };
+          // Skip core module - it's always installed first and not selectable
+          if (entry.name === 'core') {
+            continue;
+          }
 
-        // Try to read module config for metadata (prefer new location)
-        const configToRead = (await fs.pathExists(installerConfigPath)) ? installerConfigPath : configPath;
-        if (await fs.pathExists(configToRead)) {
-          try {
-            const configContent = await fs.readFile(configToRead, 'utf8');
-            const config = yaml.load(configContent);
-
-            // Use the code property as the id if available
-            if (config.code) {
-              moduleInfo.id = config.code;
-            }
-
-            moduleInfo.name = config.name || moduleInfo.name;
-            moduleInfo.description = config.description || moduleInfo.description;
-            moduleInfo.version = config.version || moduleInfo.version;
-            moduleInfo.dependencies = config.dependencies || [];
-            moduleInfo.defaultSelected = config.default_selected === undefined ? false : config.default_selected;
-          } catch (error) {
-            console.warn(`Failed to read config for ${entry.name}:`, error.message);
+          const moduleInfo = await this.getModuleInfo(modulePath, entry.name, 'src/modules');
+          if (moduleInfo) {
+            modules.push(moduleInfo);
           }
         }
+      }
+    }
 
+    // Then, find all other modules in the project
+    const otherModulePaths = await this.findModulesInProject();
+    for (const modulePath of otherModulePaths) {
+      const moduleName = path.basename(modulePath);
+      const relativePath = path.relative(getProjectRoot(), modulePath);
+
+      // Skip core module - it's always installed first and not selectable
+      if (moduleName === 'core') {
+        continue;
+      }
+
+      const moduleInfo = await this.getModuleInfo(modulePath, moduleName, relativePath);
+      if (moduleInfo && !modules.some((m) => m.id === moduleInfo.id)) {
+        // Avoid duplicates - skip if we already have this module ID
         modules.push(moduleInfo);
       }
     }
 
     return modules;
+  }
+
+  /**
+   * Get module information from a module path
+   * @param {string} modulePath - Path to the module directory
+   * @param {string} defaultName - Default name for the module
+   * @param {string} sourceDescription - Description of where the module was found
+   * @returns {Object|null} Module info or null if not a valid module
+   */
+  async getModuleInfo(modulePath, defaultName, sourceDescription) {
+    // Check for module structure (only install-config.yaml is valid now)
+    const installerConfigPath = path.join(modulePath, '_module-installer', 'install-config.yaml');
+
+    // Skip if this doesn't look like a module
+    if (!(await fs.pathExists(installerConfigPath))) {
+      return null;
+    }
+
+    const moduleInfo = {
+      id: defaultName,
+      path: modulePath,
+      name: defaultName
+        .split('-')
+        .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+        .join(' '),
+      description: 'BMAD Module',
+      version: '5.0.0',
+      source: sourceDescription,
+    };
+
+    // Read module config for metadata
+    try {
+      const configContent = await fs.readFile(installerConfigPath, 'utf8');
+      const config = yaml.load(configContent);
+
+      // Use the code property as the id if available
+      if (config.code) {
+        moduleInfo.id = config.code;
+      }
+
+      moduleInfo.name = config.name || moduleInfo.name;
+      moduleInfo.description = config.description || moduleInfo.description;
+      moduleInfo.version = config.version || moduleInfo.version;
+      moduleInfo.dependencies = config.dependencies || [];
+      moduleInfo.defaultSelected = config.default_selected === undefined ? false : config.default_selected;
+    } catch (error) {
+      console.warn(`Failed to read config for ${defaultName}:`, error.message);
+    }
+
+    return moduleInfo;
+  }
+
+  /**
+   * Find the source path for a module by searching all possible locations
+   * @param {string} moduleName - Name of the module to find
+   * @returns {string|null} Path to the module source or null if not found
+   */
+  async findModuleSource(moduleName) {
+    const projectRoot = getProjectRoot();
+
+    // First, check src/modules
+    const srcModulePath = path.join(this.modulesSourcePath, moduleName);
+    if (await fs.pathExists(srcModulePath)) {
+      // Check if this looks like a module (has install-config.yaml)
+      const installerConfigPath = path.join(srcModulePath, '_module-installer', 'install-config.yaml');
+
+      if (await fs.pathExists(installerConfigPath)) {
+        return srcModulePath;
+      }
+    }
+
+    // If not found in src/modules, search the entire project
+    const allModulePaths = await this.findModulesInProject();
+    for (const modulePath of allModulePaths) {
+      if (path.basename(modulePath) === moduleName) {
+        return modulePath;
+      }
+    }
+
+    // Also check by module ID (not just folder name)
+    // Need to read configs to match by ID
+    for (const modulePath of allModulePaths) {
+      const installerConfigPath = path.join(modulePath, '_module-installer', 'install-config.yaml');
+
+      if (await fs.pathExists(installerConfigPath)) {
+        try {
+          const configContent = await fs.readFile(installerConfigPath, 'utf8');
+          const config = yaml.load(configContent);
+          if (config.code === moduleName) {
+            return modulePath;
+          }
+        } catch {
+          // Skip if can't read config
+        }
+      }
+    }
+
+    return null;
   }
 
   /**
@@ -167,12 +318,12 @@ class ModuleManager {
    * @param {Object} options.logger - Logger instance for output
    */
   async install(moduleName, bmadDir, fileTrackingCallback = null, options = {}) {
-    const sourcePath = path.join(this.modulesSourcePath, moduleName);
+    const sourcePath = await this.findModuleSource(moduleName);
     const targetPath = path.join(bmadDir, moduleName);
 
     // Check if source module exists
-    if (!(await fs.pathExists(sourcePath))) {
-      throw new Error(`Module '${moduleName}' not found in ${this.modulesSourcePath}`);
+    if (!sourcePath) {
+      throw new Error(`Module '${moduleName}' not found in any source location`);
     }
 
     // Check if already installed
@@ -210,12 +361,12 @@ class ModuleManager {
    * @param {boolean} force - Force update (overwrite modifications)
    */
   async update(moduleName, bmadDir, force = false) {
-    const sourcePath = path.join(this.modulesSourcePath, moduleName);
+    const sourcePath = await this.findModuleSource(moduleName);
     const targetPath = path.join(bmadDir, moduleName);
 
     // Check if source module exists
-    if (!(await fs.pathExists(sourcePath))) {
-      throw new Error(`Module '${moduleName}' not found in source`);
+    if (!sourcePath) {
+      throw new Error(`Module '${moduleName}' not found in any source location`);
     }
 
     // Check if module is installed
@@ -654,7 +805,11 @@ class ModuleManager {
     if (moduleName === 'core') {
       sourcePath = getSourcePath('core');
     } else {
-      sourcePath = path.join(this.modulesSourcePath, moduleName);
+      sourcePath = await this.findModuleSource(moduleName);
+      if (!sourcePath) {
+        // No source found, skip module installer
+        return;
+      }
     }
 
     const installerPath = path.join(sourcePath, '_module-installer', 'installer.js');

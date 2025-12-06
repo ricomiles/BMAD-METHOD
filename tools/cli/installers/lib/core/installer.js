@@ -418,7 +418,7 @@ If AgentVibes party mode is enabled, immediately trigger TTS with agent's voice:
     const projectDir = path.resolve(config.directory);
 
     // If core config was pre-collected (from interactive mode), use it
-    if (config.coreConfig && !this.configCollector.collectedConfig.core) {
+    if (config.coreConfig) {
       this.configCollector.collectedConfig.core = config.coreConfig;
       // Also store in allAnswers for cross-referencing
       this.configCollector.allAnswers = {};
@@ -427,16 +427,11 @@ If AgentVibes party mode is enabled, immediately trigger TTS with agent's voice:
       }
     }
 
-    // Collect configurations for modules (skip if quick update already collected them or if pre-collected)
+    // Collect configurations for modules (skip if quick update already collected them)
     let moduleConfigs;
     if (config._quickUpdate) {
       // Quick update already collected all configs, use them directly
       moduleConfigs = this.configCollector.collectedConfig;
-    } else if (config.moduleConfig) {
-      // Use pre-collected configs from UI (includes custom modules)
-      moduleConfigs = config.moduleConfig;
-      // Also need to load them into configCollector for later use
-      this.configCollector.collectedConfig = moduleConfigs;
     } else {
       // Regular install - collect configurations (core was already collected in UI.promptInstall if interactive)
       moduleConfigs = await this.configCollector.collectAllConfigurations(config.modules || [], path.resolve(config.directory));
@@ -753,14 +748,13 @@ If AgentVibes party mode is enabled, immediately trigger TTS with agent's voice:
       spinner.text = 'Creating directory structure...';
       await this.createDirectoryStructure(bmadDir);
 
-      // Resolve dependencies for selected modules (skip custom modules)
+      // Resolve dependencies for selected modules
       spinner.text = 'Resolving dependencies...';
       const projectRoot = getProjectRoot();
-      const regularModules = (config.modules || []).filter((m) => !m.startsWith('custom-'));
-      const modulesToInstall = config.installCore ? ['core', ...regularModules] : regularModules;
+      const modulesToInstall = config.installCore ? ['core', ...config.modules] : config.modules;
 
       // For dependency resolution, we need to pass the project root
-      const resolution = await this.dependencyResolver.resolve(projectRoot, regularModules, { verbose: config.verbose });
+      const resolution = await this.dependencyResolver.resolve(projectRoot, config.modules || [], { verbose: config.verbose });
 
       if (config.verbose) {
         spinner.succeed('Dependencies resolved');
@@ -775,17 +769,17 @@ If AgentVibes party mode is enabled, immediately trigger TTS with agent's voice:
         spinner.succeed('Core installed');
       }
 
-      // Install modules with their dependencies (skip custom modules - they're handled by install.js)
-      if (regularModules.length > 0) {
-        for (const moduleName of regularModules) {
+      // Install modules with their dependencies
+      if (config.modules && config.modules.length > 0) {
+        for (const moduleName of config.modules) {
           spinner.start(`Installing module: ${moduleName}...`);
           await this.installModuleWithDependencies(moduleName, bmadDir, resolution.byModule[moduleName]);
           spinner.succeed(`Module installed: ${moduleName}`);
         }
 
-        // Install partial modules (only dependencies) - skip custom modules
+        // Install partial modules (only dependencies)
         for (const [module, files] of Object.entries(resolution.byModule)) {
-          if (!regularModules.includes(module) && module !== 'core') {
+          if (!config.modules.includes(module) && module !== 'core') {
             const totalFiles =
               files.agents.length +
               files.tasks.length +
