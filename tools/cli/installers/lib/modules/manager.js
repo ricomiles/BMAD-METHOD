@@ -679,6 +679,16 @@ class ModuleManager {
         const yamlContent = await fs.readFile(sourceYamlPath, 'utf8');
         const { compileAgent } = require('../../../lib/agent/compiler');
 
+        // Create customize template if it doesn't exist
+        if (!(await fs.pathExists(customizePath))) {
+          const { getSourcePath } = require('../../../lib/project-root');
+          const genericTemplatePath = getSourcePath('utility', 'templates', 'agent.customize.template.yaml');
+          if (await fs.pathExists(genericTemplatePath)) {
+            await this.copyFileWithPlaceholderReplacement(genericTemplatePath, customizePath);
+            console.log(chalk.dim(`  Created customize: ${moduleName}-${agentName}.customize.yaml`));
+          }
+        }
+
         // Check for customizations
         let customizedFields = [];
         if (await fs.pathExists(customizePath)) {
