@@ -339,6 +339,9 @@ class ModuleManager {
     // Copy module files with filtering
     await this.copyModuleWithFiltering(sourcePath, targetPath, fileTrackingCallback, options.moduleConfig);
 
+    // Compile any .agent.yaml files to .md format
+    await this.compileModuleAgents(sourcePath, targetPath, moduleName, bmadDir);
+
     // Process agent files to inject activation block
     await this.processAgentFiles(targetPath, moduleName);
 
@@ -491,6 +494,11 @@ class ModuleManager {
         continue;
       }
 
+      // Skip .agent.yaml files - they will be compiled separately
+      if (file.endsWith('.agent.yaml')) {
+        continue;
+      }
+
       // Skip user documentation if install_user_docs is false
       if (moduleConfig.install_user_docs === false && (file.startsWith('docs/') || file.startsWith('docs\\'))) {
         console.log(chalk.dim(`  Skipping user documentation: ${file}`));
@@ -634,6 +642,91 @@ class ModuleManager {
   }
 
   /**
+   * Compile .agent.yaml files to .md format in modules
+   * @param {string} sourcePath - Source module path
+   * @param {string} targetPath - Target module path
+   * @param {string} moduleName - Module name
+   * @param {string} bmadDir - BMAD installation directory
+   */
+  async compileModuleAgents(sourcePath, targetPath, moduleName, bmadDir) {
+    const sourceAgentsPath = path.join(sourcePath, 'agents');
+    const targetAgentsPath = path.join(targetPath, 'agents');
+    const cfgAgentsDir = path.join(bmadDir, '_cfg', 'agents');
+
+    // Check if agents directory exists in source
+    if (!(await fs.pathExists(sourceAgentsPath))) {
+      return; // No agents to compile
+    }
+
+    // Get all agent YAML files recursively
+    const agentFiles = await this.findAgentFiles(sourceAgentsPath);
+
+    for (const agentFile of agentFiles) {
+      if (!agentFile.endsWith('.agent.yaml')) continue;
+
+      const relativePath = path.relative(sourceAgentsPath, agentFile);
+      const targetDir = path.join(targetAgentsPath, path.dirname(relativePath));
+
+      await fs.ensureDir(targetDir);
+
+      const agentName = path.basename(agentFile, '.agent.yaml');
+      const sourceYamlPath = agentFile;
+      const targetMdPath = path.join(targetDir, `${agentName}.md`);
+      const customizePath = path.join(cfgAgentsDir, `${moduleName}-${agentName}.customize.yaml`);
+
+      // Read and compile the YAML
+      try {
+        const yamlContent = await fs.readFile(sourceYamlPath, 'utf8');
+        const { compileAgent } = require('../../../lib/agent/compiler');
+
+        // Check for customizations
+        let customizedFields = [];
+        if (await fs.pathExists(customizePath)) {
+          const customizeContent = await fs.readFile(customizePath, 'utf8');
+          const customizeData = yaml.load(customizeContent);
+          customizedFields = customizeData.customized_fields || [];
+        }
+
+        // Compile with customizations if any
+        const { xml } = compileAgent(yamlContent, customizedFields, agentName, relativePath);
+
+        // Write the compiled MD file
+        await fs.writeFile(targetMdPath, xml, 'utf8');
+
+        console.log(chalk.dim(`    Compiled agent: ${agentName} -> ${path.relative(targetPath, targetMdPath)}`));
+      } catch (error) {
+        console.warn(chalk.yellow(`    Failed to compile agent ${agentName}:`, error.message));
+      }
+    }
+  }
+
+  /**
+   * Find all .agent.yaml files recursively in a directory
+   * @param {string} dir - Directory to search
+   * @returns {Array} List of .agent.yaml file paths
+   */
+  async findAgentFiles(dir) {
+    const agentFiles = [];
+
+    async function searchDirectory(searchDir) {
+      const entries = await fs.readdir(searchDir, { withFileTypes: true });
+
+      for (const entry of entries) {
+        const fullPath = path.join(searchDir, entry.name);
+
+        if (entry.isFile() && entry.name.endsWith('.agent.yaml')) {
+          agentFiles.push(fullPath);
+        } else if (entry.isDirectory()) {
+          await searchDirectory(fullPath);
+        }
+      }
+    }
+
+    await searchDirectory(dir);
+    return agentFiles;
+  }
+
+  /**
    * Process agent files to inject activation block
    * @param {string} modulePath - Path to installed module
    * @param {string} moduleName - Module name
@@ -646,22 +739,47 @@ class ModuleManager {
       return; // No agents to process
     }
 
-    // Get all agent files
-    const agentFiles = await fs.readdir(agentsPath);
+    // Get all agent MD files recursively
+    const agentFiles = await this.findAgentMdFiles(agentsPath);
 
     for (const agentFile of agentFiles) {
       if (!agentFile.endsWith('.md')) continue;
 
-      const agentPath = path.join(agentsPath, agentFile);
-      let content = await fs.readFile(agentPath, 'utf8');
+      let content = await fs.readFile(agentFile, 'utf8');
 
       // Check if content has agent XML and no activation block
       if (content.includes('<agent') && !content.includes('<activation')) {
         // Inject the activation block using XML handler
         content = this.xmlHandler.injectActivationSimple(content);
-        await fs.writeFile(agentPath, content, 'utf8');
+        await fs.writeFile(agentFile, content, 'utf8');
       }
     }
+  }
+
+  /**
+   * Find all .md agent files recursively in a directory
+   * @param {string} dir - Directory to search
+   * @returns {Array} List of .md agent file paths
+   */
+  async findAgentMdFiles(dir) {
+    const agentFiles = [];
+
+    async function searchDirectory(searchDir) {
+      const entries = await fs.readdir(searchDir, { withFileTypes: true });
+
+      for (const entry of entries) {
+        const fullPath = path.join(searchDir, entry.name);
+
+        if (entry.isFile() && entry.name.endsWith('.md')) {
+          agentFiles.push(fullPath);
+        } else if (entry.isDirectory()) {
+          await searchDirectory(fullPath);
+        }
+      }
+    }
+
+    await searchDirectory(dir);
+    return agentFiles;
   }
 
   /**

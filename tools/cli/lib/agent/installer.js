@@ -46,7 +46,7 @@ function resolvePath(pathStr, context) {
 }
 
 /**
- * Discover available agents in the custom agent location
+ * Discover available agents in the custom agent location recursively
  * @param {string} searchPath - Path to search for agents
  * @returns {Array} List of agent info objects
  */
@@ -56,35 +56,59 @@ function discoverAgents(searchPath) {
   }
 
   const agents = [];
-  const entries = fs.readdirSync(searchPath, { withFileTypes: true });
 
-  for (const entry of entries) {
-    const fullPath = path.join(searchPath, entry.name);
+  // Helper function to recursively search
+  function searchDirectory(dir, relativePath = '') {
+    const entries = fs.readdirSync(dir, { withFileTypes: true });
 
-    if (entry.isFile() && entry.name.endsWith('.agent.yaml')) {
-      // Simple agent (single file)
-      agents.push({
-        type: 'simple',
-        name: entry.name.replace('.agent.yaml', ''),
-        path: fullPath,
-        yamlFile: fullPath,
-      });
-    } else if (entry.isDirectory()) {
-      // Check for agent with sidecar (folder containing .agent.yaml)
-      const yamlFiles = fs.readdirSync(fullPath).filter((f) => f.endsWith('.agent.yaml'));
-      if (yamlFiles.length === 1) {
-        const agentYamlPath = path.join(fullPath, yamlFiles[0]);
+    for (const entry of entries) {
+      const fullPath = path.join(dir, entry.name);
+      const agentRelativePath = relativePath ? path.join(relativePath, entry.name) : entry.name;
+
+      if (entry.isFile() && entry.name.endsWith('.agent.yaml')) {
+        // Simple agent (single file)
+        // The agent name is based on the filename
+        const agentName = entry.name.replace('.agent.yaml', '');
         agents.push({
-          type: 'expert',
-          name: entry.name,
+          type: 'simple',
+          name: agentName,
           path: fullPath,
-          yamlFile: agentYamlPath,
-          hasSidecar: true,
+          yamlFile: fullPath,
+          relativePath: agentRelativePath.replace('.agent.yaml', ''),
         });
+      } else if (entry.isDirectory()) {
+        // Check if this directory contains an .agent.yaml file
+        try {
+          const dirContents = fs.readdirSync(fullPath);
+          const yamlFiles = dirContents.filter((f) => f.endsWith('.agent.yaml'));
+
+          if (yamlFiles.length > 0) {
+            // Found .agent.yaml files in this directory
+            for (const yamlFile of yamlFiles) {
+              const agentYamlPath = path.join(fullPath, yamlFile);
+              const agentName = path.basename(yamlFile, '.agent.yaml');
+
+              agents.push({
+                type: 'expert',
+                name: agentName,
+                path: fullPath,
+                yamlFile: agentYamlPath,
+                hasSidecar: true,
+                relativePath: agentRelativePath,
+              });
+            }
+          } else {
+            // No .agent.yaml in this directory, recurse deeper
+            searchDirectory(fullPath, agentRelativePath);
+          }
+        } catch {
+          // Skip directories we can't read
+        }
       }
     }
   }
 
+  searchDirectory(searchPath);
   return agents;
 }
 

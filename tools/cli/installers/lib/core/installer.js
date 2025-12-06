@@ -2532,8 +2532,10 @@ If AgentVibes party mode is enabled, immediately trigger TTS with agent's voice:
             agentType = parts.slice(-2).join('-'); // Take last 2 parts as type
           }
 
-          // Create target directory
-          const agentTargetDir = path.join(customAgentsDir, finalAgentName);
+          // Create target directory - use relative path if agent is in a subdirectory
+          const agentTargetDir = agent.relativePath
+            ? path.join(customAgentsDir, agent.relativePath)
+            : path.join(customAgentsDir, finalAgentName);
           await fs.ensureDir(agentTargetDir);
 
           // Calculate paths
