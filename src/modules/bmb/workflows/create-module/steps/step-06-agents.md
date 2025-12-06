@@ -164,8 +164,8 @@ agent:
 
   # Only include if agent needs memory/persistence
   critical_actions:
-    - 'Load COMPLETE file {agent-folder}/[agent-name]-sidecar/memories.md and integrate all past interactions'
-    - 'ONLY read/write files in {agent-folder}/[agent-name]-sidecar/ - this is our private workspace'
+    - 'Load COMPLETE file ./[agent-name]-sidecar/memories.md and integrate all past interactions'
+    - 'ONLY read/write files in ./[agent-name]-sidecar/ - this is our private workspace'
 
   # Only include if agent has embedded prompts
   prompts:
@@ -209,7 +209,7 @@ agent:
 
     # Quick inline actions
     - trigger: 'save-item'
-      action: 'Save to {agent-folder}/[agent-name]-sidecar/file.md'
+      action: 'Save to ./[agent-name]-sidecar/file.md'
       description: 'Save item 💾'
 ```
 

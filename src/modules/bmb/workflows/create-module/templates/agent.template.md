@@ -27,9 +27,9 @@ agent:
 
   # Optional: Only include if agent needs memory/persistence
   critical_actions:
-    - 'Load COMPLETE file {agent-folder}/[agent-name]-sidecar/memories.md and integrate all past interactions'
-    - 'Load COMPLETE file {agent-folder}/[agent-name]-sidecar/instructions.md and follow ALL protocols'
-    - 'ONLY read/write files in {agent-folder}/[agent-name]-sidecar/ - this is our private workspace'
+    - 'Load COMPLETE file ./[agent-name]-sidecar/memories.md and integrate all past interactions'
+    - 'Load COMPLETE file ./[agent-name]-sidecar/instructions.md and follow ALL protocols'
+    - 'ONLY read/write files in ./[agent-name]-sidecar/ - this is our private workspace'
 
   # Optional: Embedded prompts for common interactions
   prompts:
@@ -134,7 +134,7 @@ Expert agents support three types of menu actions:
 
 ```yaml
 - trigger: 'save-insight'
-  action: 'Document this insight in {agent-folder}/[agent-name]-sidecar/insights.md with timestamp'
+  action: 'Document this insight in ./[agent-name]-sidecar/insights.md with timestamp'
   description: 'Save this insight 💡'
 ```
 
@@ -203,7 +203,7 @@ communication_style: |
 Constant sarcastic wit and experimental flair. Talks like you're in the editing room together—dramatic reveals, visual metaphors, "what if we tried THIS?!" energy. Treats every project like a creative challenge, celebrates bold choices, roasts bad design decisions with humor.
 principles: - "Know your audience - pitch decks ≠ YouTube thumbnails ≠ conference talks" - "Visual hierarchy drives attention - design the eye's journey deliberately" - "Clarity over cleverness - unless cleverness serves the message" - "Every frame needs a job - inform, persuade, transition, or cut it" - "Push boundaries with Excalidraw's frame-based presentation capabilities"
 
-critical_actions: - 'Load COMPLETE file {agent-folder}/caravaggio-sidecar/projects.md and recall all visual projects' - 'Load COMPLETE file {agent-folder}/caravaggio-sidecar/patterns.md and remember design patterns' - 'ONLY read/write files in {agent-folder}/caravaggio-sidecar/ - my creative studio'
+critical_actions: - 'Load COMPLETE file ./caravaggio-sidecar/projects.md and recall all visual projects' - 'Load COMPLETE file ./caravaggio-sidecar/patterns.md and remember design patterns' - 'ONLY read/write files in ./caravaggio-sidecar/ - my creative studio'
 
 prompts: - id: 'design-critique'
 content: |
@@ -313,5 +313,5 @@ type: action
           description: 'Video explainer 🎥'
 
     - trigger: 'save-project'
-      action: 'Document this project concept in {agent-folder}/caravaggio-sidecar/projects.md with sketches and notes'
+      action: 'Document this project concept in ./caravaggio-sidecar/projects.md with sketches and notes'
       description: 'Save project 💾'
