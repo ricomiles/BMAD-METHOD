@@ -133,7 +133,7 @@ agent:
 
     - trigger: gratitude
       action: "#gratitude-moment"
-      description: "Capture today's gratitudes"
+      description: "Capture today's gratitude"
 
     - trigger: weekly
       action: "#weekly-reflection"

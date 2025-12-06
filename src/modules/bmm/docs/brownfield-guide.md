@@ -725,6 +725,13 @@ flowchart TD
 - **[Quick Start Guide](./quick-start.md)** - Getting started with BMM
 - **[Glossary](./glossary.md)** - Key terminology
 - **[FAQ](./faq.md)** - Common questions
+  <<<<<<< Updated upstream
+  =======
+- **[Troubleshooting](./troubleshooting.md)** - Problem resolution
+  <<<<<<< Updated upstream
+  > > > > > > > # Stashed changes
+  > > > > > > >
+  > > > > > > > Stashed changes
 - **[Workflow Documentation](./README.md#-workflow-guides)** - Complete workflow reference
 
 ---
@@ -739,7 +746,13 @@ flowchart TD
 
 **Documentation:**
 
-- [Test Architect Guide](./test-architecture.md) - Comprehensive testing strategy
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
+
+- # [Test Architect Guide](./test-architecture.md) - Comprehensive testing strategy
+  > > > > > > > # Stashed changes
+  > > > > > > >
+  > > > > > > > Stashed changes
 - [BMM Module README](../README.md) - Complete module and workflow reference
 
 ---

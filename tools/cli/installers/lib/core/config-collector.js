@@ -396,9 +396,26 @@ class ConfigCollector {
     if (!this.allAnswers) {
       this.allAnswers = {};
     }
-    // Load module's config.yaml (check new location first, then fallback)
-    const installerConfigPath = path.join(getModulePath(moduleName), '_module-installer', 'install-config.yaml');
-    const legacyConfigPath = path.join(getModulePath(moduleName), 'config.yaml');
+    // Load module's config.yaml (check custom modules first, then regular modules)
+    let installerConfigPath;
+    let legacyConfigPath;
+
+    if (moduleName.startsWith('custom-')) {
+      // Handle custom modules
+      const actualModuleName = moduleName.replace('custom-', '');
+
+      // Custom modules are in the BMAD-METHOD source directory, not the installation directory
+      const bmadMethodRoot = getProjectRoot(); // This gets the BMAD-METHOD root
+      const customSrcPath = path.join(bmadMethodRoot, 'bmad-custom-src', 'modules', actualModuleName);
+      installerConfigPath = path.join(customSrcPath, '_module-installer', 'install-config.yaml');
+      legacyConfigPath = path.join(customSrcPath, 'config.yaml');
+
+      console.log(chalk.dim(`[DEBUG] Looking for custom module config in: ${installerConfigPath}`));
+    } else {
+      // Regular modules
+      installerConfigPath = path.join(getModulePath(moduleName), '_module-installer', 'install-config.yaml');
+      legacyConfigPath = path.join(getModulePath(moduleName), 'config.yaml');
+    }
 
     let configPath = null;
     if (await fs.pathExists(installerConfigPath)) {

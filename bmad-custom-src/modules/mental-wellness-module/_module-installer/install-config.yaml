@@ -1,0 +1,83 @@
+# Mental Wellness Module Configuration
+# This file defines installation questions and module configuration values
+
+code: mental-wellness-module
+name: "Mental Wellness Module"
+default_selected: false
+
+# Welcome message shown during installation
+prompt:
+  - "Thank you for choosing Mental Wellness Module!"
+  - "To provide accessible, empathetic AI therapy agents that support users' mental wellness through compassionate conversations, guided reflection, and evidence-based therapeutic techniques."
+
+# Core config values are automatically inherited from installer:
+## user_name
+## communication_language
+## document_output_language
+## output_folder
+
+# ============================================================================
+# CONFIGURATION FIELDS
+# ============================================================================
+
+companion_name:
+  prompt: "What would you like to call your mental wellness companion?"
+  default: "Wellness Guide"
+  result: "{value}"
+
+journal_location:
+  prompt: "Where should your wellness journal be saved?"
+  default: "output/mental-wellness"
+  result: "{project-root}/{value}"
+
+therapy_approaches:
+  prompt: "Which therapy approaches would you like to use?"
+  default: "all"
+  result: "{value}"
+  multi-select:
+    - value: "cbt"
+      label: "CBT (Cognitive Behavioral Therapy)"
+    - value: "mindfulness"
+      label: "Mindfulness & Meditation"
+    - value: "journaling"
+      label: "Journaling & Reflection"
+    - value: "positive"
+      label: "Positive Psychology"
+    - value: "all"
+      label: "All Approaches"
+
+privacy_level:
+  prompt: "What privacy level would you prefer?"
+  default: "standard"
+  result: "{value}"
+  single-select:
+    - value: "minimal"
+      label: "Minimal - Local storage only, auto-delete after 30 days"
+    - value: "standard"
+      label: "Standard - Local storage with optional backup"
+    - value: "enhanced"
+      label: "Enhanced - Encrypted storage with analytics"
+
+checkin_frequency:
+  prompt: "How often would you like wellness check-ins?"
+  default: "daily"
+  result: "{value}"
+  single-select:
+    - value: "twice_daily"
+      label: "Twice daily - Morning and evening"
+    - value: "daily"
+      label: "Daily - Once per day"
+    - value: "weekly"
+      label: "Weekly - Once per week"
+    - value: "manual"
+      label: "Manual - Only when initiated"
+
+# STATIC configuration values
+crisis_support:
+  result: true
+
+module_version:
+  result: "1.0.0"
+
+data_path:
+  result: "{project-root}/.bmad/mental-wellness-module/data"

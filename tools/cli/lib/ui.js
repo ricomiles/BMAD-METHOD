@@ -23,6 +23,7 @@ const inquirer = require('inquirer');
 const path = require('node:path');
 const os = require('node:os');
 const fs = require('fs-extra');
+const yaml = require('js-yaml');
 const { CLIUtils } = require('./cli-utils');
 
 /**
@@ -119,6 +120,27 @@ class UI {
     const moduleChoices = await this.getModuleChoices(installedModuleIds);
     const selectedModules = await this.selectModules(moduleChoices);
 
+    // Check if custom module was selected
+    let customContent = null;
+    if (selectedModules.includes('custom')) {
+      // Remove 'custom' from selectedModules since it's not a real module
+      const customIndex = selectedModules.indexOf('custom');
+      selectedModules.splice(customIndex, 1);
+
+      // Handle custom content selection
+      customContent = await this.handleCustomContentSelection(confirmedDirectory);
+
+      // Add custom modules to the selected modules list for proper installation
+      if (customContent && customContent.selectedItems && customContent.selectedItems.modules) {
+        for (const customModule of customContent.selectedItems.modules) {
+          selectedModules.push(`custom-${customModule.name}`);
+        }
+      }
+    }
+
+    // NOW collect module configurations (including custom modules that were just added)
+    const moduleConfig = await this.collectModuleConfigs(confirmedDirectory, selectedModules, coreConfig);
+
     // Prompt for AgentVibes TTS integration
     const agentVibesConfig = await this.promptAgentVibes(confirmedDirectory);
 
@@ -137,9 +159,486 @@ class UI {
       ides: toolSelection.ides,
       skipIde: toolSelection.skipIde,
       coreConfig: coreConfig, // Pass collected core config to installer
+      moduleConfig: moduleConfig, // Pass collected module configs (including custom modules)
       enableAgentVibes: agentVibesConfig.enabled, // AgentVibes TTS integration
       agentVibesInstalled: agentVibesConfig.alreadyInstalled,
+      customContent: customContent, // Custom content to install
     };
+  }
+
+  /**
+   * Handle custom content selection in module phase
+   * @param {string} projectDir - Project directory
+   * @returns {Object} Custom content info with selected items
+   */
+  async handleCustomContentSelection(projectDir) {
+    const defaultPath = path.join(projectDir, 'bmad-custom-src');
+    const hasDefaultFolder = await fs.pathExists(defaultPath);
+
+    let customPath;
+
+    if (hasDefaultFolder) {
+      console.log(chalk.cyan('\n📁 Custom Content Detected'));
+      console.log(chalk.dim(`Found custom folder at: ${defaultPath}`));
+
+      const { useDetected } = await inquirer.prompt([
+        {
+          type: 'confirm',
+          name: 'useDetected',
+          message: 'Install from detected custom folder?',
+          default: true,
+        },
+      ]);
+
+      if (useDetected) {
+        customPath = defaultPath;
+      }
+    }
+
+    if (!customPath) {
+      console.log(chalk.cyan('\n📁 Custom Content Selection'));
+
+      const { specifiedPath } = await inquirer.prompt([
+        {
+          type: 'input',
+          name: 'specifiedPath',
+          message: 'Enter path to custom content folder:',
+          default: './bmad-custom-src',
+          validate: async (input) => {
+            if (!input.trim()) {
+              return 'Path is required';
+            }
+            const resolvedPath = path.resolve(input.trim());
+            if (!(await fs.pathExists(resolvedPath))) {
+              return `Path does not exist: ${resolvedPath}`;
+            }
+            return true;
+          },
+        },
+      ]);
+
+      customPath = path.resolve(specifiedPath.trim());
+    }
+
+    // Discover and categorize custom content
+    const customContent = await this.discoverAndSelectCustomContent(customPath);
+
+    return {
+      path: customPath,
+      selectedItems: customContent,
+    };
+  }
+
+  /**
+   * Discover and allow selection of custom content
+   * @param {string} customPath - Path to custom content
+   * @returns {Object} Selected items by type
+   */
+  async discoverAndSelectCustomContent(customPath) {
+    CLIUtils.displaySection('Custom Content', 'Discovering agents, workflows, and modules');
+
+    // Discover each type
+    const agents = await this.discoverCustomAgents(path.join(customPath, 'agents'));
+    const workflows = await this.discoverCustomWorkflows(path.join(customPath, 'workflows'));
+    const modules = await this.discoverCustomModules(path.join(customPath, 'modules'));
+
+    // Build choices for selection
+    const choices = [];
+
+    if (agents.length > 0) {
+      choices.push({ name: '--- 👥 Custom Agents ---', value: 'sep-agents', disabled: true });
+      for (const agent of agents) {
+        const shortDesc = agent.description.length > 50 ? agent.description.slice(0, 47) + '...' : agent.description;
+        choices.push({
+          name: `  ${agent.name} - ${shortDesc}`,
+          value: { type: 'agent', ...agent },
+          checked: true,
+        });
+      }
+    }
+
+    if (workflows.length > 0) {
+      choices.push({ name: '--- 📋 Custom Workflows ---', value: 'sep-workflows', disabled: true });
+      for (const workflow of workflows) {
+        const shortDesc = workflow.description.length > 50 ? workflow.description.slice(0, 47) + '...' : workflow.description;
+        choices.push({
+          name: `  ${workflow.name} - ${shortDesc}`,
+          value: { type: 'workflow', ...workflow },
+          checked: true,
+        });
+      }
+    }
+
+    if (modules.length > 0) {
+      choices.push({ name: '--- 🔧 Custom Modules ---', value: 'sep-modules', disabled: true });
+      for (const module of modules) {
+        const shortDesc = module.description.length > 50 ? module.description.slice(0, 47) + '...' : module.description;
+        choices.push({
+          name: `  ${module.name} - ${shortDesc}`,
+          value: { type: 'module', ...module },
+          checked: true,
+        });
+      }
+    }
+
+    if (choices.length === 0) {
+      console.log(chalk.yellow('⚠️  No custom content found'));
+      return { agents: [], workflows: [], modules: [] };
+    }
+
+    // Ask for selection
+    const { selectedItems } = await inquirer.prompt([
+      {
+        type: 'checkbox',
+        name: 'selectedItems',
+        message: 'Select custom items to install:',
+        choices: choices,
+        pageSize: 15,
+      },
+    ]);
+
+    // Organize by type
+    const result = { agents: [], workflows: [], modules: [] };
+    for (const item of selectedItems) {
+      switch (item.type) {
+        case 'agent': {
+          result.agents.push(item);
+          break;
+        }
+        case 'workflow': {
+          result.workflows.push(item);
+          break;
+        }
+        case 'module': {
+          result.modules.push(item);
+          break;
+        }
+      }
+    }
+
+    console.log(
+      chalk.green(`\n✓ Selected: ${result.agents.length} agents, ${result.workflows.length} workflows, ${result.modules.length} modules`),
+    );
+
+    return result;
+  }
+
+  /**
+   * Discover custom agents
+   */
+  async discoverCustomAgents(agentsPath) {
+    const agents = [];
+    if (!(await fs.pathExists(agentsPath))) return agents;
+
+    const entries = await fs.readdir(agentsPath, { withFileTypes: true });
+
+    for (const entry of entries) {
+      if (entry.isDirectory()) {
+        const agentPath = path.join(agentsPath, entry.name);
+        const yamlFiles = await fs.readdir(agentPath).then((files) => files.filter((f) => f.endsWith('.agent.yaml')));
+
+        if (yamlFiles.length > 0) {
+          const yamlPath = path.join(agentPath, yamlFiles[0]);
+          const yamlData = yaml.load(await fs.readFile(yamlPath, 'utf8'));
+          agents.push({
+            name: entry.name,
+            path: agentPath,
+            yamlPath: yamlPath,
+            description: yamlData.metadata?.description || yamlData.description || 'Custom agent',
+            hasSidecar: true,
+          });
+        }
+      } else if (entry.isFile() && entry.name.endsWith('.agent.yaml')) {
+        const yamlData = yaml.load(await fs.readFile(path.join(agentsPath, entry.name), 'utf8'));
+        agents.push({
+          name: path.basename(entry.name, '.agent.yaml'),
+          path: agentsPath,
+          yamlPath: path.join(agentsPath, entry.name),
+          description: yamlData.metadata?.description || yamlData.description || 'Custom agent',
+          hasSidecar: false,
+        });
+      }
+    }
+
+    return agents;
+  }
+
+  /**
+   * Discover custom workflows
+   */
+  async discoverCustomWorkflows(workflowsPath) {
+    const workflows = [];
+    if (!(await fs.pathExists(workflowsPath))) return workflows;
+
+    const entries = await fs.readdir(workflowsPath, { withFileTypes: true });
+
+    for (const entry of entries) {
+      if (entry.isFile() && entry.name.endsWith('.md')) {
+        const filePath = path.join(workflowsPath, entry.name);
+        const content = await fs.readFile(filePath, 'utf8');
+
+        // Extract YAML frontmatter
+        let title = path.basename(entry.name, '.md');
+        let description = '';
+        let yamlMetadata = {};
+
+        // Check for YAML frontmatter
+        if (content.startsWith('---\n')) {
+          const frontmatterEnd = content.indexOf('\n---\n', 4);
+          if (frontmatterEnd !== -1) {
+            const yamlContent = content.slice(4, frontmatterEnd);
+            try {
+              yamlMetadata = yaml.load(yamlContent);
+              title = yamlMetadata.name || yamlMetadata.title || title;
+              description = yamlMetadata.description || yamlMetadata.summary || '';
+            } catch {
+              // If YAML parsing fails, fall back to markdown parsing
+            }
+          }
+        }
+
+        // If no YAML frontmatter or no metadata, parse from markdown
+        if (!title || !description) {
+          const lines = content.split('\n');
+          for (const line of lines) {
+            if (line.startsWith('# ')) {
+              title = line.slice(2).trim();
+            } else if (line.startsWith('## Description:')) {
+              description = line.replace('## Description:', '').trim();
+            }
+            if (title && description) break;
+          }
+        }
+
+        workflows.push({
+          name: title,
+          path: filePath,
+          description: description || 'Custom workflow',
+          metadata: yamlMetadata,
+        });
+      } else if (entry.isDirectory()) {
+        // Check for workflow.md in subdirectories
+        const workflowMdPath = path.join(workflowsPath, entry.name, 'workflow.md');
+        if (await fs.pathExists(workflowMdPath)) {
+          const content = await fs.readFile(workflowMdPath, 'utf8');
+
+          // Extract YAML frontmatter
+          let title = entry.name;
+          let description = '';
+          let yamlMetadata = {};
+
+          // Check for YAML frontmatter
+          if (content.startsWith('---\n')) {
+            const frontmatterEnd = content.indexOf('\n---\n', 4);
+            if (frontmatterEnd !== -1) {
+              const yamlContent = content.slice(4, frontmatterEnd);
+              try {
+                yamlMetadata = yaml.load(yamlContent);
+                title = yamlMetadata.name || yamlMetadata.title || title;
+                description = yamlMetadata.description || yamlMetadata.summary || '';
+              } catch {
+                // If YAML parsing fails, fall back to markdown parsing
+              }
+            }
+          }
+
+          // If no YAML frontmatter or no metadata, parse from markdown
+          if (!title || !description) {
+            const lines = content.split('\n');
+            for (const line of lines) {
+              if (line.startsWith('# ')) {
+                title = line.slice(2).trim();
+              } else if (line.startsWith('## Description:')) {
+                description = line.replace('## Description:', '').trim();
+              }
+              if (title && description) break;
+            }
+          }
+
+          workflows.push({
+            name: title,
+            path: path.join(workflowsPath, entry.name), // Store the DIRECTORY path, not the file
+            description: description || 'Custom workflow',
+            metadata: yamlMetadata,
+          });
+        }
+      }
+    }
+
+    return workflows;
+  }
+
+  /**
+   * Discover custom modules
+   */
+  async discoverCustomModules(modulesPath) {
+    const modules = [];
+    if (!(await fs.pathExists(modulesPath))) return modules;
+
+    const entries = await fs.readdir(modulesPath, { withFileTypes: true });
+
+    for (const entry of entries) {
+      if (entry.isDirectory()) {
+        const modulePath = path.join(modulesPath, entry.name);
+        const installerPath = path.join(modulePath, '_module-installer');
+
+        if (await fs.pathExists(installerPath)) {
+          // Check for install-config.yaml
+          const configPath = path.join(installerPath, 'install-config.yaml');
+          let description = 'Custom module';
+
+          if (await fs.pathExists(configPath)) {
+            const configData = yaml.load(await fs.readFile(configPath, 'utf8'));
+            description = configData.header || configData.description || description;
+          }
+
+          modules.push({
+            name: entry.name,
+            path: modulePath,
+            description: description,
+          });
+        }
+      }
+    }
+
+    return modules;
+  }
+
+  /**
+   * Handle custom content installation
+   * @param {string} projectDir - Project directory
+   */
+  async handleCustomContent(projectDir) {
+    const defaultPath = path.join(projectDir, 'bmad-custom-src');
+    const hasDefaultFolder = await fs.pathExists(defaultPath);
+
+    let customPath;
+
+    if (hasDefaultFolder) {
+      console.log(chalk.cyan('\n📁 Custom Content Detected'));
+      console.log(chalk.dim(`Found custom folder at: ${defaultPath}`));
+
+      const { useDetected } = await inquirer.prompt([
+        {
+          type: 'confirm',
+          name: 'useDetected',
+          message: 'Install from detected custom folder?',
+          default: true,
+        },
+      ]);
+
+      if (useDetected) {
+        customPath = defaultPath;
+      }
+    }
+
+    if (!customPath) {
+      console.log(chalk.cyan('\n📁 Custom Content Installation'));
+
+      const { specifiedPath } = await inquirer.prompt([
+        {
+          type: 'input',
+          name: 'specifiedPath',
+          message: 'Enter path to custom content folder:',
+          default: './bmad-custom-src',
+          validate: async (input) => {
+            if (!input.trim()) {
+              return 'Path is required';
+            }
+            const resolvedPath = path.resolve(input.trim());
+            if (!(await fs.pathExists(resolvedPath))) {
+              return `Path does not exist: ${resolvedPath}`;
+            }
+            return true;
+          },
+        },
+      ]);
+
+      customPath = path.resolve(specifiedPath.trim());
+    }
+
+    // Discover custom content
+    const customContent = {
+      agents: await this.discoverCustomAgents(path.join(customPath, 'agents')),
+      modules: await this.discoverCustomModules(path.join(customPath, 'modules')),
+      workflows: await this.discoverCustomWorkflows(path.join(customPath, 'workflows')),
+    };
+
+    // Show discovery results
+    console.log(chalk.cyan('\n🔍 Custom Content Discovery'));
+    console.log(chalk.dim(`Scanning: ${customPath}`));
+
+    if (customContent.agents.length > 0) {
+      console.log(chalk.green(`  ✓ Found ${customContent.agents.length} custom agent(s)`));
+    }
+    if (customContent.modules.length > 0) {
+      console.log(chalk.green(`  ✓ Found ${customContent.modules.length} custom module(s)`));
+    }
+    if (customContent.workflows.length > 0) {
+      console.log(chalk.green(`  ✓ Found ${customContent.workflows.length} custom workflow(s)`));
+    }
+
+    if (customContent.agents.length === 0 && customContent.modules.length === 0 && customContent.workflows.length === 0) {
+      console.log(chalk.yellow('  ⚠️  No custom content found in the specified folder'));
+      return;
+    }
+
+    // Confirm installation
+    const { confirmInstall } = await inquirer.prompt([
+      {
+        type: 'confirm',
+        name: 'confirmInstall',
+        message: 'Install discovered custom content?',
+        default: true,
+      },
+    ]);
+
+    if (confirmInstall) {
+      console.log(chalk.green('\n🚀 Installing Custom Content...'));
+      // Store custom content for later installation
+      this._customContent = {
+        path: customPath,
+        items: customContent,
+      };
+      console.log(chalk.dim(`   Custom content queued for installation`));
+    }
+  }
+
+  /**
+   * Discover custom content in a directory
+   * @param {string} dirPath - Directory path to scan
+   * @returns {Promise<Array>} List of discovered items
+   */
+  async discoverCustomContent(dirPath) {
+    const items = [];
+
+    if (!(await fs.pathExists(dirPath))) {
+      return items;
+    }
+
+    try {
+      const entries = await fs.readdir(dirPath, { withFileTypes: true });
+
+      for (const entry of entries) {
+        if (entry.isDirectory()) {
+          items.push({
+            name: entry.name,
+            path: path.join(dirPath, entry.name),
+            type: 'directory',
+          });
+        } else if (entry.isFile() && (entry.name.endsWith('.agent.yaml') || entry.name.endsWith('.md'))) {
+          items.push({
+            name: entry.name,
+            path: path.join(dirPath, entry.name),
+            type: 'file',
+          });
+        }
+      }
+    } catch {
+      // Silently ignore errors during discovery
+    }
+
+    return items;
   }
 
   /**
@@ -224,6 +723,8 @@ class UI {
       }
     }
 
+    // Custom option moved to module selection
+
     CLIUtils.displaySection('Tool Integration', 'Select AI coding assistants and IDEs to configure');
 
     let answers;
@@ -240,6 +741,8 @@ class UI {
           pageSize: 15,
         },
       ]);
+
+      // Custom selection moved to module phase
 
       // If tools were selected, we're done
       if (answers.ides && answers.ides.length > 0) {
@@ -275,6 +778,7 @@ class UI {
     return {
       ides: answers.ides || [],
       skipIde: !answers.ides || answers.ides.length === 0,
+      customContent: this._customContent || null,
     };
   }
 
@@ -471,6 +975,35 @@ class UI {
   }
 
   /**
+   * Collect module configurations
+   * @param {string} directory - Installation directory
+   * @param {Array} modules - Selected modules
+   * @param {Object} existingCoreConfig - Core config already collected
+   * @returns {Object} Module configurations
+   */
+  async collectModuleConfigs(directory, modules, existingCoreConfig = null) {
+    const { ConfigCollector } = require('../installers/lib/core/config-collector');
+    const configCollector = new ConfigCollector();
+
+    // Load existing configs first if they exist
+    await configCollector.loadExistingConfig(directory);
+
+    // If core config was already collected, use it
+    if (existingCoreConfig) {
+      configCollector.collectedConfig.core = existingCoreConfig;
+    }
+
+    // Collect configurations for all modules except core (already collected earlier)
+    // ConfigCollector now handles custom modules properly
+    const modulesWithoutCore = modules.filter((m) => m !== 'core');
+    if (modulesWithoutCore.length > 0) {
+      await configCollector.collectAllConfigurations(modulesWithoutCore, directory);
+    }
+
+    return configCollector.collectedConfig;
+  }
+
+  /**
    * Get module choices for selection
    * @param {Set} installedModuleIds - Currently installed module IDs
    * @returns {Array} Module choices for inquirer
@@ -481,11 +1014,32 @@ class UI {
     const availableModules = await moduleManager.listAvailable();
 
     const isNewInstallation = installedModuleIds.size === 0;
-    return availableModules.map((mod) => ({
+    const moduleChoices = availableModules.map((mod) => ({
       name: mod.name,
       value: mod.id,
       checked: isNewInstallation ? mod.defaultSelected || false : installedModuleIds.has(mod.id),
     }));
+
+    // Check for custom source folder
+    const customPath = path.join(process.cwd(), 'bmad-custom-src');
+    const hasCustomFolder = await fs.pathExists(customPath);
+
+    // Add custom option at the beginning
+    if (hasCustomFolder) {
+      moduleChoices.unshift({
+        name: '📁 Custom: Agents, Workflows, Modules',
+        value: 'custom',
+        checked: false,
+      });
+    } else {
+      moduleChoices.unshift({
+        name: '📁 Custom: Agents, Workflows, Modules (specify path)',
+        value: 'custom',
+        checked: false,
+      });
+    }
+
+    return moduleChoices;
   }
 
   /**
