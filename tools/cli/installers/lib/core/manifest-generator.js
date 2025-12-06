@@ -260,13 +260,13 @@ class ManifestGenerator {
         const principlesMatch = content.match(/<principles>([\s\S]*?)<\/principles>/);
 
         // Build relative path for installation
-        const fileRelativePath = relativePath ? `${relativePath}/${file}` : file;
+        const fileRelativePath = relativePath ? `${relativePath}/${entry.name}` : entry.name;
         const installPath =
           moduleName === 'core'
             ? `${this.bmadFolderName}/core/agents/${fileRelativePath}`
             : `${this.bmadFolderName}/${moduleName}/agents/${fileRelativePath}`;
 
-        const agentName = file.replace('.md', '');
+        const agentName = entry.name.replace('.md', '');
 
         // Helper function to clean and escape CSV content
         const cleanForCSV = (text) => {
