@@ -95,19 +95,9 @@ Game development equivalent of PRD, created by Game Designer agent for game proj
 
 ## Workflow and Phases
 
-<<<<<<< Updated upstream
-
-# <<<<<<< Updated upstream
-
-=======
-
-> > > > > > > Stashed changes
-
 ### Phase 0: Documentation (Prerequisite)
 
 **Conditional phase for brownfield projects.** Creates comprehensive codebase documentation before planning. Only required if existing documentation is insufficient for AI agents.
-
-> > > > > > > Stashed changes
 
 ### Phase 1: Analysis (Optional)
 

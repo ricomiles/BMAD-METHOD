@@ -192,7 +192,7 @@ workflow-init asks: "Is this work in progress or previous effort?"
 
 **Solution:**
 
-1. Check spelling/format - Use exact workflow name or menu shortcut (*prd not *PRD)
+1. Check spelling/format - Use exact workflow name or menu shortcut (`*prd` not `*PRD`)
 2. Verify agent has workflow:
    - PM agent: prd, tech-spec
    - Architect agent: create-architecture, validate-architecture
