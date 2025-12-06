@@ -23,7 +23,11 @@ document_output_language:
   default: "{communication_language}"
   result: "{value}"
 
-  # This is the folder where all generated AI Output documents from workflows will default be sa
+agent_sidecar_folder:
+  prompt: "Where should agent sidecar folders be stored?"
+  default: ".myagent-data"
+  result: "{project-root}/{value}"
+
 output_folder:
   prompt: "Where should AI Generated Artifacts be saved across all modules?"
   default: "docs"
