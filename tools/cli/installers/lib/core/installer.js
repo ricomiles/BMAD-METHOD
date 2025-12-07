@@ -798,6 +798,53 @@ If AgentVibes party mode is enabled, immediately trigger TTS with agent's voice:
         }
       }
 
+      // Install custom content if provided AND selected
+      if (
+        config.customContent &&
+        config.customContent.hasCustomContent &&
+        config.customContent.customPath &&
+        config.customContent.selected &&
+        config.customContent.selectedFiles
+      ) {
+        spinner.start('Installing custom content...');
+        const { CustomHandler } = require('../custom/handler');
+        const customHandler = new CustomHandler();
+
+        // Use the selected files instead of finding all files
+        const customFiles = config.customContent.selectedFiles;
+
+        if (customFiles.length > 0) {
+          console.log(chalk.cyan(`\n  Found ${customFiles.length} custom content file(s):`));
+          for (const customFile of customFiles) {
+            const customInfo = await customHandler.getCustomInfo(customFile, projectDir);
+            if (customInfo) {
+              console.log(chalk.dim(`    • ${customInfo.name} (${customInfo.relativePath})`));
+
+              // Install the custom content
+              const result = await customHandler.install(
+                customInfo.path,
+                bmadDir,
+                { ...config.coreConfig, ...customInfo.config },
+                (filePath) => {
+                  // Track installed files
+                  this.installedFiles.push(filePath);
+                },
+              );
+
+              if (result.errors.length > 0) {
+                console.log(chalk.yellow(`    ⚠️  ${result.errors.length} error(s) occurred`));
+                for (const error of result.errors) {
+                  console.log(chalk.dim(`      - ${error}`));
+                }
+              } else {
+                console.log(chalk.green(`    ✓ Installed ${result.agentsInstalled} agents, ${result.workflowsInstalled} workflows`));
+              }
+            }
+          }
+        }
+        spinner.succeed('Custom content installed');
+      }
+
       // Generate clean config.yaml files for each installed module
       spinner.start('Generating module configurations...');
       await this.generateModuleConfigs(bmadDir, moduleConfigs);

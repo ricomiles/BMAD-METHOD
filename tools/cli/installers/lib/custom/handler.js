@@ -68,9 +68,10 @@ class CustomHandler {
   /**
    * Get custom content info from a custom.yaml file
    * @param {string} customYamlPath - Path to custom.yaml file
+   * @param {string} projectRoot - Project root directory for calculating relative paths
    * @returns {Object|null} Custom content info
    */
-  async getCustomInfo(customYamlPath) {
+  async getCustomInfo(customYamlPath, projectRoot = null) {
     try {
       const configContent = await fs.readFile(customYamlPath, 'utf8');
 
@@ -84,7 +85,9 @@ class CustomHandler {
       }
 
       const customDir = path.dirname(customYamlPath);
-      const relativePath = path.relative(process.cwd(), customDir);
+      // Use provided projectRoot or fall back to process.cwd()
+      const basePath = projectRoot || process.cwd();
+      const relativePath = path.relative(basePath, customDir);
 
       return {
         id: config.code || path.basename(customDir),
@@ -236,13 +239,20 @@ class CustomHandler {
             // Copy with placeholder replacement for text files
             const textExtensions = ['.md', '.yaml', '.yml', '.txt', '.json'];
             if (textExtensions.some((ext) => entry.name.endsWith(ext))) {
-              await this.fileOps.copyFile(sourcePath, targetPath, {
-                bmadFolder: config.bmad_folder || 'bmad',
-                userName: config.user_name || 'User',
-                communicationLanguage: config.communication_language || 'English',
-                outputFolder: config.output_folder || 'docs',
-              });
+              // Read source content
+              let content = await fs.readFile(sourcePath, 'utf8');
+
+              // Replace placeholders
+              content = content.replaceAll('{bmad_folder}', config.bmad_folder || 'bmad');
+              content = content.replaceAll('{user_name}', config.user_name || 'User');
+              content = content.replaceAll('{communication_language}', config.communication_language || 'English');
+              content = content.replaceAll('{output_folder}', config.output_folder || 'docs');
+
+              // Write to target
+              await fs.ensureDir(path.dirname(targetPath));
+              await fs.writeFile(targetPath, content, 'utf8');
             } else {
+              // Copy binary files as-is
               await fs.copy(sourcePath, targetPath);
             }
 
