@@ -1599,10 +1599,15 @@ If AgentVibes party mode is enabled, immediately trigger TTS with agent's voice:
           const sourceModulePath = getSourcePath(`modules/${moduleName}`);
           const sourceAgentPath = path.join(sourceModulePath, 'agents');
 
-          // Copy sidecar files
-          const sidecarFiles = copyAgentSidecarFiles(sourceAgentPath, agentSidecarDir, yamlPath);
+          // Copy sidecar files (preserve existing, add new)
+          const sidecarResult = copyAgentSidecarFiles(sourceAgentPath, agentSidecarDir, yamlPath);
 
-          console.log(chalk.dim(`  Copied sidecar to: ${agentSidecarDir}`));
+          if (sidecarResult.copied.length > 0) {
+            console.log(chalk.dim(`  Copied ${sidecarResult.copied.length} new sidecar file(s) to: ${agentSidecarDir}`));
+          }
+          if (sidecarResult.preserved.length > 0) {
+            console.log(chalk.dim(`  Preserved ${sidecarResult.preserved.length} existing sidecar file(s)`));
+          }
         }
 
         // Remove the source YAML file - we can regenerate from installer source if needed
@@ -2645,8 +2650,12 @@ If AgentVibes party mode is enabled, immediately trigger TTS with agent's voice:
             const agentSidecarDir = path.join(resolvedSidecarFolder, finalAgentName);
             await fs.ensureDir(agentSidecarDir);
 
-            // Find and copy sidecar folder
-            const sidecarFiles = copyAgentSidecarFiles(agent.path, agentSidecarDir, agent.yamlFile);
+            // Copy sidecar files (preserve existing, add new)
+            const sidecarResult = copyAgentSidecarFiles(agent.path, agentSidecarDir, agent.yamlFile);
+
+            if (sidecarResult.copied.length > 0 || sidecarResult.preserved.length > 0) {
+              console.log(chalk.dim(`  Sidecar: ${sidecarResult.copied.length} new, ${sidecarResult.preserved.length} preserved`));
+            }
           }
 
           // Update manifest CSV

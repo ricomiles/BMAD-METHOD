@@ -750,10 +750,16 @@ class ModuleManager {
           const agentSidecarDir = path.join(resolvedSidecarFolder, agentName);
           await fs.ensureDir(agentSidecarDir);
 
-          // Copy sidecar files
-          const sidecarFiles = copyAgentSidecarFiles(path.dirname(sourceYamlPath), agentSidecarDir, sourceYamlPath);
+          // Copy sidecar files (preserve existing, add new)
+          const sidecarResult = copyAgentSidecarFiles(path.dirname(sourceYamlPath), agentSidecarDir, sourceYamlPath);
+          const totalFiles = sidecarResult.copied.length + sidecarResult.preserved.length;
 
-          console.log(chalk.dim(`    Copied sidecar to: ${agentSidecarDir}`));
+          if (sidecarResult.copied.length > 0) {
+            console.log(chalk.dim(`    Copied ${sidecarResult.copied.length} new sidecar file(s) to: ${agentSidecarDir}`));
+          }
+          if (sidecarResult.preserved.length > 0) {
+            console.log(chalk.dim(`    Preserved ${sidecarResult.preserved.length} existing sidecar file(s)`));
+          }
         }
 
         console.log(

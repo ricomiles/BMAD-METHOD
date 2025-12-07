@@ -337,6 +337,7 @@ function copySidecarFiles(sourceDir, targetDir, excludeYaml) {
  */
 function copyAgentSidecarFiles(sourceDir, targetSidecarDir, excludeYaml) {
   const copied = [];
+  const preserved = [];
 
   // Find folders with "sidecar" in the name
   const entries = fs.readdirSync(sourceDir, { withFileTypes: true });
@@ -345,31 +346,42 @@ function copyAgentSidecarFiles(sourceDir, targetSidecarDir, excludeYaml) {
     if (entry.isDirectory() && entry.name.toLowerCase().includes('sidecar')) {
       const sidecarSourcePath = path.join(sourceDir, entry.name);
 
-      // Recursively copy the sidecar folder contents
-      function copySidecarDir(src, dest) {
+      // Recursively sync the sidecar folder contents (preserve existing, add new)
+      function syncSidecarDir(src, dest) {
         if (!fs.existsSync(dest)) {
           fs.mkdirSync(dest, { recursive: true });
         }
 
-        const sidecarEntries = fs.readdirSync(src, { withFileTypes: true });
-        for (const sidecarEntry of sidecarEntries) {
-          const srcPath = path.join(src, sidecarEntry.name);
-          const destPath = path.join(dest, sidecarEntry.name);
+        // Get all files in source
+        const sourceEntries = fs.readdirSync(src, { withFileTypes: true });
 
-          if (sidecarEntry.isDirectory()) {
-            copySidecarDir(srcPath, destPath);
+        for (const sourceEntry of sourceEntries) {
+          const srcPath = path.join(src, sourceEntry.name);
+          const destPath = path.join(dest, sourceEntry.name);
+
+          if (sourceEntry.isDirectory()) {
+            // Recursively sync subdirectories
+            syncSidecarDir(srcPath, destPath);
           } else {
-            fs.copyFileSync(srcPath, destPath);
-            copied.push(destPath);
+            // Check if file already exists in destination
+            if (fs.existsSync(destPath)) {
+              // File exists - preserve it
+              preserved.push(destPath);
+            } else {
+              // File doesn't exist - copy it
+              fs.copyFileSync(srcPath, destPath);
+              copied.push(destPath);
+            }
           }
         }
       }
 
-      copySidecarDir(sidecarSourcePath, targetSidecarDir);
+      syncSidecarDir(sidecarSourcePath, targetSidecarDir);
     }
   }
 
-  return copied;
+  // Return info about what was preserved and what was copied
+  return { copied, preserved };
 }
 
 /**
