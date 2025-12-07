@@ -16,7 +16,7 @@
 - @/docs/v6-open-items.md - Known issues and open items
 - @/docs/document-sharding-guide.md - Guide for sharding large documents
 - @/docs/agent-customization-guide.md - How to customize agents
-- @/docs/custom-agent-installation.md - Custom agent installation guide
+- @/docs/custom-content-installation.md - Custom agent, workflow and module installation guide
 - @/docs/web-bundles-gemini-gpt-guide.md - Web bundle usage for AI platforms
 - @/docs/BUNDLE_DISTRIBUTION_SETUP.md - Bundle distribution setup
 
