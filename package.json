@@ -24,7 +24,6 @@
     "bmad-method": "tools/bmad-npx-wrapper.js"
   },
   "scripts": {
-    "bmad:agent-install": "node tools/cli/bmad-cli.js agent-install",
     "bmad:install": "node tools/cli/bmad-cli.js install",
     "bmad:status": "node tools/cli/bmad-cli.js status",
     "bundle": "node tools/cli/bundlers/bundle-web.js all",

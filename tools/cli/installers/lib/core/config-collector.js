@@ -198,9 +198,27 @@ class ConfigCollector {
     }
 
     let configPath = null;
+    let isCustomModule = false;
+
     if (await fs.pathExists(installerConfigPath)) {
       configPath = installerConfigPath;
     } else {
+      // Check if this is a custom module with custom.yaml
+      const { ModuleManager } = require('../modules/manager');
+      const moduleManager = new ModuleManager();
+      const moduleSourcePath = await moduleManager.findModuleSource(moduleName);
+
+      if (moduleSourcePath) {
+        const rootCustomConfigPath = path.join(moduleSourcePath, 'custom.yaml');
+        const moduleInstallerCustomPath = path.join(moduleSourcePath, '_module-installer', 'custom.yaml');
+
+        if ((await fs.pathExists(rootCustomConfigPath)) || (await fs.pathExists(moduleInstallerCustomPath))) {
+          isCustomModule = true;
+          // For custom modules, we don't have an install-config schema, so just use existing values
+          // The custom.yaml values will be loaded and merged during installation
+        }
+      }
+
       // No config schema for this module - use existing values
       if (this.existingConfig && this.existingConfig[moduleName]) {
         if (!this.collectedConfig[moduleName]) {

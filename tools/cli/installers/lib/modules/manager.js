@@ -378,6 +378,35 @@ class ModuleManager {
       throw new Error(`Module '${moduleName}' not found in any source location`);
     }
 
+    // Check if this is a custom module and read its custom.yaml values
+    let customConfig = null;
+    const rootCustomConfigPath = path.join(sourcePath, 'custom.yaml');
+    const moduleInstallerCustomPath = path.join(sourcePath, '_module-installer', 'custom.yaml');
+
+    if (await fs.pathExists(rootCustomConfigPath)) {
+      try {
+        const customContent = await fs.readFile(rootCustomConfigPath, 'utf8');
+        customConfig = yaml.load(customContent);
+      } catch (error) {
+        console.warn(chalk.yellow(`Warning: Failed to read custom.yaml for ${moduleName}:`, error.message));
+      }
+    } else if (await fs.pathExists(moduleInstallerCustomPath)) {
+      try {
+        const customContent = await fs.readFile(moduleInstallerCustomPath, 'utf8');
+        customConfig = yaml.load(customContent);
+      } catch (error) {
+        console.warn(chalk.yellow(`Warning: Failed to read custom.yaml for ${moduleName}:`, error.message));
+      }
+    }
+
+    // If this is a custom module, merge its values into the module config
+    if (customConfig) {
+      options.moduleConfig = { ...options.moduleConfig, ...customConfig };
+      if (options.logger) {
+        options.logger.log(chalk.cyan(`  Merged custom configuration for ${moduleName}`));
+      }
+    }
+
     // Check if already installed
     if (await fs.pathExists(targetPath)) {
       console.log(chalk.yellow(`Module '${moduleName}' already installed, updating...`));
@@ -552,8 +581,8 @@ class ModuleManager {
       }
 
       // Skip config.yaml templates - we'll generate clean ones with actual values
-      // But allow custom.yaml which is used for custom modules
-      if ((file === 'config.yaml' || file.endsWith('/config.yaml')) && !file.endsWith('custom.yaml')) {
+      // Also skip custom.yaml files - their values will be merged into core config
+      if (file === 'config.yaml' || file.endsWith('/config.yaml') || file === 'custom.yaml' || file.endsWith('/custom.yaml')) {
         continue;
       }
 

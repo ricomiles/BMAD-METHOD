@@ -1,124 +1,67 @@
 # Custom Agent Installation
 
-Install and personalize BMAD agents in your project.
+BMAD agents and workflows are now installed through the main CLI installer using a `custom.yaml` configuration file or by having an installer file.
 
 ## Quick Start
 
+Create a `custom.yaml` file in the root of your agent/workflow folder:
+
+```yaml
+code: my-custom-agent
+name: 'My Custom Agent'
+default_selected: true
+```
+
+Then run the BMAD installer from your project directory:
+
 ```bash
-# From your project directory with BMAD installed
-npx bmad-method agent-install
+npx bmad-method install
 ```
 
 Or if you have bmad-cli installed globally:
 
 ```bash
-bmad agent-install
+bmad install
+```
+
+## Installation Methods
+
+### Method 1: Stand-alone Folder with custom.yaml
+
+Place your agent or workflow in a folder with a `custom.yaml` file at the root:
+
+```
+my-agent/
+├── custom.yaml      # Required configuration file
+├── my-agent.agent.yaml
+└── sidecar/         # Optional
+    └── instructions.md
+```
+
+### Method 2: Installer File
+
+For more complex installations, include an `installer.js` or `installer.yaml` file in your agent/workflow folder:
+
+```
+my-workflow/
+├── workflow.md
+└── installer.yaml   # Custom installation logic
 ```
 
 ## What It Does
 
-1. **Discovers** available agent templates from your custom agents folder
-2. **Prompts** you to personalize the agent (name, behavior, preferences)
-3. **Compiles** the agent with your choices baked in
-4. **Installs** to your project's `.bmad/custom/agents/` directory
-5. **Creates** IDE commands for all your configured IDEs (Claude Code, Codex, Cursor, etc.)
-6. **Saves** your configuration for automatic reinstallation during BMAD updates
+1. **Discovers** available agents and workflows from folders with `custom.yaml`
+2. **Installs** to your project's `.bmad/custom/` directory
+3. **Creates** IDE commands for all your configured IDEs (Claude Code, Codex, Cursor, etc.)
+4. **Registers** the agent/workflow in the BMAD system
 
-## Options
+## Example custom.yaml
 
-```bash
-bmad agent-install [options]
-
-Options:
-  -p, --path <path>     #Direct path to specific agent YAML file or folder
-  -d, --defaults        #Use default values without prompting
-  -t, --target <path>   #Target installation directory
+```yaml
+code: my-custom-agent
+name: 'My Custom Agent'
+default_selected: true
 ```
-
-## Installing from Custom Locations
-
-Use the `-s` / `--source` option to install agents from any location:
-
-```bash
-# Install agent from a custom folder (expert agent with sidecar)
-bmad agent-install -s path/to/my-agent
-
-# Install a specific .agent.yaml file (simple agent)
-bmad agent-install -s path/to/my-agent.agent.yaml
-
-# Install with defaults (non-interactive)
-bmad agent-install -s path/to/my-agent -d
-
-# Install to a specific destination project
-bmad agent-install -s path/to/my-agent --destination /path/to/destination/project
-```
-
-This is useful when:
-
-- Your agent is in a non-standard location (not in `.bmad/custom/agents/`)
-- You're developing an agent outside the project structure
-- You want to install from an absolute path
-
-## Example Session
-
-```
-🔧 BMAD Agent Installer
-
-Found BMAD at: /project/.bmad
-Searching for agents in: /project/.bmad/custom/agents
-
-Available Agents:
-
-  1. 📄 commit-poet (simple)
-  2. 📚 journal-keeper (expert)
-
-Select agent to install (number): 1
-
-Selected: commit-poet
-
-📛 Agent Persona Name
-
-   Agent type: commit-poet
-   Default persona: Inkwell Von Comitizen
-
-   Custom name (or Enter for default): Fred
-
-   Persona: Fred
-   File: fred-commit-poet.md
-
-📝 Agent Configuration
-
-   What's your preferred default commit message style?
-   * 1. Conventional (feat/fix/chore)
-     2. Narrative storytelling
-     3. Poetic haiku
-     4. Detailed explanation
-   Choice (default: 1): 1
-
-   How enthusiastic should the agent be?
-     1. Moderate - Professional with personality
-   * 2. High - Genuinely excited
-     3. EXTREME - Full theatrical drama
-   Choice (default: 2): 3
-
-   Include emojis in commit messages? [Y/n]: y
-
-✨ Agent installed successfully!
-   Name: fred-commit-poet
-   Location: /project/.bmad/custom/agents/fred-commit-poet
-   Compiled: fred-commit-poet.md
-
-   ✓ Source saved for reinstallation
-   ✓ Added to agent-manifest.csv
-   ✓ Created IDE commands:
-      claude-code: /bmad:custom:agents:fred-commit-poet
-      codex: /bmad-custom-agents-fred-commit-poet
-      github-copilot: bmad-agent-custom-fred-commit-poet
-```
-
-## Reinstallation
-
-Custom agents are automatically reinstalled when you run `bmad init --quick`. Your personalization choices are preserved in `.bmad/_cfg/custom/agents/`.
 
 ## Installing Reference Agents
 
@@ -130,8 +73,9 @@ The BMAD source includes example agents you can install. **You must copy them to
 
 ```bash
 # From your project root
+mkdir -p .bmad/custom/agents/my-agent
 cp node_modules/bmad-method/src/modules/bmb/reference/agents/stand-alone/commit-poet.agent.yaml \
-   .bmad/custom/agents/
+   .bmad/custom/agents/my-agent/
 ```
 
 **For expert agents** (folder with sidecar files):
@@ -142,19 +86,29 @@ cp -r node_modules/bmad-method/src/modules/bmb/reference/agents/agent-with-memor
    .bmad/custom/agents/
 ```
 
-### Step 2: Install and Personalize
+### Step 2: Create custom.yaml
 
 ```bash
-npx bmad-method agent-install
-# or: bmad agent-install (if BMAD installed locally)
+# In the agent folder, create custom.yaml
+cat > .bmad/custom/agents/my-agent/custom.yaml << EOF
+code: my-agent
+name: "My Custom Agent"
+default_selected: true
+EOF
+```
+
+### Step 3: Install
+
+```bash
+npx bmad-method install
+# or: bmad install (if BMAD installed locally)
 ```
 
 The installer will:
 
-1. Find the copied template in `.bmad/custom/agents/`
-2. Prompt for personalization (name, behavior, preferences)
-3. Compile and install with your choices baked in
-4. Create IDE commands for immediate use
+1. Find the agent with its `custom.yaml`
+2. Install it to the appropriate location
+3. Create IDE commands for immediate use
 
 ### Available Reference Agents
 
@@ -180,4 +134,4 @@ src/modules/bmb/reference/agents/
 
 ## Creating Your Own
 
-Use the BMB agent builder to craft your agents. Once ready to use yourself, place your `.agent.yaml` files or folder in `.bmad/custom/agents/`.
+Use the BMB agent builder to craft your agents. Once ready to use, place your `.agent.yaml` files or folders with `custom.yaml` in `.bmad/custom/agents/` or `.bmad/custom/workflows/`.

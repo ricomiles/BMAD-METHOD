@@ -22,5 +22,5 @@ custom_stand_alone_location:
 
 custom_module_location:
   prompt: "Where do custom modules get stored?"
-  default: "bmad-custom-modules-src/modules"
+  default: "bmad-custom-modules-src"
   result: "{project-root}/{value}"
