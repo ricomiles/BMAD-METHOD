@@ -198,8 +198,8 @@ module.exports = {
         }
       } else {
         // Discover agents from custom location
-        const customAgentLocation = config.custom_agent_location
-          ? resolvePath(config.custom_agent_location, config)
+        const customAgentLocation = config.custom_stand_alone_location
+          ? resolvePath(config.custom_stand_alone_location, config)
           : path.join(config.bmadFolder, 'custom', 'src', 'agents');
 
         console.log(chalk.dim(`Searching for agents in: ${customAgentLocation}\n`));

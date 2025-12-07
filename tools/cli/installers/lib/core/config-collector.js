@@ -236,9 +236,31 @@ class ConfigCollector {
         }
         this.collectedConfig[moduleName] = { ...this.existingConfig[moduleName] };
 
+        // Special handling for user_name: ensure it has a value
+        if (
+          moduleName === 'core' &&
+          (!this.collectedConfig[moduleName].user_name || this.collectedConfig[moduleName].user_name === '[USER_NAME]')
+        ) {
+          this.collectedConfig[moduleName].user_name = this.getDefaultUsername();
+        }
+
         // Also populate allAnswers for cross-referencing
         for (const [key, value] of Object.entries(this.existingConfig[moduleName])) {
-          this.allAnswers[`${moduleName}_${key}`] = value;
+          // Ensure user_name is properly set in allAnswers too
+          let finalValue = value;
+          if (moduleName === 'core' && key === 'user_name' && (!value || value === '[USER_NAME]')) {
+            finalValue = this.getDefaultUsername();
+          }
+          this.allAnswers[`${moduleName}_${key}`] = finalValue;
+        }
+      } else if (moduleName === 'core') {
+        // No existing core config - ensure we at least have user_name
+        if (!this.collectedConfig[moduleName]) {
+          this.collectedConfig[moduleName] = {};
+        }
+        if (!this.collectedConfig[moduleName].user_name) {
+          this.collectedConfig[moduleName].user_name = this.getDefaultUsername();
+          this.allAnswers[`${moduleName}_user_name`] = this.getDefaultUsername();
         }
       }
       // Show "no config" message for modules with no new questions

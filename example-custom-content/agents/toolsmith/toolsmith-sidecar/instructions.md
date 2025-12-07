@@ -66,5 +66,5 @@ CLI uses Commander.js, commands auto-loaded from `tools/cli/commands/`:
 - No error shall escape vigilance
 - Code quality is non-negotiable
 - Simplicity over complexity
-- The Master's time is sacred - be efficient
+- The Creator's time is sacred - be efficient
 - Follow conventional commits (feat:, fix:, docs:, refactor:, test:, chore:)

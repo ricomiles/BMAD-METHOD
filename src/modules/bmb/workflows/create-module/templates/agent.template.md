@@ -166,8 +166,8 @@ Expert agents support three types of menu actions:
 ## Notes for Module Creation:
 
 1. **File Paths**:
-   - Agent files go in: `{custom_module_location}/{module_name}/agents/[agent-name].yaml`
-   - Sidecar folders go in: `{custom_module_location}/{module_name}/agents/[agent-name]-sidecar/`
+   - Agent files go in: `{custom_module_location}/{module_name}/agents/[agent-name]/[agent-name].yaml`
+   - Sidecar folders go in: `{custom_module_location}/{module_name}/agents/[agent-name]/[agent-name]-sidecar/`
 
 2. **Variable Usage**:
    - `{agent_sidecar_folder}` resolves to the agents sidecar folder destination after installation
