@@ -22,11 +22,12 @@ const { getProjectRoot, getSourcePath, getModulePath } = require('../../../lib/p
  * await manager.install('core-module', '/path/to/bmad');
  */
 class ModuleManager {
-  constructor() {
+  constructor(options = {}) {
     // Path to source modules directory
     this.modulesSourcePath = getSourcePath('modules');
     this.xmlHandler = new XmlHandler();
     this.bmadFolderName = 'bmad'; // Default, can be overridden
+    this.scanProjectForModules = options.scanProjectForModules !== false; // Default to true for backward compatibility
   }
 
   /**
@@ -175,10 +176,11 @@ class ModuleManager {
 
   /**
    * List all available modules (excluding core which is always installed)
-   * @returns {Array} List of available modules with metadata
+   * @returns {Object} Object with modules array and customModules array
    */
   async listAvailable() {
     const modules = [];
+    const customModules = [];
 
     // First, scan src/modules (the standard location)
     if (await fs.pathExists(this.modulesSourcePath)) {
@@ -209,25 +211,31 @@ class ModuleManager {
       }
     }
 
-    // Then, find all other modules in the project
-    const otherModulePaths = await this.findModulesInProject();
-    for (const modulePath of otherModulePaths) {
-      const moduleName = path.basename(modulePath);
-      const relativePath = path.relative(getProjectRoot(), modulePath);
+    // Then, find all other modules in the project (only if scanning is enabled)
+    if (this.scanProjectForModules) {
+      const otherModulePaths = await this.findModulesInProject();
+      for (const modulePath of otherModulePaths) {
+        const moduleName = path.basename(modulePath);
+        const relativePath = path.relative(getProjectRoot(), modulePath);
 
-      // Skip core module - it's always installed first and not selectable
-      if (moduleName === 'core') {
-        continue;
-      }
+        // Skip core module - it's always installed first and not selectable
+        if (moduleName === 'core') {
+          continue;
+        }
 
-      const moduleInfo = await this.getModuleInfo(modulePath, moduleName, relativePath);
-      if (moduleInfo && !modules.some((m) => m.id === moduleInfo.id)) {
-        // Avoid duplicates - skip if we already have this module ID
-        modules.push(moduleInfo);
+        const moduleInfo = await this.getModuleInfo(modulePath, moduleName, relativePath);
+        if (moduleInfo && !modules.some((m) => m.id === moduleInfo.id) && !customModules.some((m) => m.id === moduleInfo.id)) {
+          // Avoid duplicates - skip if we already have this module ID
+          if (moduleInfo.isCustom) {
+            customModules.push(moduleInfo);
+          } else {
+            modules.push(moduleInfo);
+          }
+        }
       }
     }
 
-    return modules;
+    return { modules, customModules };
   }
 
   /**

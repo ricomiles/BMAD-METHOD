@@ -275,10 +275,9 @@ class Detector {
             hasV6Installation = true;
             // Don't break - continue scanning to be thorough
           } else {
-            // Not V6+, check if folder name contains "bmad" (case insensitive)
-            const nameLower = name.toLowerCase();
-            if (nameLower.includes('bmad')) {
-              // Potential V4 legacy folder
+            // Not V6+, check if this is the exact V4 folder name "bmad-method"
+            if (name === 'bmad-method') {
+              // This is the V4 default folder - flag it as legacy
               potentialV4Folders.push(fullPath);
             }
           }

@@ -52,15 +52,19 @@ class UI {
       await installer.handleLegacyV4Migration(confirmedDirectory, legacyV4);
     }
 
-    // Prompt for custom content location (separate from installation directory)
-    const customContentConfig = await this.promptCustomContentLocation();
-
     // Check if there's an existing BMAD installation
     const fs = require('fs-extra');
     const path = require('node:path');
     // Use findBmadDir to detect any custom folder names (V6+)
     const bmadDir = await installer.findBmadDir(confirmedDirectory);
     const hasExistingInstall = await fs.pathExists(bmadDir);
+
+    // Only ask for custom content if it's a NEW installation
+    let customContentConfig = { hasCustomContent: false };
+    if (!hasExistingInstall) {
+      // Prompt for custom content location (separate from installation directory)
+      customContentConfig = await this.promptCustomContentLocation();
+    }
 
     // Track action type (only set if there's an existing installation)
     let actionType;
@@ -88,12 +92,11 @@ class UI {
 
       // Handle quick update separately
       if (actionType === 'quick-update') {
-        // Even for quick update, ask about custom content
-        const customContentConfig = await this.promptCustomContentLocation();
+        // Quick update doesn't install custom content - just updates existing modules
         return {
           actionType: 'quick-update',
           directory: confirmedDirectory,
-          customContent: customContentConfig,
+          customContent: { hasCustomContent: false },
         };
       }
 
@@ -511,11 +514,11 @@ class UI {
     const moduleChoices = [];
     const isNewInstallation = installedModuleIds.size === 0;
 
-    // Add custom content items first if found
-    if (customContentConfig && customContentConfig.hasCustomContent && customContentConfig.customPath) {
-      // Add separator before custom content
-      moduleChoices.push(new inquirer.Separator('── Custom Content ──'));
+    const customContentItems = [];
+    const hasCustomContentItems = false;
 
+    // Add custom content items from directory
+    if (customContentConfig && customContentConfig.hasCustomContent && customContentConfig.customPath) {
       // Get the custom content info to display proper names
       const { CustomHandler } = require('../installers/lib/custom/handler');
       const customHandler = new CustomHandler();
@@ -524,29 +527,63 @@ class UI {
       for (const customFile of customFiles) {
         const customInfo = await customHandler.getCustomInfo(customFile);
         if (customInfo) {
-          moduleChoices.push({
+          customContentItems.push({
             name: `${chalk.cyan('✓')} ${customInfo.name} ${chalk.gray(`(${customInfo.relativePath})`)}`,
             value: `__CUSTOM_CONTENT__${customFile}`, // Unique value for each custom content
             checked: true, // Default to selected since user chose to provide custom content
+            path: customInfo.path, // Track path to avoid duplicates
           });
         }
       }
-
-      // Add separator for official content
-      moduleChoices.push(new inquirer.Separator('── Official Content ──'));
     }
 
     // Add official modules
     const { ModuleManager } = require('../installers/lib/modules/manager');
-    const moduleManager = new ModuleManager();
-    const availableModules = await moduleManager.listAvailable();
+    // Only scan project for modules if user selected custom content
+    const moduleManager = new ModuleManager({
+      scanProjectForModules: customContentConfig && customContentConfig.hasCustomContent && customContentConfig.selected,
+    });
+    const { modules: availableModules, customModules: customModulesFromProject } = await moduleManager.listAvailable();
 
+    // First, add all items to appropriate sections
+    const allCustomModules = [];
+
+    // Add custom content items from directory
+    allCustomModules.push(...customContentItems);
+
+    // Add custom modules from project scan (if scanning is enabled)
+    for (const mod of customModulesFromProject) {
+      // Skip if this module is already in customContentItems (by path)
+      const isDuplicate = allCustomModules.some((item) => item.path && mod.path && path.resolve(item.path) === path.resolve(mod.path));
+
+      if (!isDuplicate) {
+        allCustomModules.push({
+          name: `${chalk.cyan('✓')} ${mod.name} ${chalk.gray(`(${mod.source})`)}`,
+          value: mod.id,
+          checked: isNewInstallation ? mod.defaultSelected || false : installedModuleIds.has(mod.id),
+        });
+      }
+    }
+
+    // Add separators and modules in correct order
+    if (allCustomModules.length > 0) {
+      // Add separator for custom content, all custom modules, and official content separator
+      moduleChoices.push(
+        new inquirer.Separator('── Custom Content ──'),
+        ...allCustomModules,
+        new inquirer.Separator('── Official Content ──'),
+      );
+    }
+
+    // Add official modules (only non-custom ones)
     for (const mod of availableModules) {
-      moduleChoices.push({
-        name: mod.name,
-        value: mod.id,
-        checked: isNewInstallation ? mod.defaultSelected || false : installedModuleIds.has(mod.id),
-      });
+      if (!mod.isCustom) {
+        moduleChoices.push({
+          name: mod.name,
+          value: mod.id,
+          checked: isNewInstallation ? mod.defaultSelected || false : installedModuleIds.has(mod.id),
+        });
+      }
     }
 
     return moduleChoices;
