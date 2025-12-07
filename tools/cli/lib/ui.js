@@ -491,11 +491,13 @@ class UI {
     const availableModules = await moduleManager.listAvailable();
 
     const isNewInstallation = installedModuleIds.size === 0;
-    return availableModules.map((mod) => ({
-      name: mod.name,
+    const moduleChoices = availableModules.map((mod) => ({
+      name: mod.isCustom ? `${mod.name} ${chalk.red('(Custom)')}` : mod.name,
       value: mod.id,
       checked: isNewInstallation ? mod.defaultSelected || false : installedModuleIds.has(mod.id),
     }));
+
+    return moduleChoices;
   }
 
   /**

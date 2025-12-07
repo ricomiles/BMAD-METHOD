@@ -137,10 +137,11 @@ class ModuleManager {
               continue;
             }
 
-            // Check if this directory contains a module (only install-config.yaml is valid now)
+            // Check if this directory contains a module (install-config.yaml OR custom.yaml)
             const installerConfigPath = path.join(fullPath, '_module-installer', 'install-config.yaml');
+            const customConfigPath = path.join(fullPath, 'custom.yaml');
 
-            if (await fs.pathExists(installerConfigPath)) {
+            if ((await fs.pathExists(installerConfigPath)) || (await fs.pathExists(customConfigPath))) {
               modulePaths.add(fullPath);
               // Don't scan inside modules - they might have their own nested structures
               continue;
@@ -225,11 +226,19 @@ class ModuleManager {
    * @returns {Object|null} Module info or null if not a valid module
    */
   async getModuleInfo(modulePath, defaultName, sourceDescription) {
-    // Check for module structure (only install-config.yaml is valid now)
+    // Check for module structure (install-config.yaml OR custom.yaml)
     const installerConfigPath = path.join(modulePath, '_module-installer', 'install-config.yaml');
+    const customConfigPath = path.join(modulePath, 'custom.yaml');
+    let configPath = null;
+
+    if (await fs.pathExists(installerConfigPath)) {
+      configPath = installerConfigPath;
+    } else if (await fs.pathExists(customConfigPath)) {
+      configPath = customConfigPath;
+    }
 
     // Skip if this doesn't look like a module
-    if (!(await fs.pathExists(installerConfigPath))) {
+    if (!configPath) {
       return null;
     }
 
@@ -243,11 +252,12 @@ class ModuleManager {
       description: 'BMAD Module',
       version: '5.0.0',
       source: sourceDescription,
+      isCustom: configPath === customConfigPath,
     };
 
     // Read module config for metadata
     try {
-      const configContent = await fs.readFile(installerConfigPath, 'utf8');
+      const configContent = await fs.readFile(configPath, 'utf8');
       const config = yaml.load(configContent);
 
       // Use the code property as the id if available
@@ -284,6 +294,12 @@ class ModuleManager {
       if (await fs.pathExists(installerConfigPath)) {
         return srcModulePath;
       }
+
+      // Also check for custom.yaml in src/modules
+      const customConfigPath = path.join(srcModulePath, 'custom.yaml');
+      if (await fs.pathExists(customConfigPath)) {
+        return srcModulePath;
+      }
     }
 
     // If not found in src/modules, search the entire project
@@ -298,10 +314,18 @@ class ModuleManager {
     // Need to read configs to match by ID
     for (const modulePath of allModulePaths) {
       const installerConfigPath = path.join(modulePath, '_module-installer', 'install-config.yaml');
+      const customConfigPath = path.join(modulePath, 'custom.yaml');
 
+      let configPath = null;
       if (await fs.pathExists(installerConfigPath)) {
+        configPath = installerConfigPath;
+      } else if (await fs.pathExists(customConfigPath)) {
+        configPath = customConfigPath;
+      }
+
+      if (configPath) {
         try {
-          const configContent = await fs.readFile(installerConfigPath, 'utf8');
+          const configContent = await fs.readFile(configPath, 'utf8');
           const config = yaml.load(configContent);
           if (config.code === moduleName) {
             return modulePath;

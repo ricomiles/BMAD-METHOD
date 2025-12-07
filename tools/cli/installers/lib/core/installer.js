@@ -38,6 +38,7 @@ const { CLIUtils } = require('../../../lib/cli-utils');
 const { ManifestGenerator } = require('./manifest-generator');
 const { IdeConfigManager } = require('./ide-config-manager');
 const { replaceAgentSidecarFolders } = require('./post-install-sidecar-replacement');
+const { CustomHandler } = require('../custom/handler');
 
 class Installer {
   constructor() {
@@ -51,6 +52,7 @@ class Installer {
     this.dependencyResolver = new DependencyResolver();
     this.configCollector = new ConfigCollector();
     this.ideConfigManager = new IdeConfigManager();
+    this.customHandler = new CustomHandler();
     this.installedFiles = []; // Track all installed files
     this.ttsInjectedFiles = []; // Track files with TTS injection applied
   }
@@ -1026,6 +1028,9 @@ If AgentVibes party mode is enabled, immediately trigger TTS with agent's voice:
         }
       }
 
+      // Update custom content (add new files, don't remove existing)
+      await this.updateCustomContent(projectDir, bmadDir);
+
       // Replace {agent_sidecar_folder} placeholders in all agent files
       console.log(chalk.dim('\n  Configuring agent sidecar folders...'));
       const sidecarResults = await replaceAgentSidecarFolders(bmadDir);
@@ -1161,6 +1166,133 @@ If AgentVibes party mode is enabled, immediately trigger TTS with agent's voice:
     await this.ideManager.cleanup(projectDir);
 
     return { success: true };
+  }
+
+  /**
+   * Update custom content (add new files without removing existing ones)
+   * @param {string} projectDir - Project directory
+   * @param {string} bmadDir - BMAD installation directory
+   */
+  async updateCustomContent(projectDir, bmadDir) {
+    try {
+      // Find all custom content
+      const customContents = await this.customHandler.findCustomContent(projectDir);
+
+      if (customContents.length === 0) {
+        return; // No custom content to update
+      }
+
+      // Load core config
+      const coreConfigPath = path.join(bmadDir, 'bmb', 'config.yaml');
+      let coreConfig = {};
+      if (await fs.pathExists(coreConfigPath)) {
+        const yamlLib = require('yaml');
+        const coreConfigContent = await fs.readFile(coreConfigPath, 'utf8');
+        coreConfig = yamlLib.load(coreConfigContent);
+      }
+
+      console.log(chalk.dim('\nUpdating custom content...'));
+
+      for (const customPath of customContents) {
+        const customInfo = await this.customHandler.getCustomInfo(customPath);
+        if (customInfo) {
+          console.log(chalk.dim(`  Checking: ${customInfo.name}`));
+
+          // Install only adds new files, doesn't remove existing ones
+          const results = await this.customHandler.install(
+            customPath,
+            bmadDir,
+            {
+              user_name: coreConfig.user_name,
+              communication_language: coreConfig.communication_language,
+              output_folder: coreConfig.output_folder,
+              bmad_folder: path.basename(bmadDir),
+            },
+            (filePath) => {
+              this.installedFiles.push(filePath);
+            },
+          );
+
+          // Only show if new files were added or preserved
+          if (results.filesCopied > 0 || results.preserved > 0) {
+            if (results.filesCopied > 0) {
+              console.log(chalk.dim(`    Added ${results.filesCopied} new file(s)`));
+            }
+            if (results.preserved > 0) {
+              console.log(chalk.dim(`    Preserved ${results.preserved} existing file(s)`));
+            }
+          }
+        }
+      }
+    } catch (error) {
+      console.warn(chalk.yellow(`Warning: Failed to update custom content: ${error.message}`));
+    }
+  }
+
+  /**
+   * Install custom content by ID
+   * @param {string} customId - Custom content ID
+   * @param {string} bmadDir - BMAD installation directory
+   * @param {Object} coreConfig - Core configuration
+   */
+  async installCustomContent(customId, bmadDir, coreConfig) {
+    try {
+      // Find the custom content
+      const customContents = await this.customHandler.findCustomContent(process.cwd());
+      let customInfo = null;
+      let customPath = null;
+
+      for (const path of customContents) {
+        const info = await this.customHandler.getCustomInfo(path);
+        if (info && info.id === customId) {
+          customInfo = info;
+          customPath = path;
+          break;
+        }
+      }
+
+      if (!customInfo || !customPath) {
+        console.warn(chalk.yellow(`Warning: Custom content '${customId}' not found`));
+        return;
+      }
+
+      console.log(chalk.dim(`  Installing: ${customInfo.name}`));
+
+      // Install the custom content
+      const results = await this.customHandler.install(
+        customPath,
+        bmadDir,
+        {
+          user_name: coreConfig.user_name,
+          communication_language: coreConfig.communication_language,
+          output_folder: coreConfig.output_folder,
+          bmad_folder: path.basename(bmadDir),
+        },
+        (filePath) => {
+          this.installedFiles.push(filePath);
+        },
+      );
+
+      // Show results
+      if (results.agentsInstalled > 0) {
+        console.log(chalk.dim(`    ${results.agentsInstalled} agent(s) installed`));
+      }
+      if (results.workflowsInstalled > 0) {
+        console.log(chalk.dim(`    ${results.workflowsInstalled} workflow(s) installed`));
+      }
+      if (results.filesCopied > 0) {
+        console.log(chalk.dim(`    ${results.filesCopied} file(s) copied`));
+      }
+      if (results.preserved > 0) {
+        console.log(chalk.dim(`    ${results.preserved} file(s) preserved`));
+      }
+      if (results.errors.length > 0) {
+        console.log(chalk.yellow(`    ${results.errors.length} error(s)`));
+        for (const error of results.errors) console.log(chalk.dim(`      - ${error}`));
+      }
+    } catch (error) {
+      console.error(chalk.red(`Failed to install custom content '${customId}':`, error.message));
+    }
   }
 
   /**
