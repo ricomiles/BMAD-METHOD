@@ -107,7 +107,7 @@ class ModuleManager {
   }
 
   /**
-   * Find all modules in the project by searching for install-config.yaml files
+   * Find all modules in the project by searching for module.yaml files
    * @returns {Array} List of module paths
    */
   async findModulesInProject() {
@@ -144,12 +144,14 @@ class ModuleManager {
               continue;
             }
 
-            // Check if this directory contains a module (install-config.yaml OR custom.yaml)
-            const installerConfigPath = path.join(fullPath, '_module-installer', 'install-config.yaml');
+            // Check if this directory contains a module (module.yaml OR custom.yaml)
+            const moduleConfigPath = path.join(fullPath, 'module.yaml');
+            const installerConfigPath = path.join(fullPath, '_module-installer', 'module.yaml');
             const customConfigPath = path.join(fullPath, '_module-installer', 'custom.yaml');
             const rootCustomConfigPath = path.join(fullPath, 'custom.yaml');
 
             if (
+              (await fs.pathExists(moduleConfigPath)) ||
               (await fs.pathExists(installerConfigPath)) ||
               (await fs.pathExists(customConfigPath)) ||
               (await fs.pathExists(rootCustomConfigPath))
@@ -189,12 +191,17 @@ class ModuleManager {
       for (const entry of entries) {
         if (entry.isDirectory()) {
           const modulePath = path.join(this.modulesSourcePath, entry.name);
-          // Check for module structure (install-config.yaml OR custom.yaml)
-          const installerConfigPath = path.join(modulePath, '_module-installer', 'install-config.yaml');
+          // Check for module structure (module.yaml OR custom.yaml)
+          const moduleConfigPath = path.join(modulePath, 'module.yaml');
+          const installerConfigPath = path.join(modulePath, '_module-installer', 'module.yaml');
           const customConfigPath = path.join(modulePath, '_module-installer', 'custom.yaml');
 
           // Skip if this doesn't look like a module
-          if (!(await fs.pathExists(installerConfigPath)) && !(await fs.pathExists(customConfigPath))) {
+          if (
+            !(await fs.pathExists(moduleConfigPath)) &&
+            !(await fs.pathExists(installerConfigPath)) &&
+            !(await fs.pathExists(customConfigPath))
+          ) {
             continue;
           }
 
@@ -246,13 +253,16 @@ class ModuleManager {
    * @returns {Object|null} Module info or null if not a valid module
    */
   async getModuleInfo(modulePath, defaultName, sourceDescription) {
-    // Check for module structure (install-config.yaml OR custom.yaml)
-    const installerConfigPath = path.join(modulePath, '_module-installer', 'install-config.yaml');
+    // Check for module structure (module.yaml OR custom.yaml)
+    const moduleConfigPath = path.join(modulePath, 'module.yaml');
+    const installerConfigPath = path.join(modulePath, '_module-installer', 'module.yaml');
     const customConfigPath = path.join(modulePath, '_module-installer', 'custom.yaml');
     const rootCustomConfigPath = path.join(modulePath, 'custom.yaml');
     let configPath = null;
 
-    if (await fs.pathExists(installerConfigPath)) {
+    if (await fs.pathExists(moduleConfigPath)) {
+      configPath = moduleConfigPath;
+    } else if (await fs.pathExists(installerConfigPath)) {
       configPath = installerConfigPath;
     } else if (await fs.pathExists(customConfigPath)) {
       configPath = customConfigPath;
@@ -313,10 +323,11 @@ class ModuleManager {
     // First, check src/modules
     const srcModulePath = path.join(this.modulesSourcePath, moduleName);
     if (await fs.pathExists(srcModulePath)) {
-      // Check if this looks like a module (has install-config.yaml)
-      const installerConfigPath = path.join(srcModulePath, '_module-installer', 'install-config.yaml');
+      // Check if this looks like a module (has module.yaml)
+      const moduleConfigPath = path.join(srcModulePath, 'module.yaml');
+      const installerConfigPath = path.join(srcModulePath, '_module-installer', 'module.yaml');
 
-      if (await fs.pathExists(installerConfigPath)) {
+      if ((await fs.pathExists(moduleConfigPath)) || (await fs.pathExists(installerConfigPath))) {
         return srcModulePath;
       }
 
@@ -338,12 +349,15 @@ class ModuleManager {
     // Also check by module ID (not just folder name)
     // Need to read configs to match by ID
     for (const modulePath of allModulePaths) {
-      const installerConfigPath = path.join(modulePath, '_module-installer', 'install-config.yaml');
+      const moduleConfigPath = path.join(modulePath, 'module.yaml');
+      const installerConfigPath = path.join(modulePath, '_module-installer', 'module.yaml');
       const customConfigPath = path.join(modulePath, '_module-installer', 'custom.yaml');
       const rootCustomConfigPath = path.join(modulePath, 'custom.yaml');
 
       let configPath = null;
-      if (await fs.pathExists(installerConfigPath)) {
+      if (await fs.pathExists(moduleConfigPath)) {
+        configPath = moduleConfigPath;
+      } else if (await fs.pathExists(installerConfigPath)) {
         configPath = installerConfigPath;
       } else if (await fs.pathExists(customConfigPath)) {
         configPath = customConfigPath;
@@ -584,7 +598,7 @@ class ModuleManager {
       }
 
       // Skip _module-installer directory - it's only needed at install time
-      if (file.startsWith('_module-installer/')) {
+      if (file.startsWith('_module-installer/') || file === 'module.yaml') {
         continue;
       }
 

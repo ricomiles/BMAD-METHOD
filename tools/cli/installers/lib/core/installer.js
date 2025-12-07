@@ -753,10 +753,39 @@ If AgentVibes party mode is enabled, immediately trigger TTS with agent's voice:
       // Resolve dependencies for selected modules
       spinner.text = 'Resolving dependencies...';
       const projectRoot = getProjectRoot();
-      const modulesToInstall = config.installCore ? ['core', ...config.modules] : config.modules;
+
+      // Add custom content modules to the modules list for installation
+      let allModules = [...(config.modules || [])];
+      if (config.customContent && config.customContent.selected && config.customContent.selectedFiles) {
+        // Add custom modules to the installation list
+        for (const customFile of config.customContent.selectedFiles) {
+          const { CustomHandler } = require('../custom/handler');
+          const customHandler = new CustomHandler();
+          const customInfo = await customHandler.getCustomInfo(customFile, projectDir);
+          if (customInfo && customInfo.id) {
+            allModules.push(customInfo.id);
+          }
+        }
+      }
+
+      const modulesToInstall = config.installCore ? ['core', ...allModules] : allModules;
 
       // For dependency resolution, we need to pass the project root
-      const resolution = await this.dependencyResolver.resolve(projectRoot, config.modules || [], { verbose: config.verbose });
+      // Create a temporary module manager that knows about custom content locations
+      const tempModuleManager = new ModuleManager({
+        scanProjectForModules: true,
+      });
+
+      // Make sure custom modules are discoverable
+      if (config.customContent && config.customContent.selected && config.customContent.selectedFiles) {
+        // The dependency resolver needs to know about these modules
+        // We'll handle custom modules separately in the installation loop
+      }
+
+      const resolution = await this.dependencyResolver.resolve(projectRoot, allModules, {
+        verbose: config.verbose,
+        moduleManager: tempModuleManager,
+      });
 
       if (config.verbose) {
         spinner.succeed('Dependencies resolved');
@@ -772,16 +801,90 @@ If AgentVibes party mode is enabled, immediately trigger TTS with agent's voice:
       }
 
       // Install modules with their dependencies
-      if (config.modules && config.modules.length > 0) {
-        for (const moduleName of config.modules) {
+      if (allModules && allModules.length > 0) {
+        const installedModuleNames = new Set();
+
+        for (const moduleName of allModules) {
+          // Skip if already installed
+          if (installedModuleNames.has(moduleName)) {
+            continue;
+          }
+          installedModuleNames.add(moduleName);
+
           spinner.start(`Installing module: ${moduleName}...`);
-          await this.installModuleWithDependencies(moduleName, bmadDir, resolution.byModule[moduleName]);
+
+          // Check if this is a custom module
+          let isCustomModule = false;
+          let customInfo = null;
+          if (config.customContent && config.customContent.selected && config.customContent.selectedFiles) {
+            const { CustomHandler } = require('../custom/handler');
+            const customHandler = new CustomHandler();
+            for (const customFile of config.customContent.selectedFiles) {
+              const info = await customHandler.getCustomInfo(customFile, projectDir);
+              if (info && info.id === moduleName) {
+                isCustomModule = true;
+                customInfo = info;
+                break;
+              }
+            }
+          }
+
+          if (isCustomModule && customInfo) {
+            // Install custom module using CustomHandler but as a proper module
+            const { CustomHandler } = require('../custom/handler');
+            const customHandler = new CustomHandler();
+
+            // Install to module directory instead of custom directory
+            const moduleTargetPath = path.join(bmadDir, moduleName);
+            await fs.ensureDir(moduleTargetPath);
+
+            const result = await customHandler.install(
+              customInfo.path,
+              path.join(bmadDir, 'temp-custom'),
+              { ...config.coreConfig, ...customInfo.config, _bmadDir: bmadDir },
+              (filePath) => {
+                // Track installed files with correct path
+                const relativePath = path.relative(path.join(bmadDir, 'temp-custom'), filePath);
+                const finalPath = path.join(moduleTargetPath, relativePath);
+                this.installedFiles.push(finalPath);
+              },
+            );
+
+            // Move from temp-custom to actual module directory
+            const tempCustomPath = path.join(bmadDir, 'temp-custom');
+            if (await fs.pathExists(tempCustomPath)) {
+              const customDir = path.join(tempCustomPath, 'custom');
+              if (await fs.pathExists(customDir)) {
+                // Move contents to module directory
+                const items = await fs.readdir(customDir);
+                for (const item of items) {
+                  const srcPath = path.join(customDir, item);
+                  const destPath = path.join(moduleTargetPath, item);
+
+                  // If destination exists, remove it first (or we could merge)
+                  if (await fs.pathExists(destPath)) {
+                    await fs.remove(destPath);
+                  }
+
+                  await fs.move(srcPath, destPath);
+                }
+              }
+              await fs.remove(tempCustomPath);
+            }
+
+            // Create module config
+            await this.generateModuleConfigs(bmadDir, { [moduleName]: { ...config.coreConfig, ...customInfo.config } });
+          } else {
+            // Regular module installation
+            await this.installModuleWithDependencies(moduleName, bmadDir, resolution.byModule[moduleName]);
+          }
+
           spinner.succeed(`Module installed: ${moduleName}`);
         }
 
         // Install partial modules (only dependencies)
         for (const [module, files] of Object.entries(resolution.byModule)) {
-          if (!config.modules.includes(module) && module !== 'core') {
+          if (!allModules.includes(module) && module !== 'core') {
             const totalFiles =
               files.agents.length +
               files.tasks.length +
@@ -799,6 +902,11 @@ If AgentVibes party mode is enabled, immediately trigger TTS with agent's voice:
       }
 
       // Install custom content if provided AND selected
+      // Process custom content that wasn't installed as modules
+      // This is now handled in the module installation loop above
+      // This section is kept for backward compatibility with any custom content
+      // that doesn't have a module structure
+      const remainingCustomContent = [];
       if (
         config.customContent &&
         config.customContent.hasCustomContent &&
@@ -806,12 +914,26 @@ If AgentVibes party mode is enabled, immediately trigger TTS with agent's voice:
         config.customContent.selected &&
         config.customContent.selectedFiles
       ) {
-        spinner.start('Installing custom content...');
+        // Filter out custom modules that were already installed
+        for (const customFile of config.customContent.selectedFiles) {
+          const { CustomHandler } = require('../custom/handler');
+          const customHandler = new CustomHandler();
+          const customInfo = await customHandler.getCustomInfo(customFile, projectDir);
+
+          // Skip if this was installed as a module
+          if (!customInfo || !customInfo.id || !allModules.includes(customInfo.id)) {
+            remainingCustomContent.push(customFile);
+          }
+        }
+      }
+
+      if (remainingCustomContent.length > 0) {
+        spinner.start('Installing remaining custom content...');
         const { CustomHandler } = require('../custom/handler');
         const customHandler = new CustomHandler();
 
-        // Use the selected files instead of finding all files
-        const customFiles = config.customContent.selectedFiles;
+        // Use the remaining files
+        const customFiles = remainingCustomContent;
 
         if (customFiles.length > 0) {
           console.log(chalk.cyan(`\n  Found ${customFiles.length} custom content file(s):`));
@@ -867,10 +989,10 @@ If AgentVibes party mode is enabled, immediately trigger TTS with agent's voice:
       spinner.start('Generating workflow and agent manifests...');
       const manifestGen = new ManifestGenerator();
 
-      // Include preserved modules (from quick update) in the manifest
-      const allModulesToList = config._preserveModules ? [...(config.modules || []), ...config._preserveModules] : config.modules || [];
+      // Include preserved modules (from quick update) and custom modules in the manifest
+      const allModulesToList = config._preserveModules ? [...allModules, ...config._preserveModules] : allModules || [];
 
-      const manifestStats = await manifestGen.generateManifests(bmadDir, config.modules || [], this.installedFiles, {
+      const manifestStats = await manifestGen.generateManifests(bmadDir, allModulesToList, this.installedFiles, {
         ides: config.ides || [],
         preservedModules: config._preserveModules || [], // Scan these from installed bmad/ dir
       });

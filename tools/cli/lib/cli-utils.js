@@ -84,8 +84,8 @@ const CLIUtils = {
   /**
    * Display module configuration header
    * @param {string} moduleName - Module name (fallback if no custom header)
-   * @param {string} header - Custom header from install-config.yaml
-   * @param {string} subheader - Custom subheader from install-config.yaml
+   * @param {string} header - Custom header from module.yaml
+   * @param {string} subheader - Custom subheader from module.yaml
    */
   displayModuleConfigHeader(moduleName, header = null, subheader = null) {
     // Simple blue banner with custom header/subheader if provided
@@ -100,8 +100,8 @@ const CLIUtils = {
   /**
    * Display module with no custom configuration
    * @param {string} moduleName - Module name (fallback if no custom header)
-   * @param {string} header - Custom header from install-config.yaml
-   * @param {string} subheader - Custom subheader from install-config.yaml
+   * @param {string} header - Custom header from module.yaml
+   * @param {string} subheader - Custom subheader from module.yaml
    */
   displayModuleNoConfig(moduleName, header = null, subheader = null) {
     // Show full banner with header/subheader, just like modules with config

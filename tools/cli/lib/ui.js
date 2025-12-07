@@ -142,8 +142,19 @@ class UI {
       if (selectedCustomContent.length > 0) {
         customContentConfig.selected = true;
         customContentConfig.selectedFiles = selectedCustomContent.map((mod) => mod.replace('__CUSTOM_CONTENT__', ''));
-        // Filter out custom content markers since they're not real modules
-        selectedModules = selectedModules.filter((mod) => !mod.startsWith('__CUSTOM_CONTENT__'));
+        // Convert custom content to module IDs for installation
+        const customContentModuleIds = [];
+        const { CustomHandler } = require('../installers/lib/custom/handler');
+        const customHandler = new CustomHandler();
+        for (const customFile of customContentConfig.selectedFiles) {
+          // Get the module info to extract the ID
+          const customInfo = await customHandler.getCustomInfo(customFile);
+          if (customInfo) {
+            customContentModuleIds.push(customInfo.id);
+          }
+        }
+        // Filter out custom content markers and add module IDs
+        selectedModules = [...selectedModules.filter((mod) => !mod.startsWith('__CUSTOM_CONTENT__')), ...customContentModuleIds];
       } else if (customContentConfig.hasCustomContent) {
         // User provided custom content but didn't select any
         customContentConfig.selected = false;
@@ -669,7 +680,7 @@ class UI {
    */
   async promptCustomContentLocation() {
     try {
-      CLIUtils.displaySection('Custom Content', 'Optional: Add custom agents and workflows');
+      CLIUtils.displaySection('Custom Content', 'Optional: Add custom agents, workflows, and modules');
 
       const { hasCustomContent } = await inquirer.prompt([
         {
@@ -703,7 +714,7 @@ class UI {
             {
               type: 'input',
               name: 'directory',
-              message: 'Enter the path to your custom content directory:',
+              message: 'Enter directory to search for custom content (will scan subfolders):',
               default: process.cwd(), // Use actual current working directory
               validate: async (input) => {
                 if (!input || input.trim() === '') {
@@ -736,7 +747,7 @@ class UI {
           const customFiles = await customHandler.findCustomContent(expandedPath);
 
           if (customFiles.length === 0) {
-            console.log(chalk.yellow(`\nNo custom.yaml files found in ${expandedPath}`));
+            console.log(chalk.yellow(`\nNo custom content found in ${expandedPath}`));
 
             const { tryAgain } = await inquirer.prompt([
               {
@@ -755,7 +766,12 @@ class UI {
           }
 
           customPath = expandedPath;
-          console.log(chalk.green(`\n✓ Found ${customFiles.length} custom content file(s)`));
+          console.log(chalk.green(`\n✓ Found ${customFiles.length} custom content item(s):`));
+          for (const file of customFiles) {
+            const relativePath = path.relative(expandedPath, path.dirname(file));
+            const folderName = path.dirname(file).split(path.sep).pop();
+            console.log(chalk.dim(`  • ${folderName} ${chalk.gray(`(${relativePath})`)}`));
+          }
         }
 
         return { hasCustomContent: true, customPath };
