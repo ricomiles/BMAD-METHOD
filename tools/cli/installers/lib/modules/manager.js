@@ -38,6 +38,14 @@ class ModuleManager {
   }
 
   /**
+   * Set the core configuration for access during module installation
+   * @param {Object} coreConfig - Core configuration object
+   */
+  setCoreConfig(coreConfig) {
+    this.coreConfig = coreConfig;
+  }
+
+  /**
    * Copy a file and replace {bmad_folder} placeholder with actual folder name
    * @param {string} sourcePath - Source file path
    * @param {string} targetPath - Target file path
@@ -728,7 +736,7 @@ class ModuleManager {
         }
 
         // Compile with customizations if any
-        const { xml } = compileAgent(yamlContent, {}, agentName, relativePath, { config: coreConfig });
+        const { xml } = compileAgent(yamlContent, {}, agentName, relativePath, { config: this.coreConfig });
 
         // Write the compiled MD file
         await fs.writeFile(targetMdPath, xml, 'utf8');
@@ -737,8 +745,8 @@ class ModuleManager {
         if (hasSidecar) {
           const { copyAgentSidecarFiles } = require('../../../lib/agent/installer');
 
-          // Get agent sidecar folder from core config or use default
-          const agentSidecarFolder = coreConfig.agent_sidecar_folder || '{project-root}/.myagent-data';
+          // Get agent sidecar folder from core config (should always be set)
+          const agentSidecarFolder = this.coreConfig?.agent_sidecar_folder;
 
           // Resolve path variables
           const projectDir = path.dirname(bmadDir);

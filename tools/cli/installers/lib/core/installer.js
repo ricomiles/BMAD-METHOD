@@ -447,6 +447,7 @@ If AgentVibes party mode is enabled, immediately trigger TTS with agent's voice:
 
     // Set bmad folder name on module manager and IDE manager for placeholder replacement
     this.moduleManager.setBmadFolderName(bmadFolderName);
+    this.moduleManager.setCoreConfig(moduleConfigs.core || {});
     this.ideManager.setBmadFolderName(bmadFolderName);
 
     // Tool selection will be collected after we determine if it's a reinstall/update/new install
@@ -1577,7 +1578,7 @@ If AgentVibes party mode is enabled, immediately trigger TTS with agent's voice:
 
           // Get agent sidecar folder from core config
           const coreConfigPath = path.join(bmadDir, 'bmb', 'config.yaml');
-          let agentSidecarFolder = '{project-root}/.myagent-data';
+          let agentSidecarFolder;
 
           if (await fs.pathExists(coreConfigPath)) {
             const yamlLib = require('yaml');
@@ -2641,7 +2642,7 @@ If AgentVibes party mode is enabled, immediately trigger TTS with agent's voice:
             const { copyAgentSidecarFiles } = require('../../../lib/agent/installer');
 
             // Get agent sidecar folder from config or use default
-            const agentSidecarFolder = config.coreConfig?.agent_sidecar_folder || '{project-root}/.myagent-data';
+            const agentSidecarFolder = config.coreConfig?.agent_sidecar_folder;
 
             // Resolve path variables
             const resolvedSidecarFolder = agentSidecarFolder.replaceAll('{project-root}', projectDir).replaceAll('{bmad_folder}', bmadDir);

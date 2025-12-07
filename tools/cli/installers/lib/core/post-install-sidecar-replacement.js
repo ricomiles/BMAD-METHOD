@@ -32,7 +32,7 @@ async function replaceAgentSidecarFolders(bmadDir) {
 
     const coreConfigContent = await fs.readFile(coreConfigPath, 'utf8');
     const coreConfig = yaml.parse(coreConfigContent);
-    const agentSidecarFolder = coreConfig.agent_sidecar_folder || '{project-root}/.myagent-data';
+    const agentSidecarFolder = coreConfig.agent_sidecar_folder;
 
     // Use the literal value from config, don't resolve the placeholders
     console.log(chalk.dim(`\n  Replacing {agent_sidecar_folder} with: ${agentSidecarFolder}`));
