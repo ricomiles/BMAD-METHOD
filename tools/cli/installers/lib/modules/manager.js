@@ -484,6 +484,16 @@ class ModuleManager {
         continue;
       }
 
+      // Skip sidecar directories - they are handled separately during agent compilation
+      if (
+        path
+          .dirname(file)
+          .split('/')
+          .some((dir) => dir.toLowerCase().includes('sidecar'))
+      ) {
+        continue;
+      }
+
       // Skip _module-installer directory - it's only needed at install time
       if (file.startsWith('_module-installer/')) {
         continue;
@@ -697,13 +707,58 @@ class ModuleManager {
           customizedFields = customizeData.customized_fields || [];
         }
 
+        // Load core config to get agent_sidecar_folder
+        const coreConfigPath = path.join(bmadDir, 'bmb', 'config.yaml');
+        let coreConfig = {};
+
+        if (await fs.pathExists(coreConfigPath)) {
+          const yamlLib = require('yaml');
+          const coreConfigContent = await fs.readFile(coreConfigPath, 'utf8');
+          coreConfig = yamlLib.parse(coreConfigContent);
+        }
+
+        // Check if agent has sidecar
+        let hasSidecar = false;
+        try {
+          const yamlLib = require('yaml');
+          const agentYaml = yamlLib.parse(yamlContent);
+          hasSidecar = agentYaml?.agent?.metadata?.hasSidecar === true;
+        } catch {
+          // Continue without sidecar processing
+        }
+
         // Compile with customizations if any
-        const { xml } = compileAgent(yamlContent, customizedFields, agentName, relativePath);
+        const { xml } = compileAgent(yamlContent, {}, agentName, relativePath, { config: coreConfig });
 
         // Write the compiled MD file
         await fs.writeFile(targetMdPath, xml, 'utf8');
 
-        console.log(chalk.dim(`    Compiled agent: ${agentName} -> ${path.relative(targetPath, targetMdPath)}`));
+        // Copy sidecar files if agent has hasSidecar flag
+        if (hasSidecar) {
+          const { copyAgentSidecarFiles } = require('../../../lib/agent/installer');
+
+          // Get agent sidecar folder from core config or use default
+          const agentSidecarFolder = coreConfig.agent_sidecar_folder || '{project-root}/.myagent-data';
+
+          // Resolve path variables
+          const projectDir = path.dirname(bmadDir);
+          const resolvedSidecarFolder = agentSidecarFolder
+            .replaceAll('{project-root}', projectDir)
+            .replaceAll('{bmad_folder}', path.basename(bmadDir));
+
+          // Create sidecar directory for this agent
+          const agentSidecarDir = path.join(resolvedSidecarFolder, agentName);
+          await fs.ensureDir(agentSidecarDir);
+
+          // Copy sidecar files
+          const sidecarFiles = copyAgentSidecarFiles(path.dirname(sourceYamlPath), agentSidecarDir, sourceYamlPath);
+
+          console.log(chalk.dim(`    Copied sidecar to: ${agentSidecarDir}`));
+        }
+
+        console.log(
+          chalk.dim(`    Compiled agent: ${agentName} -> ${path.relative(targetPath, targetMdPath)}${hasSidecar ? ' (with sidecar)' : ''}`),
+        );
       } catch (error) {
         console.warn(chalk.yellow(`    Failed to compile agent ${agentName}:`, error.message));
       }

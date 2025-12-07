@@ -93,7 +93,6 @@ function discoverAgents(searchPath) {
                 name: agentName,
                 path: fullPath,
                 yamlFile: agentYamlPath,
-                hasSidecar: true,
                 relativePath: agentRelativePath,
               });
             }
@@ -127,12 +126,15 @@ function loadAgentConfig(yamlPath) {
   // These take precedence over defaults
   const savedAnswers = agentYaml?.saved_answers || {};
 
+  const metadata = agentYaml?.agent?.metadata || {};
+
   return {
     yamlContent: content,
     agentYaml,
     installConfig,
     defaults: { ...defaults, ...savedAnswers }, // saved_answers override defaults
-    metadata: agentYaml?.agent?.metadata || {},
+    metadata,
+    hasSidecar: metadata.hasSidecar === true,
   };
 }
 
@@ -232,9 +234,10 @@ async function promptInstallQuestions(installConfig, defaults, presetAnswers = {
  * @param {Object} agentInfo - Agent discovery info
  * @param {Object} answers - User answers for install_config
  * @param {string} targetPath - Target installation directory
+ * @param {Object} options - Additional options including config
  * @returns {Object} Installation result
  */
-function installAgent(agentInfo, answers, targetPath) {
+function installAgent(agentInfo, answers, targetPath, options = {}) {
   // Compile the agent
   const { xml, metadata, processedYaml } = compileAgent(fs.readFileSync(agentInfo.yamlFile, 'utf8'), answers);
 
@@ -261,11 +264,27 @@ function installAgent(agentInfo, answers, targetPath) {
     sidecarCopied: false,
   };
 
-  // Copy sidecar files for expert agents
-  if (agentInfo.hasSidecar && agentInfo.type === 'expert') {
-    const sidecarFiles = copySidecarFiles(agentInfo.path, agentTargetDir, agentInfo.yamlFile);
+  // Handle sidecar files for agents with hasSidecar flag
+  if (agentInfo.hasSidecar === true && agentInfo.type === 'expert') {
+    // Get agent sidecar folder from config or use default
+    const agentSidecarFolder = options.config?.agent_sidecar_folder || '{project-root}/.myagent-data';
+
+    // Resolve path variables
+    const resolvedSidecarFolder = agentSidecarFolder
+      .replaceAll('{project-root}', options.projectRoot || process.cwd())
+      .replaceAll('{bmad_folder}', options.bmadFolder || '.bmad');
+
+    // Create sidecar directory for this agent
+    const agentSidecarDir = path.join(resolvedSidecarFolder, agentFolderName);
+    if (!fs.existsSync(agentSidecarDir)) {
+      fs.mkdirSync(agentSidecarDir, { recursive: true });
+    }
+
+    // Find and copy sidecar folder
+    const sidecarFiles = copyAgentSidecarFiles(agentInfo.path, agentSidecarDir, agentInfo.yamlFile);
     result.sidecarCopied = true;
     result.sidecarFiles = sidecarFiles;
+    result.sidecarDir = agentSidecarDir;
   }
 
   return result;
@@ -306,6 +325,50 @@ function copySidecarFiles(sourceDir, targetDir, excludeYaml) {
   }
 
   copyDir(sourceDir, targetDir);
+  return copied;
+}
+
+/**
+ * Find and copy agent sidecar folders
+ * @param {string} sourceDir - Source agent directory
+ * @param {string} targetSidecarDir - Target sidecar directory for the agent
+ * @param {string} excludeYaml - The .agent.yaml file to exclude
+ * @returns {Array} List of copied files
+ */
+function copyAgentSidecarFiles(sourceDir, targetSidecarDir, excludeYaml) {
+  const copied = [];
+
+  // Find folders with "sidecar" in the name
+  const entries = fs.readdirSync(sourceDir, { withFileTypes: true });
+
+  for (const entry of entries) {
+    if (entry.isDirectory() && entry.name.toLowerCase().includes('sidecar')) {
+      const sidecarSourcePath = path.join(sourceDir, entry.name);
+
+      // Recursively copy the sidecar folder contents
+      function copySidecarDir(src, dest) {
+        if (!fs.existsSync(dest)) {
+          fs.mkdirSync(dest, { recursive: true });
+        }
+
+        const sidecarEntries = fs.readdirSync(src, { withFileTypes: true });
+        for (const sidecarEntry of sidecarEntries) {
+          const srcPath = path.join(src, sidecarEntry.name);
+          const destPath = path.join(dest, sidecarEntry.name);
+
+          if (sidecarEntry.isDirectory()) {
+            copySidecarDir(srcPath, destPath);
+          } else {
+            fs.copyFileSync(srcPath, destPath);
+            copied.push(destPath);
+          }
+        }
+      }
+
+      copySidecarDir(sidecarSourcePath, targetSidecarDir);
+    }
+  }
+
   return copied;
 }
 
@@ -745,6 +808,7 @@ module.exports = {
   promptInstallQuestions,
   installAgent,
   copySidecarFiles,
+  copyAgentSidecarFiles,
   updateAgentId,
   detectBmadProject,
   addToManifest,

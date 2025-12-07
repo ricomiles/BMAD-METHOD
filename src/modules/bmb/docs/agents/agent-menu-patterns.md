@@ -375,7 +375,7 @@ exec: "../../../core/tasks/validate.xml"
 
 - `{project-root}` - Project root directory
 - `{bmad_folder}` - BMAD installation folder
-- `{agent-folder}` - Agent installation directory (Expert agents)
+- `{agent_sidecar_folder}` - Agent installation directory (Expert agents)
 - `{output_folder}` - Document output location
 - `{user_name}` - User's name from config
 - `{communication_language}` - Language preference

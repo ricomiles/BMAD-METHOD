@@ -245,11 +245,19 @@ module.exports = {
       // Load agent configuration
       const agentConfig = loadAgentConfig(selectedAgent.yamlFile);
 
+      // Check if agent has sidecar
+      if (agentConfig.metadata.hasSidecar) {
+        selectedAgent.hasSidecar = true;
+      }
+
       if (agentConfig.metadata.name) {
         console.log(chalk.dim(`Agent Name: ${agentConfig.metadata.name}`));
       }
       if (agentConfig.metadata.title) {
         console.log(chalk.dim(`Title: ${agentConfig.metadata.title}`));
+      }
+      if (agentConfig.metadata.hasSidecar) {
+        console.log(chalk.dim(`Sidecar: Yes`));
       }
 
       // Get the agent type (source name)
@@ -508,12 +516,22 @@ module.exports = {
       const compiledPath = path.join(agentTargetDir, compiledFileName);
       const relativePath = path.relative(projectRoot, compiledPath);
 
+      // Read core config to get agent_sidecar_folder
+      const coreConfigPath = path.join(config.bmadFolder, 'bmb', 'config.yaml');
+      let coreConfig = {};
+      if (fs.existsSync(coreConfigPath)) {
+        const yamlLib = require('yaml');
+        const content = fs.readFileSync(coreConfigPath, 'utf8');
+        coreConfig = yamlLib.parse(content);
+      }
+
       // Compile with proper name and path
       const { xml, metadata, processedYaml } = compileAgent(
         fs.readFileSync(selectedAgent.yamlFile, 'utf8'),
         answers,
         finalAgentName,
         relativePath,
+        { config: coreConfig },
       );
 
       // Write compiled XML (.md) with custom name
@@ -527,12 +545,31 @@ module.exports = {
         sidecarCopied: false,
       };
 
-      // Copy sidecar files for expert agents
-      if (selectedAgent.hasSidecar && selectedAgent.type === 'expert') {
-        const { copySidecarFiles } = require('../lib/agent/installer');
-        const sidecarFiles = copySidecarFiles(selectedAgent.path, agentTargetDir, selectedAgent.yamlFile);
+      // Handle sidecar files for agents with hasSidecar flag
+      if (selectedAgent.hasSidecar === true && selectedAgent.type === 'expert') {
+        const { copyAgentSidecarFiles } = require('../lib/agent/installer');
+
+        // Get agent sidecar folder from config or use default
+        const agentSidecarFolder = coreConfig?.agent_sidecar_folder || '{project-root}/.myagent-data';
+
+        // Resolve path variables
+        const resolvedSidecarFolder = agentSidecarFolder
+          .replaceAll('{project-root}', projectRoot)
+          .replaceAll('{bmad_folder}', config.bmadFolder);
+
+        // Create sidecar directory for this agent
+        const agentSidecarDir = path.join(resolvedSidecarFolder, finalAgentName);
+        if (!fs.existsSync(agentSidecarDir)) {
+          fs.mkdirSync(agentSidecarDir, { recursive: true });
+        }
+
+        // Find and copy sidecar folder
+        const sidecarFiles = copyAgentSidecarFiles(selectedAgent.path, agentSidecarDir, selectedAgent.yamlFile);
         result.sidecarCopied = true;
         result.sidecarFiles = sidecarFiles;
+        result.sidecarDir = agentSidecarDir;
+
+        console.log(chalk.dim(`   Sidecar copied to: ${agentSidecarDir}`));
       }
 
       console.log(chalk.green('\n✨ Agent installed successfully!'));
