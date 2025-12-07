@@ -156,6 +156,7 @@ Each agent brings deep expertise and can be customized to match your team's styl
 - **[GitHub Issues](https://github.com/bmad-code-org/BMAD-METHOD/issues)** - Report bugs, request features
 - **[YouTube Channel](https://www.youtube.com/@BMadCode)** - Video tutorials and demos
 - **[Web Bundles](https://bmad-code-org.github.io/bmad-bundles/)** - Pre-built agent bundles
+- **[Code of Conduct](.github/CODE_OF_CONDUCT.md)** - Community guidelines
 
 ## 🛠️ Development
 
