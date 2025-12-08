@@ -130,7 +130,7 @@ class Installer {
    */
   async copyFileWithPlaceholderReplacement(sourcePath, targetPath, bmadFolderName) {
     // List of text file extensions that should have placeholder replacement
-    const textExtensions = ['.md', '.yaml', '.yml', '.txt', '.json', '.js', '.ts', '.html', '.css', '.sh', '.bat', '.csv'];
+    const textExtensions = ['.md', '.yaml', '.yml', '.txt', '.json', '.js', '.ts', '.html', '.css', '.sh', '.bat', '.csv', '.xml'];
     const ext = path.extname(sourcePath).toLowerCase();
 
     // Check if this is a text file that might contain placeholders
@@ -1863,6 +1863,9 @@ If AgentVibes party mode is enabled, immediately trigger TTS with agent's voice:
 
         // DO NOT replace {project-root} - LLMs understand this placeholder at runtime
         // const processedContent = xmlContent.replaceAll('{project-root}', projectDir);
+
+        // Replace {bmad_folder} with actual folder name
+        xmlContent = xmlContent.replaceAll('{bmad_folder}', this.bmadFolderName || 'bmad');
 
         // Replace {agent_sidecar_folder} if configured
         const coreConfig = this.configCollector.collectedConfig.core || {};
