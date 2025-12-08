@@ -3,6 +3,7 @@ const boxen = require('boxen');
 const wrapAnsi = require('wrap-ansi');
 const figlet = require('figlet');
 const path = require('node:path');
+const os = require('node:os');
 
 const CLIUtils = {
   /**
@@ -204,6 +205,22 @@ const CLIUtils = {
   displayModuleComplete(moduleName, clearScreen = false) {
     // No longer clear screen or show boxes - just a simple completion message
     // This is deprecated but kept for backwards compatibility
+  },
+
+  /**
+   * Expand path with ~ expansion
+   * @param {string} inputPath - Path to expand
+   * @returns {string} Expanded path
+   */
+  expandPath(inputPath) {
+    if (!inputPath) return inputPath;
+
+    // Expand ~ to home directory
+    if (inputPath.startsWith('~')) {
+      return path.join(os.homedir(), inputPath.slice(1));
+    }
+
+    return inputPath;
   },
 };
 

@@ -240,6 +240,25 @@ class ModuleManager {
           }
         }
       }
+
+      // Also check for cached custom modules in _cfg/custom/
+      if (this.bmadDir) {
+        const customCacheDir = path.join(this.bmadDir, '_cfg', 'custom');
+        if (await fs.pathExists(customCacheDir)) {
+          const cacheEntries = await fs.readdir(customCacheDir, { withFileTypes: true });
+          for (const entry of cacheEntries) {
+            if (entry.isDirectory()) {
+              const cachePath = path.join(customCacheDir, entry.name);
+              const moduleInfo = await this.getModuleInfo(cachePath, entry.name, '_cfg/custom');
+              if (moduleInfo && !modules.some((m) => m.id === moduleInfo.id) && !customModules.some((m) => m.id === moduleInfo.id)) {
+                moduleInfo.isCustom = true;
+                moduleInfo.fromCache = true;
+                customModules.push(moduleInfo);
+              }
+            }
+          }
+        }
+      }
     }
 
     return { modules, customModules };

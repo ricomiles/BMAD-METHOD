@@ -17,6 +17,7 @@ class Detector {
       hasCore: false,
       modules: [],
       ides: [],
+      customModules: [],
       manifest: null,
     };
 
@@ -32,6 +33,10 @@ class Detector {
       result.manifest = manifestData;
       result.version = manifestData.version;
       result.installed = true;
+      // Copy custom modules if they exist
+      if (manifestData.customModules) {
+        result.customModules = manifestData.customModules;
+      }
     }
 
     // Check for core
