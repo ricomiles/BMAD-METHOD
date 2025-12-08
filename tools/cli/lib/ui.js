@@ -618,18 +618,51 @@ class UI {
           // Get the module info from cache
           const yaml = require('js-yaml');
           const fs = require('fs-extra');
-          const moduleYamlPath = path.join(cachedModule.cachePath, 'module.yaml');
 
-          if (await fs.pathExists(moduleYamlPath)) {
-            const yamlContent = await fs.readFile(moduleYamlPath, 'utf8');
-            const moduleData = yaml.load(yamlContent);
+          // Try multiple possible config file locations
+          const possibleConfigPaths = [
+            path.join(cachedModule.cachePath, 'module.yaml'),
+            path.join(cachedModule.cachePath, 'custom.yaml'),
+            path.join(cachedModule.cachePath, '_module-installer', 'module.yaml'),
+            path.join(cachedModule.cachePath, '_module-installer', 'custom.yaml'),
+          ];
+
+          let moduleData = null;
+          let foundPath = null;
+
+          for (const configPath of possibleConfigPaths) {
+            if (await fs.pathExists(configPath)) {
+              try {
+                const yamlContent = await fs.readFile(configPath, 'utf8');
+                moduleData = yaml.load(yamlContent);
+                foundPath = configPath;
+                break;
+              } catch {
+                // Continue to next path
+              }
+            }
+          }
+
+          if (moduleData) {
+            // Use the name from the custom info if we have it
+            const moduleName = cachedModule.name || moduleData.name || cachedModule.id;
 
             customContentItems.push({
-              name: `${chalk.cyan('✓')} ${moduleData.name || cachedModule.id} ${chalk.gray('(cached)')}`,
+              name: `${chalk.cyan('✓')} ${moduleName} ${chalk.gray('(cached)')}`,
               value: cachedModule.id, // Use module ID directly
               checked: true, // Default to selected
               cached: true,
             });
+          } else {
+            // Debug: show what paths we tried to check
+            console.log(chalk.dim(`DEBUG: No module config found for ${cachedModule.id}`));
+            console.log(
+              chalk.dim(
+                `DEBUG: Tried paths:`,
+                possibleConfigPaths.map((p) => p.replace(cachedModule.cachePath, '.')),
+              ),
+            );
+            console.log(chalk.dim(`DEBUG: cachedModule:`, JSON.stringify(cachedModule, null, 2)));
           }
         }
       } else if (customContentConfig.customPath) {
