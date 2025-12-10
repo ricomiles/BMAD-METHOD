@@ -145,7 +145,7 @@
 - Fixed version reading from package.json instead of hardcoded fallback
 - Removed hardcoded years from WebSearch queries
 - Removed broken build caching mechanism
-- Fixed hardcoded 'bmad' prefix from files-manifest.csv paths
+- Fixed hardcoded '.bmad' prefix from files-manifest.csv paths
 - Enhanced TTS injection summary with tracking and documentation
 - Fixed CI nvmrc configuration issues
 
