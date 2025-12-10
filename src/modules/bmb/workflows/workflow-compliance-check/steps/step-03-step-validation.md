@@ -186,7 +186,7 @@ For each step:
 
 "**Path Variable Validation:**"
 
-- Check format: `{project-root}/.bmad/bmb/...` vs `{project-root}/src/modules/bmb/...`
+- Check format: `{project-root}/.bmad/bmb/...` vs `{project-root}/bmb/...`
 - Ensure consistent variable usage across all step files
 - Validate relative vs absolute path usage
 

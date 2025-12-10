@@ -77,9 +77,9 @@ brainstorm_context: "{workflow_path}/data/brainstorm-context.md"
 
 # Reference examples
 
-simple_agent_examples: "{project-root}/src/modules/bmb/reference/agents/simple-examples/"
-expert_agent_examples: "{project-root}/src/modules/bmb/reference/agents/expert-examples/"
-module_agent_examples: "{project-root}/src/modules/bmb/reference/agents/module-examples/"
+simple_agent_examples: "{project-root}/bmb/reference/agents/simple-examples/"
+expert_agent_examples: "{project-root}/bmb/reference/agents/expert-examples/"
+module_agent_examples: "{project-root}/bmb/reference/agents/module-examples/"
 
 # Output configuration
 
