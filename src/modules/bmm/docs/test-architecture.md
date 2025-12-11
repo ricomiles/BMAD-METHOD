@@ -104,7 +104,9 @@ graph TB
 - **System-level (Phase 3):** Run immediately after architecture/ADR drafting to produce `test-design-system.md` (testability review, ADR → test mapping, ASRs, environment needs). Feeds the implementation-readiness gate.
 - **Epic-level (Phase 4):** Run per-epic to produce `test-design-epic-N.md` (risk, priorities, coverage plan).
 
-Quick Flow track skips Phase 1 and 3. BMad Method and Enterprise use all phases based on project needs. When an ADR/architecture draft is produced, run `*test-design` in **system-level** mode before the implementation-readiness gate so the ADR has an attached testability review and ADR → test mapping; keep it updated if ADRs change.
+Quick Flow track skips Phases 1 and 3.
+BMad Method and Enterprise use all phases based on project needs.
+When an ADR or architecture draft is produced, run `*test-design` in **system-level** mode before the implementation-readiness gate. This ensures the ADR has an attached testability review and ADR → test mapping. Keep the test-design updated if ADRs change.
 
 ### Why TEA is Different from Other BMM Agents
 
