@@ -26,14 +26,17 @@ graph TB
     subgraph Phase3["<b>Phase 3: SOLUTIONING</b>"]
         Architecture["<b>Architect: *architecture</b>"]
         EpicsStories["<b>PM/Architect: *create-epics-and-stories</b>"]
+        TestDesignSys["<b>TEA: *test-design (system-level)</b>"]
         Framework["<b>TEA: *framework</b>"]
         CI["<b>TEA: *ci</b>"]
         GateCheck["<b>Architect: *implementation-readiness</b>"]
         Architecture --> EpicsStories
+        Architecture --> TestDesignSys
+        TestDesignSys --> Framework
         EpicsStories --> Framework
         Framework --> CI
         CI --> GateCheck
-        Phase3Note["<b>Epics created AFTER architecture,</b><br/><b>then test infrastructure setup</b>"]
+        Phase3Note["<b>Epics created AFTER architecture,</b><br/><b>then system-level test design and test infra setup</b>"]
         EpicsStories -.-> Phase3Note
     end
 
@@ -96,9 +99,12 @@ graph TB
 - **Phase 3** (Track-dependent): Solutioning (`*architecture` → `*create-epics-and-stories` → TEA: `*framework`, `*ci` → `*implementation-readiness`)
 - **Phase 4** (Required): Implementation (`*sprint-planning` → per-epic: `*test-design` → per-story: dev workflows)
 
-**TEA workflows:** `*framework` and `*ci` run once in Phase 3 after architecture. `*test-design` runs per-epic in Phase 4. Output: `test-design-epic-N.md`.
+**TEA workflows:** `*framework` and `*ci` run once in Phase 3 after architecture. `*test-design` is **dual-mode**:
 
-Quick Flow track skips Phase 1 and 3. BMad Method and Enterprise use all phases based on project needs.
+- **System-level (Phase 3):** Run immediately after architecture/ADR drafting to produce `test-design-system.md` (testability review, ADR → test mapping, ASRs, environment needs). Feeds the implementation-readiness gate.
+- **Epic-level (Phase 4):** Run per-epic to produce `test-design-epic-N.md` (risk, priorities, coverage plan).
+
+Quick Flow track skips Phase 1 and 3. BMad Method and Enterprise use all phases based on project needs. When an ADR/architecture draft is produced, run `*test-design` in **system-level** mode before the implementation-readiness gate so the ADR has an attached testability review and ADR → test mapping; keep it updated if ADRs change.
 
 ### Why TEA is Different from Other BMM Agents
 
