@@ -180,10 +180,12 @@ The BMad Method Module (BMM) provides a comprehensive team of specialized AI age
 
 - `workflow-status` - Check what to do next
 - `sprint-planning` - Initialize `sprint-status.yaml` tracking
-- `create-story` - Draft next story from epic
-- `validate-create-story` - Independent story validation
+- `create-story` - Create next story from epic (sets status to `ready-for-dev`)
+- `validate-create-story` - Optional quality check (does not change status; run before dev-story for extra validation)
 - `epic-retrospective` - Post-epic review
 - `correct-course` - Handle changes during implementation
+
+**Story handoff sequence:** `create-story` → (optional) `validate-create-story` → `dev-story`
 
 **Communication Style:** Task-oriented and efficient. Direct and eliminates ambiguity. Focuses on clear handoffs and developer-ready specifications.
 
@@ -644,7 +646,7 @@ Many workflows have optional validation workflows that perform independent revie
 | -------------------------- | ----------- | ------------------------------------------ |
 | `implementation-readiness` | Architect   | PRD + Architecture + Epics + UX (optional) |
 | `validate-design`          | UX Designer | UX specification and artifacts             |
-| `validate-create-story`    | SM          | Story draft                                |
+| `validate-create-story`    | SM          | Story file                                 |
 
 **When to use validation:**
 
