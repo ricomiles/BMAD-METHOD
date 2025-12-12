@@ -40,9 +40,11 @@
 
           **What would you like to do?**
           1. Run `create-story` to create next story from epics with comprehensive context
-          2. Run `*validate-create-story` to improve existing drafted stories before development
+          2. Run `*validate-create-story` to improve existing stories before development (recommended quality check)
           3. Specify a particular story file to develop (provide full path)
           4. Check {{sprint_status}} file to see current sprint status
+
+          💡 **Tip:** Stories in `ready-for-dev` may not have been validated. Consider running `validate-create-story` first for a quality check.
         </output>
         <ask>Choose option [1], [2], [3], or [4], or specify story file path:</ask>
 
@@ -85,7 +87,7 @@
 
           **Available Options:**
           1. Run `create-story` to create next story from epics with comprehensive context
-          2. Run `*validate-create-story` to improve existing drafted stories
+          2. Run `*validate-create-story` to improve existing stories
           3. Specify which story to develop
         </output>
         <ask>What would you like to do? Choose option [1], [2], or [3]:</ask>
