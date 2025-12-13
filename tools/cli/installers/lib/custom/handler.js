@@ -318,7 +318,6 @@ class CustomHandler {
           const { getSourcePath } = require('../../../lib/project-root');
           const genericTemplatePath = getSourcePath('utility', 'agent-components', 'agent.customize.template.yaml');
           if (await fs.pathExists(genericTemplatePath)) {
-            // Copy with placeholder replacement
             let templateContent = await fs.readFile(genericTemplatePath, 'utf8');
             await fs.writeFile(customizePath, templateContent, 'utf8');
             console.log(chalk.dim(`  Created customize: custom-${agentName}.customize.yaml`));
@@ -336,41 +335,6 @@ class CustomHandler {
 
         // Write the compiled MD file
         await fs.writeFile(targetMdPath, processedXml, 'utf8');
-
-        // Check if agent has sidecar
-        let hasSidecar = false;
-        try {
-          const yamlLib = require('yaml');
-          const agentYaml = yamlLib.parse(yamlContent);
-          hasSidecar = agentYaml?.agent?.metadata?.hasSidecar === true;
-        } catch {
-          // Continue without sidecar processing
-        }
-
-        // Copy sidecar files if agent has hasSidecar flag
-        if (hasSidecar && config.agent_sidecar_folder) {
-          const { copyAgentSidecarFiles } = require('../../../lib/agent/installer');
-
-          // Resolve agent sidecar folder path
-          const projectDir = path.dirname(bmadDir);
-          const resolvedSidecarFolder = config.agent_sidecar_folder
-            .replaceAll('{project-root}', projectDir)
-            .replaceAll('_bmad', path.basename(bmadDir));
-
-          // Create sidecar directory for this agent
-          const agentSidecarDir = path.join(resolvedSidecarFolder, agentName);
-          await fs.ensureDir(agentSidecarDir);
-
-          // Copy sidecar files
-          const sidecarResult = copyAgentSidecarFiles(path.dirname(agentFile), agentSidecarDir, agentFile);
-
-          if (sidecarResult.copied.length > 0) {
-            console.log(chalk.dim(`    Copied ${sidecarResult.copied.length} sidecar file(s) to: ${agentSidecarDir}`));
-          }
-          if (sidecarResult.preserved.length > 0) {
-            console.log(chalk.dim(`    Preserved ${sidecarResult.preserved.length} existing sidecar file(s)`));
-          }
-        }
 
         // Track the file
         if (fileTrackingCallback) {

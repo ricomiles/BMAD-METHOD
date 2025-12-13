@@ -262,127 +262,9 @@ function installAgent(agentInfo, answers, targetPath, options = {}) {
     agentName: metadata.name || agentInfo.name,
     targetDir: agentTargetDir,
     compiledFile: compiledPath,
-    sidecarCopied: false,
   };
 
-  // Handle sidecar files for agents with hasSidecar flag
-  if (agentInfo.hasSidecar === true && agentInfo.type === 'expert') {
-    // Get agent sidecar folder from config or use default
-    const agentSidecarFolder = options.config?.agent_sidecar_folder || '{project-root}/.myagent-data';
-
-    // Resolve path variables
-    const resolvedSidecarFolder = agentSidecarFolder
-      .replaceAll('{project-root}', options.projectRoot || process.cwd())
-      .replaceAll('_bmad', options_bmadFolder || '_bmad');
-
-    // Create sidecar directory for this agent
-    const agentSidecarDir = path.join(resolvedSidecarFolder, agentFolderName);
-    if (!fs.existsSync(agentSidecarDir)) {
-      fs.mkdirSync(agentSidecarDir, { recursive: true });
-    }
-
-    // Find and copy sidecar folder
-    const sidecarFiles = copyAgentSidecarFiles(agentInfo.path, agentSidecarDir, agentInfo.yamlFile);
-    result.sidecarCopied = true;
-    result.sidecarFiles = sidecarFiles;
-    result.sidecarDir = agentSidecarDir;
-  }
-
   return result;
-}
-
-/**
- * Recursively copy sidecar files (everything except the .agent.yaml)
- * @param {string} sourceDir - Source agent directory
- * @param {string} targetDir - Target agent directory
- * @param {string} excludeYaml - The .agent.yaml file to exclude
- * @returns {Array} List of copied files
- */
-function copySidecarFiles(sourceDir, targetDir, excludeYaml) {
-  const copied = [];
-
-  function copyDir(src, dest) {
-    if (!fs.existsSync(dest)) {
-      fs.mkdirSync(dest, { recursive: true });
-    }
-
-    const entries = fs.readdirSync(src, { withFileTypes: true });
-    for (const entry of entries) {
-      const srcPath = path.join(src, entry.name);
-      const destPath = path.join(dest, entry.name);
-
-      // Skip the source YAML file
-      if (srcPath === excludeYaml) {
-        continue;
-      }
-
-      if (entry.isDirectory()) {
-        copyDir(srcPath, destPath);
-      } else {
-        fs.copyFileSync(srcPath, destPath);
-        copied.push(destPath);
-      }
-    }
-  }
-
-  copyDir(sourceDir, targetDir);
-  return copied;
-}
-
-/**
- * Find and copy agent sidecar folders
- * @param {string} sourceDir - Source agent directory
- * @param {string} targetSidecarDir - Target sidecar directory for the agent
- * @param {string} excludeYaml - The .agent.yaml file to exclude
- * @returns {Array} List of copied files
- */
-function copyAgentSidecarFiles(sourceDir, targetSidecarDir, excludeYaml) {
-  const copied = [];
-  const preserved = [];
-
-  // Find folders with "sidecar" in the name
-  const entries = fs.readdirSync(sourceDir, { withFileTypes: true });
-
-  for (const entry of entries) {
-    if (entry.isDirectory() && entry.name.toLowerCase().includes('sidecar')) {
-      const sidecarSourcePath = path.join(sourceDir, entry.name);
-
-      // Recursively sync the sidecar folder contents (preserve existing, add new)
-      function syncSidecarDir(src, dest) {
-        if (!fs.existsSync(dest)) {
-          fs.mkdirSync(dest, { recursive: true });
-        }
-
-        // Get all files in source
-        const sourceEntries = fs.readdirSync(src, { withFileTypes: true });
-
-        for (const sourceEntry of sourceEntries) {
-          const srcPath = path.join(src, sourceEntry.name);
-          const destPath = path.join(dest, sourceEntry.name);
-
-          if (sourceEntry.isDirectory()) {
-            // Recursively sync subdirectories
-            syncSidecarDir(srcPath, destPath);
-          } else {
-            // Check if file already exists in destination
-            if (fs.existsSync(destPath)) {
-              // File exists - preserve it
-              preserved.push(destPath);
-            } else {
-              // File doesn't exist - copy it
-              fs.copyFileSync(srcPath, destPath);
-              copied.push(destPath);
-            }
-          }
-        }
-      }
-
-      syncSidecarDir(sidecarSourcePath, targetSidecarDir);
-    }
-  }
-
-  // Return info about what was preserved and what was copied
-  return { copied, preserved };
 }
 
 /**
@@ -820,8 +702,6 @@ module.exports = {
   loadAgentConfig,
   promptInstallQuestions,
   installAgent,
-  copySidecarFiles,
-  copyAgentSidecarFiles,
   updateAgentId,
   detectBmadProject,
   addToManifest,

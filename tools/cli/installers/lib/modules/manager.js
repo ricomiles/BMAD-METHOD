@@ -905,35 +905,6 @@ class ModuleManager {
           await fs.writeFile(targetMdPath, xml, 'utf8');
         }
 
-        // Copy sidecar files if agent has hasSidecar flag
-        if (hasSidecar) {
-          const { copyAgentSidecarFiles } = require('../../../lib/agent/installer');
-
-          // Get agent sidecar folder from core config (should always be set)
-          const agentSidecarFolder = this.coreConfig?.agent_sidecar_folder;
-
-          // Resolve path variables
-          const projectDir = path.dirname(bmadDir);
-          const resolvedSidecarFolder = agentSidecarFolder
-            .replaceAll('{project-root}', projectDir)
-            .replaceAll('_bmad', path.basename(bmadDir));
-
-          // Create sidecar directory for this agent
-          const agentSidecarDir = path.join(resolvedSidecarFolder, agentName);
-          await fs.ensureDir(agentSidecarDir);
-
-          // Copy sidecar files (preserve existing, add new)
-          const sidecarResult = copyAgentSidecarFiles(path.dirname(sourceYamlPath), agentSidecarDir, sourceYamlPath);
-          const totalFiles = sidecarResult.copied.length + sidecarResult.preserved.length;
-
-          if (sidecarResult.copied.length > 0) {
-            console.log(chalk.dim(`    Copied ${sidecarResult.copied.length} new sidecar file(s) to: ${agentSidecarDir}`));
-          }
-          if (sidecarResult.preserved.length > 0) {
-            console.log(chalk.dim(`    Preserved ${sidecarResult.preserved.length} existing sidecar file(s)`));
-          }
-        }
-
         console.log(
           chalk.dim(`    Compiled agent: ${agentName} -> ${path.relative(targetPath, targetMdPath)}${hasSidecar ? ' (with sidecar)' : ''}`),
         );

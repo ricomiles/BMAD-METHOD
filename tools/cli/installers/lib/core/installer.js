@@ -1920,55 +1920,6 @@ If AgentVibes party mode is enabled, immediately trigger TTS with agent's voice:
           console.log(chalk.dim(`  Created customize: ${moduleName}-${agentName}.customize.yaml`));
         }
       }
-
-      // Read the existing .md file to check for sidecar info
-      let hasSidecar = false;
-      try {
-        const content = await fs.readFile(mdPath, 'utf8');
-        // Look for sidecar metadata in the frontmatter or content
-        hasSidecar = content.includes('hasSidecar') && content.includes('true');
-      } catch {
-        // Continue without sidecar processing
-      }
-
-      // Copy sidecar files if agent has hasSidecar flag
-      if (hasSidecar) {
-        const { copyAgentSidecarFiles } = require('../../../lib/agent/installer');
-
-        // Get agent sidecar folder from core config
-        const coreConfigPath = path.join(bmadDir, 'bmb', 'config.yaml');
-        let agentSidecarFolder;
-
-        if (await fs.pathExists(coreConfigPath)) {
-          const yamlLib = require('yaml');
-          const coreConfigContent = await fs.readFile(coreConfigPath, 'utf8');
-          const coreConfig = yamlLib.parse(coreConfigContent);
-          agentSidecarFolder = coreConfig.agent_sidecar_folder || agentSidecarFolder;
-        }
-
-        // Resolve path variables
-        const resolvedSidecarFolder = agentSidecarFolder
-          .replaceAll('{project-root}', projectDir)
-          .replaceAll('_bmad', this.bmadFolderName || 'bmad');
-
-        // Create sidecar directory for this agent
-        const agentSidecarDir = path.join(resolvedSidecarFolder, agentName);
-        await fs.ensureDir(agentSidecarDir);
-
-        // Find and copy sidecar folder from source module
-        const sourceModulePath = moduleName === 'core' ? getModulePath('core') : getSourcePath(`modules/${moduleName}`);
-        const sourceAgentPath = path.join(sourceModulePath, 'agents');
-
-        // Copy sidecar files (preserve existing, add new)
-        const sidecarResult = copyAgentSidecarFiles(sourceAgentPath, agentSidecarDir, null);
-
-        if (sidecarResult.copied.length > 0) {
-          console.log(chalk.dim(`  Copied ${sidecarResult.copied.length} new sidecar file(s) to: ${agentSidecarDir}`));
-        }
-        if (sidecarResult.preserved.length > 0) {
-          console.log(chalk.dim(`  Preserved ${sidecarResult.preserved.length} existing sidecar file(s)`));
-        }
-      }
     }
   }
 
