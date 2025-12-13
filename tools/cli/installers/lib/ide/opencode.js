@@ -152,7 +152,7 @@ class OpenCodeSetup extends BaseIdeSetup {
 
     let frontmatter = {};
     try {
-      frontmatter = yaml.load(match[1]) || {};
+      frontmatter = yaml.parse(match[1]) || {};
     } catch {
       frontmatter = {};
     }

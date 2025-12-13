@@ -348,7 +348,7 @@ class BaseIdeSetup {
         try {
           const yaml = require('js-yaml');
           const content = await fs.readFile(fullPath, 'utf8');
-          const workflowData = yaml.load(content);
+          const workflowData = yaml.parse(content);
 
           if (workflowData && workflowData.name) {
             workflows.push({
@@ -456,7 +456,7 @@ class BaseIdeSetup {
               if (frontmatterMatch) {
                 const yaml = require('js-yaml');
                 try {
-                  const frontmatter = yaml.load(frontmatterMatch[1]);
+                  const frontmatter = yaml.parse(frontmatterMatch[1]);
                   standalone = frontmatter.standalone === true;
                 } catch {
                   // Ignore YAML parse errors

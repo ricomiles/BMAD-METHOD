@@ -50,7 +50,7 @@ class AntigravitySetup extends BaseIdeSetup {
         try {
           // Load injection configuration
           const configContent = await fs.readFile(injectionConfigPath, 'utf8');
-          const injectionConfig = yaml.load(configContent);
+          const injectionConfig = yaml.parse(configContent);
 
           // Ask about subagents if they exist and we haven't asked yet
           if (injectionConfig.subagents && !config.subagentChoices) {

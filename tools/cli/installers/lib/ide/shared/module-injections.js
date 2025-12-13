@@ -14,7 +14,7 @@ async function loadModuleInjectionConfig(handler, moduleName) {
   }
 
   const configContent = await fs.readFile(configPath, 'utf8');
-  const config = yaml.load(configContent) || {};
+  const config = yaml.parse(configContent) || {};
 
   return {
     config,

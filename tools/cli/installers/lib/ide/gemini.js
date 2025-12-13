@@ -34,7 +34,7 @@ class GeminiSetup extends BaseIdeSetup {
     if (await fs.pathExists(coreConfigPath)) {
       try {
         const configContent = await fs.readFile(coreConfigPath, 'utf8');
-        const config = yaml.load(configContent);
+        const config = yaml.parse(configContent);
 
         if (config.user_name) {
           configValues.user_name = config.user_name;

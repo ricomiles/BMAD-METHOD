@@ -822,12 +822,27 @@ class ModuleManager {
           }
         }
 
-        // Check for customizations
+        // Check for customizations and build answers object
         let customizedFields = [];
+        let answers = {};
         if (await fs.pathExists(customizePath)) {
           const customizeContent = await fs.readFile(customizePath, 'utf8');
           const customizeData = yaml.load(customizeContent);
           customizedFields = customizeData.customized_fields || [];
+
+          // Build answers object from customizations
+          if (customizeData.persona) {
+            Object.assign(answers, customizeData.persona);
+          }
+          if (customizeData.agent?.metadata) {
+            Object.assign(answers, { metadata: customizeData.agent.metadata });
+          }
+          if (customizeData.critical_actions) {
+            answers.critical_actions = customizeData.critical_actions;
+          }
+          if (customizeData.memories) {
+            answers.memories = customizeData.memories;
+          }
         }
 
         // Load core config to get agent_sidecar_folder
@@ -835,23 +850,22 @@ class ModuleManager {
         let coreConfig = {};
 
         if (await fs.pathExists(coreConfigPath)) {
-          const yamlLib = require('yaml');
+          const yaml = require('yaml');
           const coreConfigContent = await fs.readFile(coreConfigPath, 'utf8');
-          coreConfig = yamlLib.parse(coreConfigContent);
+          coreConfig = yaml.load(coreConfigContent);
         }
 
         // Check if agent has sidecar
         let hasSidecar = false;
         try {
-          const yamlLib = require('yaml');
-          const agentYaml = yamlLib.parse(yamlContent);
+          const agentYaml = yaml.parse(yamlContent);
           hasSidecar = agentYaml?.agent?.metadata?.hasSidecar === true;
         } catch {
           // Continue without sidecar processing
         }
 
         // Compile with customizations if any
-        const { xml } = compileAgent(yamlContent, {}, agentName, relativePath, { config: this.coreConfig });
+        const { xml } = await compileAgent(yamlContent, answers, agentName, relativePath, { config: coreConfig });
 
         // Replace _bmad placeholder if needed
         if (xml.includes('_bmad') && this.bmadFolderName) {

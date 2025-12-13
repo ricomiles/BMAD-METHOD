@@ -1448,6 +1448,7 @@ If AgentVibes party mode is enabled, immediately trigger TTS with agent's voice:
     await fs.ensureDir(bmadDir);
     await fs.ensureDir(path.join(bmadDir, '_cfg'));
     await fs.ensureDir(path.join(bmadDir, '_cfg', 'agents'));
+    await fs.ensureDir(path.join(bmadDir, '_cfg', 'custom'));
   }
 
   /**
@@ -1699,25 +1700,55 @@ If AgentVibes party mode is enabled, immediately trigger TTS with agent's voice:
     const sourcePath = getModulePath('core');
     const targetPath = path.join(bmadDir, 'core');
 
-    // Copy core files with filtering for localskip agents
-    await this.copyDirectoryWithFiltering(sourcePath, targetPath);
+    // Copy core files (skip .agent.yaml files like modules do)
+    await this.copyCoreFiles(sourcePath, targetPath);
+
+    // Compile agents using the same compiler as modules
+    const { ModuleManager } = require('../modules/manager');
+    const moduleManager = new ModuleManager();
+    await moduleManager.compileModuleAgents(sourcePath, targetPath, 'core', bmadDir);
 
     // Process agent files to inject activation block
     await this.processAgentFiles(targetPath, 'core');
   }
 
   /**
-   * Copy directory with filtering for localskip agents
-   * @param {string} sourcePath - Source directory path
-   * @param {string} targetPath - Target directory path
+   * Copy core files (similar to copyModuleWithFiltering but for core)
+   * @param {string} sourcePath - Source path
+   * @param {string} targetPath - Target path
    */
-  async copyDirectoryWithFiltering(sourcePath, targetPath) {
-    // Get all files in source directory
+  async copyCoreFiles(sourcePath, targetPath) {
+    // Get all files in source
     const files = await this.getFileList(sourcePath);
 
     for (const file of files) {
+      // Skip sub-modules directory - these are IDE-specific and handled separately
+      if (file.startsWith('sub-modules/')) {
+        continue;
+      }
+
+      // Skip sidecar directories - they are handled separately during agent compilation
+      if (
+        path
+          .dirname(file)
+          .split('/')
+          .some((dir) => dir.toLowerCase().includes('sidecar'))
+      ) {
+        continue;
+      }
+
+      // Skip _module-installer directory - it's only needed at install time
+      if (file.startsWith('_module-installer/') || file === 'module.yaml') {
+        continue;
+      }
+
       // Skip config.yaml templates - we'll generate clean ones with actual values
-      if (file === 'config.yaml' || file.endsWith('/config.yaml')) {
+      if (file === 'config.yaml' || file.endsWith('/config.yaml') || file === 'custom.yaml' || file.endsWith('/custom.yaml')) {
+        continue;
+      }
+
+      // Skip .agent.yaml files - they will be compiled separately
+      if (file.endsWith('.agent.yaml')) {
         continue;
       }
 
@@ -1725,7 +1756,7 @@ If AgentVibes party mode is enabled, immediately trigger TTS with agent's voice:
       const targetFile = path.join(targetPath, file);
 
       // Check if this is an agent file
-      if (file.includes('agents/') && file.endsWith('.md')) {
+      if (file.startsWith('agents/') && file.endsWith('.md')) {
         // Read the file to check for localskip
         const content = await fs.readFile(sourceFile, 'utf8');
 
@@ -1737,8 +1768,14 @@ If AgentVibes party mode is enabled, immediately trigger TTS with agent's voice:
         }
       }
 
-      // Copy the file with placeholder replacement
-      await this.copyFileWithPlaceholderReplacement(sourceFile, targetFile, this.bmadFolderName || 'bmad');
+      // Check if this is a workflow.yaml file
+      if (file.endsWith('workflow.yaml')) {
+        await fs.ensureDir(path.dirname(targetFile));
+        await this.copyWorkflowYamlStripped(sourceFile, targetFile);
+      } else {
+        // Copy the file with placeholder replacement
+        await this.copyFileWithPlaceholderReplacement(sourceFile, targetFile, this.bmadFolderName || 'bmad');
+      }
 
       // Track the installed file
       this.installedFiles.push(targetFile);
@@ -1798,104 +1835,77 @@ If AgentVibes party mode is enabled, immediately trigger TTS with agent's voice:
     const agentFiles = await fs.readdir(agentsPath);
 
     for (const agentFile of agentFiles) {
-      // Handle YAML agents - build them to .md
+      // Skip .agent.yaml files - they should already be compiled by compileModuleAgents
       if (agentFile.endsWith('.agent.yaml')) {
-        const agentName = agentFile.replace('.agent.yaml', '');
-        const yamlPath = path.join(agentsPath, agentFile);
-        const mdPath = path.join(agentsPath, `${agentName}.md`);
-        const customizePath = path.join(cfgAgentsDir, `${moduleName}-${agentName}.customize.yaml`);
+        continue;
+      }
 
-        // Create customize template if it doesn't exist
-        if (!(await fs.pathExists(customizePath))) {
-          const genericTemplatePath = getSourcePath('utility', 'agent-components', 'agent.customize.template.yaml');
-          if (await fs.pathExists(genericTemplatePath)) {
-            await this.copyFileWithPlaceholderReplacement(genericTemplatePath, customizePath, this.bmadFolderName || 'bmad');
-            console.log(chalk.dim(`  Created customize: ${moduleName}-${agentName}.customize.yaml`));
-          }
+      // Only process .md files (already compiled from YAML)
+      if (!agentFile.endsWith('.md')) {
+        continue;
+      }
+
+      const agentName = agentFile.replace('.md', '');
+      const mdPath = path.join(agentsPath, agentFile);
+      const customizePath = path.join(cfgAgentsDir, `${moduleName}-${agentName}.customize.yaml`);
+
+      // For .md files that are already compiled, we don't need to do much
+      // Just ensure the customize template exists
+      if (!(await fs.pathExists(customizePath))) {
+        const genericTemplatePath = getSourcePath('utility', 'agent-components', 'agent.customize.template.yaml');
+        if (await fs.pathExists(genericTemplatePath)) {
+          await this.copyFileWithPlaceholderReplacement(genericTemplatePath, customizePath, this.bmadFolderName || 'bmad');
+          console.log(chalk.dim(`  Created customize: ${moduleName}-${agentName}.customize.yaml`));
         }
+      }
 
-        // Build YAML + customize to .md
-        const customizeExists = await fs.pathExists(customizePath);
-        let xmlContent = await this.xmlHandler.buildFromYaml(yamlPath, customizeExists ? customizePath : null, {
-          includeMetadata: true,
-        });
+      // Read the existing .md file to check for sidecar info
+      let hasSidecar = false;
+      try {
+        const content = await fs.readFile(mdPath, 'utf8');
+        // Look for sidecar metadata in the frontmatter or content
+        hasSidecar = content.includes('hasSidecar') && content.includes('true');
+      } catch {
+        // Continue without sidecar processing
+      }
 
-        // DO NOT replace {project-root} - LLMs understand this placeholder at runtime
-        // const processedContent = xmlContent.replaceAll('{project-root}', projectDir);
+      // Copy sidecar files if agent has hasSidecar flag
+      if (hasSidecar) {
+        const { copyAgentSidecarFiles } = require('../../../lib/agent/installer');
 
-        // Replace _bmad with actual folder name
-        xmlContent = xmlContent.replaceAll('_bmad', this.bmadFolderName || 'bmad');
+        // Get agent sidecar folder from core config
+        const coreConfigPath = path.join(bmadDir, 'bmb', 'config.yaml');
+        let agentSidecarFolder;
 
-        // Replace {agent_sidecar_folder} if configured
-        const coreConfig = this.configCollector.collectedConfig.core || {};
-        if (coreConfig.agent_sidecar_folder && xmlContent.includes('{agent_sidecar_folder}')) {
-          xmlContent = xmlContent.replaceAll('{agent_sidecar_folder}', coreConfig.agent_sidecar_folder);
-        }
-
-        // Process TTS injection points (pass targetPath for tracking)
-        xmlContent = this.processTTSInjectionPoints(xmlContent, mdPath);
-
-        // Check if agent has sidecar and copy it
-        let agentYamlContent = null;
-        let hasSidecar = false;
-
-        try {
-          agentYamlContent = await fs.readFile(yamlPath, 'utf8');
+        if (await fs.pathExists(coreConfigPath)) {
           const yamlLib = require('yaml');
-          const agentYaml = yamlLib.parse(agentYamlContent);
-          hasSidecar = agentYaml?.agent?.metadata?.hasSidecar === true;
-        } catch {
-          // Continue without sidecar processing
+          const coreConfigContent = await fs.readFile(coreConfigPath, 'utf8');
+          const coreConfig = yamlLib.parse(coreConfigContent);
+          agentSidecarFolder = coreConfig.agent_sidecar_folder || agentSidecarFolder;
         }
 
-        // Write the built .md file to bmad/{module}/agents/ with POSIX-compliant final newline
-        const content = xmlContent.endsWith('\n') ? xmlContent : xmlContent + '\n';
-        await fs.writeFile(mdPath, content, 'utf8');
-        this.installedFiles.push(mdPath);
+        // Resolve path variables
+        const resolvedSidecarFolder = agentSidecarFolder
+          .replaceAll('{project-root}', projectDir)
+          .replaceAll('_bmad', this.bmadFolderName || 'bmad');
 
-        // Copy sidecar files if agent has hasSidecar flag
-        if (hasSidecar) {
-          const { copyAgentSidecarFiles } = require('../../../lib/agent/installer');
+        // Create sidecar directory for this agent
+        const agentSidecarDir = path.join(resolvedSidecarFolder, agentName);
+        await fs.ensureDir(agentSidecarDir);
 
-          // Get agent sidecar folder from core config
-          const coreConfigPath = path.join(bmadDir, 'bmb', 'config.yaml');
-          let agentSidecarFolder;
+        // Find and copy sidecar folder from source module
+        const sourceModulePath = moduleName === 'core' ? getModulePath('core') : getSourcePath(`modules/${moduleName}`);
+        const sourceAgentPath = path.join(sourceModulePath, 'agents');
 
-          if (await fs.pathExists(coreConfigPath)) {
-            const yamlLib = require('yaml');
-            const coreConfigContent = await fs.readFile(coreConfigPath, 'utf8');
-            const coreConfig = yamlLib.parse(coreConfigContent);
-            agentSidecarFolder = coreConfig.agent_sidecar_folder || agentSidecarFolder;
-          }
+        // Copy sidecar files (preserve existing, add new)
+        const sidecarResult = copyAgentSidecarFiles(sourceAgentPath, agentSidecarDir, null);
 
-          // Resolve path variables
-          const resolvedSidecarFolder = agentSidecarFolder
-            .replaceAll('{project-root}', projectDir)
-            .replaceAll('_bmad', this.bmadFolderName || 'bmad');
-
-          // Create sidecar directory for this agent
-          const agentSidecarDir = path.join(resolvedSidecarFolder, agentName);
-          await fs.ensureDir(agentSidecarDir);
-
-          // Find and copy sidecar folder from source module
-          const sourceModulePath = getSourcePath(`modules/${moduleName}`);
-          const sourceAgentPath = path.join(sourceModulePath, 'agents');
-
-          // Copy sidecar files (preserve existing, add new)
-          const sidecarResult = copyAgentSidecarFiles(sourceAgentPath, agentSidecarDir, yamlPath);
-
-          if (sidecarResult.copied.length > 0) {
-            console.log(chalk.dim(`  Copied ${sidecarResult.copied.length} new sidecar file(s) to: ${agentSidecarDir}`));
-          }
-          if (sidecarResult.preserved.length > 0) {
-            console.log(chalk.dim(`  Preserved ${sidecarResult.preserved.length} existing sidecar file(s)`));
-          }
+        if (sidecarResult.copied.length > 0) {
+          console.log(chalk.dim(`  Copied ${sidecarResult.copied.length} new sidecar file(s) to: ${agentSidecarDir}`));
         }
-
-        // Remove the source YAML file - we can regenerate from installer source if needed
-        await fs.remove(yamlPath);
-
-        console.log(chalk.dim(`  Built agent: ${agentName}.md${hasSidecar ? ' (with sidecar)' : ''}`));
+        if (sidecarResult.preserved.length > 0) {
+          console.log(chalk.dim(`  Preserved ${sidecarResult.preserved.length} existing sidecar file(s)`));
+        }
       }
     }
   }
@@ -1940,7 +1950,7 @@ If AgentVibes party mode is enabled, immediately trigger TTS with agent's voice:
       if (customizeExists) {
         const customizeContent = await fs.readFile(customizePath, 'utf8');
         const yaml = require('js-yaml');
-        const customizeYaml = yaml.load(customizeContent);
+        const customizeYaml = yaml.parse(customizeContent);
 
         // Detect what fields are customized (similar to rebuildAgentFiles)
         if (customizeYaml) {
@@ -2064,34 +2074,52 @@ If AgentVibes party mode is enabled, immediately trigger TTS with agent's voice:
           }
         }
 
-        // Build YAML + customize to .md
-        let xmlContent = await this.xmlHandler.buildFromYaml(sourceYamlPath, customizeExists ? customizePath : null, {
-          includeMetadata: true,
+        // Read the YAML content
+        const yamlContent = await fs.readFile(sourceYamlPath, 'utf8');
+
+        // Read customize content if exists
+        let customizeData = {};
+        if (customizeExists) {
+          const customizeContent = await fs.readFile(customizePath, 'utf8');
+          const yaml = require('yaml');
+          customizeData = yaml.parse(customizeContent);
+        }
+
+        // Build agent answers from customize data
+        const answers = {};
+        if (customizeData.persona) {
+          Object.assign(answers, customizeData.persona);
+        }
+        if (customizeData.agent?.metadata) {
+          Object.assign(answers, { metadata: customizeData.agent.metadata });
+        }
+        if (customizeData.critical_actions) {
+          answers.critical_actions = customizeData.critical_actions;
+        }
+        if (customizeData.memories) {
+          answers.memories = customizeData.memories;
+        }
+
+        // Get core config for agent_sidecar_folder
+        const coreConfigPath = path.join(bmadDir, 'bmb', 'config.yaml');
+        let coreConfig = {};
+        if (await fs.pathExists(coreConfigPath)) {
+          const yaml = require('yaml');
+          const coreConfigContent = await fs.readFile(coreConfigPath, 'utf8');
+          coreConfig = yaml.parse(coreConfigContent);
+        }
+
+        // Compile using the same compiler as initial installation
+        const { compileAgent } = require('../../../lib/agent/compiler');
+        const { xml } = await compileAgent(yamlContent, answers, agentName, path.relative(bmadDir, targetMdPath), {
+          config: coreConfig,
         });
 
-        // DO NOT replace {project-root} - LLMs understand this placeholder at runtime
-        // const processedContent = xmlContent.replaceAll('{project-root}', projectDir);
-
-        // Replace {agent_sidecar_folder} if configured
-        const coreConfigPath = path.join(bmadDir, 'bmb', 'config.yaml');
-        let agentSidecarFolder = null;
-
-        if (await fs.pathExists(coreConfigPath)) {
-          const yamlLib = require('yaml');
-          const coreConfigContent = await fs.readFile(coreConfigPath, 'utf8');
-          const coreConfig = yamlLib.parse(coreConfigContent);
-          agentSidecarFolder = coreConfig.agent_sidecar_folder;
-        }
-
-        if (agentSidecarFolder && xmlContent.includes('{agent_sidecar_folder}')) {
-          xmlContent = xmlContent.replaceAll('{agent_sidecar_folder}', agentSidecarFolder);
-        }
-
-        // Process TTS injection points (pass targetPath for tracking)
-        xmlContent = this.processTTSInjectionPoints(xmlContent, targetMdPath);
+        // Replace _bmad with actual folder name if needed
+        const finalXml = xml.replaceAll('_bmad', path.basename(bmadDir));
 
         // Write the rebuilt .md file with POSIX-compliant final newline
-        const content = xmlContent.endsWith('\n') ? xmlContent : xmlContent + '\n';
+        const content = finalXml.endsWith('\n') ? finalXml : finalXml + '\n';
         await fs.writeFile(targetMdPath, content, 'utf8');
 
         // Display result with customizations if any
@@ -2119,8 +2147,18 @@ If AgentVibes party mode is enabled, immediately trigger TTS with agent's voice:
         throw new Error(`BMAD not installed at ${bmadDir}`);
       }
 
+      // Get installed modules from manifest
+      const manifestPath = path.join(bmadDir, '_cfg', 'manifest.yaml');
+      let installedModules = [];
+      let manifest = null;
+      if (await fs.pathExists(manifestPath)) {
+        const manifestContent = await fs.readFile(manifestPath, 'utf8');
+        const yaml = require('js-yaml');
+        manifest = yaml.load(manifestContent);
+        installedModules = manifest.modules || [];
+      }
+
       // Check for custom modules with missing sources
-      const manifest = await this.manifest.read(bmadDir);
       if (manifest && manifest.customModules && manifest.customModules.length > 0) {
         console.log(chalk.yellow('\nChecking custom module sources before compilation...'));
 
@@ -2130,7 +2168,6 @@ If AgentVibes party mode is enabled, immediately trigger TTS with agent's voice:
         }
 
         const projectRoot = getProjectRoot();
-        const installedModules = manifest.modules || [];
         await this.handleMissingCustomSources(customModuleSources, bmadDir, projectRoot, 'compile-agents', installedModules);
       }
 
@@ -2177,21 +2214,9 @@ If AgentVibes party mode is enabled, immediately trigger TTS with agent's voice:
         }
       }
 
-      // Skip full manifest regeneration during compileAgents to preserve custom agents
-      // Custom agents are already added to manifests during individual installation
-      // Only regenerate YAML manifest for IDE updates if needed
-      const existingManifestPath = path.join(bmadDir, '_cfg', 'manifest.yaml');
-      let existingIdes = [];
-      if (await fs.pathExists(existingManifestPath)) {
-        const manifestContent = await fs.readFile(existingManifestPath, 'utf8');
-        const yaml = require('js-yaml');
-        const manifest = yaml.load(manifestContent);
-        existingIdes = manifest.ides || [];
-      }
-
       // Update IDE configurations using the existing IDE list from manifest
-      if (existingIdes && existingIdes.length > 0) {
-        for (const ide of existingIdes) {
+      if (manifest && manifest.ides && manifest.ides.length > 0) {
+        for (const ide of manifest.ides) {
           await this.ideManager.setup(ide, projectDir, bmadDir, {
             selectedModules: installedModules,
             skipModuleInstall: true, // Skip module installation, just update IDE files
@@ -2770,8 +2795,11 @@ If AgentVibes party mode is enabled, immediately trigger TTS with agent's voice:
             const relativePath = path.relative(bmadDir, fullPath);
             const fileName = path.basename(fullPath);
 
-            // Skip _cfg directory - system files
-            if (relativePath.startsWith('_cfg/') || relativePath.startsWith('_cfg\\')) {
+            // Skip _cfg directory EXCEPT for agent customizations
+            if (
+              (relativePath.startsWith('_cfg/') || relativePath.startsWith('_cfg\\')) && // Allow .customize.yaml files in _cfg/agents/
+              !(relativePath.includes('/agents/') && fileName.endsWith('.customize.yaml'))
+            ) {
               continue;
             }
 

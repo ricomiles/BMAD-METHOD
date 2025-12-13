@@ -32,7 +32,7 @@ class CustomModuleCache {
 
     const content = await fs.readFile(this.manifestPath, 'utf8');
     const yaml = require('js-yaml');
-    return yaml.load(content) || {};
+    return yaml.parse(content) || {};
   }
 
   /**

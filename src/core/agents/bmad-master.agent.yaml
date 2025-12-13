@@ -35,5 +35,4 @@ agent:
       exec: "{project-root}/_bmad/core/workflows/party-mode/workflow.md"
       description: "Group chat with all agents"
 
-  # Empty prompts section (no custom prompts for this agent)
   prompts: []

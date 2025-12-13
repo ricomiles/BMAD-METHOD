@@ -142,14 +142,14 @@ class ManifestGenerator {
             let workflow;
             if (entry.name === 'workflow.yaml') {
               // Parse YAML workflow
-              workflow = yaml.load(content);
+              workflow = yaml.parse(content);
             } else {
               // Parse MD workflow with YAML frontmatter
               const frontmatterMatch = content.match(/^---\n([\s\S]*?)\n---/);
               if (!frontmatterMatch) {
                 continue; // Skip MD files without frontmatter
               }
-              workflow = yaml.load(frontmatterMatch[1]);
+              workflow = yaml.parse(frontmatterMatch[1]);
             }
 
             // Skip template workflows (those with placeholder values)
@@ -459,7 +459,7 @@ class ManifestGenerator {
     if (await fs.pathExists(manifestPath)) {
       try {
         const existingContent = await fs.readFile(manifestPath, 'utf8');
-        const existingManifest = yaml.load(existingContent);
+        const existingManifest = yaml.parse(existingContent);
         if (existingManifest && existingManifest.customModules) {
           existingCustomModules = existingManifest.customModules;
         }

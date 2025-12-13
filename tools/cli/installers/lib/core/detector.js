@@ -49,7 +49,7 @@ class Detector {
       if (await fs.pathExists(coreConfigPath)) {
         try {
           const configContent = await fs.readFile(coreConfigPath, 'utf8');
-          const config = yaml.load(configContent);
+          const config = yaml.parse(configContent);
           if (!result.version && config.version) {
             result.version = config.version;
           }
@@ -77,7 +77,7 @@ class Detector {
         if (await fs.pathExists(moduleConfigPath)) {
           try {
             const configContent = await fs.readFile(moduleConfigPath, 'utf8');
-            const config = yaml.load(configContent);
+            const config = yaml.parse(configContent);
             moduleInfo.version = config.version || 'unknown';
             moduleInfo.name = config.name || moduleId;
             moduleInfo.description = config.description;
@@ -106,7 +106,7 @@ class Detector {
 
             try {
               const configContent = await fs.readFile(moduleConfigPath, 'utf8');
-              const config = yaml.load(configContent);
+              const config = yaml.parse(configContent);
               moduleInfo.version = config.version || 'unknown';
               moduleInfo.name = config.name || entry.name;
               moduleInfo.description = config.description;
@@ -239,7 +239,7 @@ class Detector {
       try {
         const yaml = require('js-yaml');
         const manifestContent = await fs.readFile(manifestPath, 'utf8');
-        const manifest = yaml.load(manifestContent);
+        const manifest = yaml.parse(manifestContent);
         // V6+ manifest has installation.version
         return manifest && manifest.installation && manifest.installation.version;
       } catch {

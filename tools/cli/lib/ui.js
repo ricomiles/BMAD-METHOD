@@ -1,23 +1,3 @@
-/**
- * File: tools/cli/lib/ui.js
- *
- * BMAD Method - Business Model Agile Development Method
- * Repository: https://github.com/paulpreibisch/BMAD-METHOD
- *
- * Copyright (c) 2025 Paul Preibisch
- * Licensed under the Apache License, Version 2.0
- *
- * ---
- *
- * @fileoverview Interactive installation prompts and user input collection for BMAD CLI
- * @context Guides users through installation configuration including core settings, modules, IDEs, and optional AgentVibes TTS
- * @architecture Facade pattern - presents unified installation flow, delegates to Detector/ConfigCollector/IdeManager for specifics
- * @dependencies inquirer (prompts), chalk (formatting), detector.js (existing installation detection)
- * @entrypoints Called by install.js command via ui.promptInstall(), returns complete configuration object
- * @patterns Progressive disclosure (prompts in order), early IDE selection (Windows compat), AgentVibes auto-detection
- * @related installer.js (consumes config), AgentVibes#34 (TTS integration), promptAgentVibes()
- */
-
 const chalk = require('chalk');
 const inquirer = require('inquirer');
 const path = require('node:path');
@@ -56,7 +36,6 @@ class UI {
     // Check if there's an existing BMAD installation
     const fs = require('fs-extra');
     const path = require('node:path');
-    // Use findBmadDir to detect any custom folder names (V6+)
     const bmadDir = await installer.findBmadDir(confirmedDirectory);
     const hasExistingInstall = await fs.pathExists(bmadDir);
 
@@ -131,60 +110,9 @@ class UI {
     const { installedModuleIds } = await this.getExistingInstallation(confirmedDirectory);
     const coreConfig = await this.collectCoreConfig(confirmedDirectory);
 
-    // For new installations, create the directory structure first so we can cache custom content
-    if (!hasExistingInstall && customContentConfig._shouldAsk) {
-      // Create the bmad directory based on core config
-      const path = require('node:path');
-      const fs = require('fs-extra');
-      const bmadFolderName = '_bmad';
-      const bmadDir = path.join(confirmedDirectory, bmadFolderName);
-
-      await fs.ensureDir(bmadDir);
-      await fs.ensureDir(path.join(bmadDir, '_cfg'));
-      await fs.ensureDir(path.join(bmadDir, '_cfg', 'custom'));
-
-      // Now prompt for custom content
-      customContentConfig = await this.promptCustomContentLocation();
-
-      // If custom content found, cache it
-      if (customContentConfig.hasCustomContent) {
-        const { CustomModuleCache } = require('../installers/lib/core/custom-module-cache');
-        const cache = new CustomModuleCache(bmadDir);
-
-        const customHandler = new CustomHandler();
-        const customFiles = await customHandler.findCustomContent(customContentConfig.customPath);
-
-        for (const customFile of customFiles) {
-          const customInfo = await customHandler.getCustomInfo(customFile);
-          if (customInfo && customInfo.id) {
-            // Cache the module source
-            await cache.cacheModule(customInfo.id, customInfo.path, {
-              name: customInfo.name,
-              type: 'custom',
-            });
-
-            console.log(chalk.dim(`  Cached ${customInfo.name} to _cfg/custom/${customInfo.id}`));
-          }
-        }
-
-        // Update config to use cached modules
-        customContentConfig.cachedModules = [];
-        for (const customFile of customFiles) {
-          const customInfo = await customHandler.getCustomInfo(customFile);
-          if (customInfo && customInfo.id) {
-            customContentConfig.cachedModules.push({
-              id: customInfo.id,
-              cachePath: path.join(bmadDir, '_cfg', 'custom', customInfo.id),
-              // Store relative path from cache for the manifest
-              relativePath: path.join('_cfg', 'custom', customInfo.id),
-            });
-          }
-        }
-
-        console.log(chalk.green(`✓ Cached ${customFiles.length} custom module(s)`));
-      }
-
-      // Clear the flag
+    // Custom content will be handled during installation phase
+    // Store the custom content config for later use
+    if (customContentConfig._shouldAsk) {
       delete customContentConfig._shouldAsk;
     }
 
@@ -202,44 +130,26 @@ class UI {
       // Check which custom content items were selected
       const selectedCustomContent = selectedModules.filter((mod) => mod.startsWith('__CUSTOM_CONTENT__'));
 
-      // For cached modules (new installs), check if any cached modules were selected
-      let selectedCachedModules = [];
-      if (customContentConfig.cachedModules) {
-        selectedCachedModules = selectedModules.filter(
-          (mod) => !mod.startsWith('__CUSTOM_CONTENT__') && customContentConfig.cachedModules.some((cm) => cm.id === mod),
-        );
-      }
-
-      if (selectedCustomContent.length > 0 || selectedCachedModules.length > 0) {
+      if (selectedCustomContent.length > 0) {
         customContentConfig.selected = true;
+        customContentConfig.selectedFiles = selectedCustomContent.map((mod) => mod.replace('__CUSTOM_CONTENT__', ''));
 
-        // Handle directory-based custom content (existing installs)
-        if (selectedCustomContent.length > 0) {
-          customContentConfig.selectedFiles = selectedCustomContent.map((mod) => mod.replace('__CUSTOM_CONTENT__', ''));
-          // Convert custom content to module IDs for installation
-          const customContentModuleIds = [];
-          const customHandler = new CustomHandler();
-          for (const customFile of customContentConfig.selectedFiles) {
-            // Get the module info to extract the ID
-            const customInfo = await customHandler.getCustomInfo(customFile);
-            if (customInfo) {
-              customContentModuleIds.push(customInfo.id);
-            }
+        // Convert custom content to module IDs for installation
+        const customContentModuleIds = [];
+        const customHandler = new CustomHandler();
+        for (const customFile of customContentConfig.selectedFiles) {
+          // Get the module info to extract the ID
+          const customInfo = await customHandler.getCustomInfo(customFile);
+          if (customInfo) {
+            customContentModuleIds.push(customInfo.id);
           }
-          // Filter out custom content markers and add module IDs
-          selectedModules = [...selectedModules.filter((mod) => !mod.startsWith('__CUSTOM_CONTENT__')), ...customContentModuleIds];
         }
-
-        // For cached modules, they're already module IDs, just mark as selected
-        if (selectedCachedModules.length > 0) {
-          customContentConfig.selectedCachedModules = selectedCachedModules;
-          // No need to filter since they're already proper module IDs
-        }
+        // Filter out custom content markers and add module IDs
+        selectedModules = [...selectedModules.filter((mod) => !mod.startsWith('__CUSTOM_CONTENT__')), ...customContentModuleIds];
       } else if (customContentConfig.hasCustomContent) {
         // User provided custom content but didn't select any
         customContentConfig.selected = false;
         customContentConfig.selectedFiles = [];
-        customContentConfig.selectedCachedModules = [];
       }
     }
 
@@ -610,67 +520,20 @@ class UI {
     const hasCustomContentItems = false;
 
     // Add custom content items
-    if (customContentConfig && customContentConfig.hasCustomContent) {
-      if (customContentConfig.cachedModules) {
-        // New installation - show cached modules
-        for (const cachedModule of customContentConfig.cachedModules) {
-          // Get the module info from cache
-          const yaml = require('js-yaml');
-          const fs = require('fs-extra');
+    if (customContentConfig && customContentConfig.hasCustomContent && customContentConfig.customPath) {
+      // Existing installation - show from directory
+      const customHandler = new CustomHandler();
+      const customFiles = await customHandler.findCustomContent(customContentConfig.customPath);
 
-          // Try multiple possible config file locations
-          const possibleConfigPaths = [
-            path.join(cachedModule.cachePath, 'module.yaml'),
-            path.join(cachedModule.cachePath, 'custom.yaml'),
-            path.join(cachedModule.cachePath, '_module-installer', 'module.yaml'),
-            path.join(cachedModule.cachePath, '_module-installer', 'custom.yaml'),
-          ];
-
-          let moduleData = null;
-          let foundPath = null;
-
-          for (const configPath of possibleConfigPaths) {
-            if (await fs.pathExists(configPath)) {
-              try {
-                const yamlContent = await fs.readFile(configPath, 'utf8');
-                moduleData = yaml.load(yamlContent);
-                foundPath = configPath;
-                break;
-              } catch (error) {
-                throw new Error(`Failed to parse config at ${configPath}: ${error.message}`);
-              }
-            }
-          }
-
-          if (moduleData) {
-            // Use the name from the custom info if we have it
-            const moduleName = cachedModule.name || moduleData.name || cachedModule.id;
-
-            customContentItems.push({
-              name: `${chalk.cyan('✓')} ${moduleName} ${chalk.gray('(cached)')}`,
-              value: cachedModule.id, // Use module ID directly
-              checked: true, // Default to selected
-              cached: true,
-            });
-          } else {
-            // Module config not found - skip silently (non-critical)
-          }
-        }
-      } else if (customContentConfig.customPath) {
-        // Existing installation - show from directory
-        const customHandler = new CustomHandler();
-        const customFiles = await customHandler.findCustomContent(customContentConfig.customPath);
-
-        for (const customFile of customFiles) {
-          const customInfo = await customHandler.getCustomInfo(customFile);
-          if (customInfo) {
-            customContentItems.push({
-              name: `${chalk.cyan('✓')} ${customInfo.name} ${chalk.gray(`(${customInfo.relativePath})`)}`,
-              value: `__CUSTOM_CONTENT__${customFile}`, // Unique value for each custom content
-              checked: true, // Default to selected since user chose to provide custom content
-              path: customInfo.path, // Track path to avoid duplicates
-            });
-          }
+      for (const customFile of customFiles) {
+        const customInfo = await customHandler.getCustomInfo(customFile);
+        if (customInfo) {
+          customContentItems.push({
+            name: `${chalk.cyan('✓')} ${customInfo.name} ${chalk.gray(`(${customInfo.relativePath})`)}`,
+            value: `__CUSTOM_CONTENT__${customFile}`, // Unique value for each custom content
+            checked: true, // Default to selected since user chose to provide custom content
+            path: customInfo.path, // Track path to avoid duplicates
+          });
         }
       }
     }
@@ -801,120 +664,6 @@ class UI {
           console.log(chalk.gray('Directory exists and is empty'));
         }
       }
-    }
-  }
-
-  /**
-   * Prompt for custom content location
-   * @returns {Object} Custom content configuration
-   */
-  async promptCustomContentLocation() {
-    try {
-      // Skip custom content installation - always return false
-      return { hasCustomContent: false };
-
-      // TODO: Custom content installation temporarily disabled
-      // CLIUtils.displaySection('Custom Content', 'Optional: Add custom agents, workflows, and modules');
-
-      // const { hasCustomContent } = await inquirer.prompt([
-      //   {
-      //     type: 'list',
-      //     name: 'hasCustomContent',
-      //     message: 'Do you have custom content to install?',
-      //     choices: [
-      //       { name: 'No (skip custom content)', value: 'none' },
-      //       { name: 'Enter a directory path', value: 'directory' },
-      //       { name: 'Enter a URL', value: 'url' },
-      //     ],
-      //     default: 'none',
-      //   },
-      // ]);
-
-      // if (hasCustomContent === 'none') {
-      //   return { hasCustomContent: false };
-      // }
-
-      // TODO: Custom content installation temporarily disabled
-      // if (hasCustomContent === 'url') {
-      //   console.log(chalk.yellow('\nURL-based custom content installation is coming soon!'));
-      //   console.log(chalk.cyan('For now, please download your custom content and choose "Enter a directory path".\n'));
-      //   return { hasCustomContent: false };
-      // }
-
-      // if (hasCustomContent === 'directory') {
-      //   let customPath;
-      //   while (!customPath) {
-      //     let expandedPath;
-      //     const { directory } = await inquirer.prompt([
-      //       {
-      //         type: 'input',
-      //         name: 'directory',
-      //         message: 'Enter directory to search for custom content (will scan subfolders):',
-      //         default: process.cwd(), // Use actual current working directory
-      //         validate: async (input) => {
-      //           if (!input || input.trim() === '') {
-      //             return 'Please enter a directory path';
-      //           }
-
-      //           try {
-      //             expandedPath = this.expandUserPath(input.trim());
-      //           } catch (error) {
-      //             return error.message;
-      //           }
-
-      //           // Check if the path exists
-      //           const pathExists = await fs.pathExists(expandedPath);
-      //           if (!pathExists) {
-      //             return 'Directory does not exist';
-      //           }
-
-      //           return true;
-      //         },
-      //       },
-      //     ]);
-
-      //     // Now expand the path for use after the prompt
-      //     expandedPath = this.expandUserPath(directory.trim());
-
-      //     // Check if directory has custom content
-      //     const customHandler = new CustomHandler();
-      //     const customFiles = await customHandler.findCustomContent(expandedPath);
-
-      //     if (customFiles.length === 0) {
-      //       console.log(chalk.yellow(`\nNo custom content found in ${expandedPath}`));
-
-      //       const { tryAgain } = await inquirer.prompt([
-      //         {
-      //           type: 'confirm',
-      //           name: 'tryAgain',
-      //           message: 'Try a different directory?',
-      //           default: true,
-      //         },
-      //       ]);
-
-      //       if (tryAgain) {
-      //         continue;
-      //       } else {
-      //         return { hasCustomContent: false };
-      //       }
-      //     }
-
-      //     customPath = expandedPath;
-      //     console.log(chalk.green(`\n✓ Found ${customFiles.length} custom content item(s):`));
-      //     for (const file of customFiles) {
-      //       const relativePath = path.relative(expandedPath, path.dirname(file));
-      //       const folderName = path.dirname(file).split(path.sep).pop();
-      //       console.log(chalk.dim(`  • ${folderName} ${chalk.gray(`(${relativePath})`)}`));
-      //     }
-      //   }
-
-      //   return { hasCustomContent: true, customPath };
-      // }
-
-      // return { hasCustomContent: false };
-    } catch (error) {
-      console.error(chalk.red('Error in custom content prompt:'), error);
-      return { hasCustomContent: false };
     }
   }
 

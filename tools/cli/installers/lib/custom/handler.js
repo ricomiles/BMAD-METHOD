@@ -86,7 +86,7 @@ class CustomHandler {
       // Try to parse YAML with error handling
       let config;
       try {
-        config = yaml.load(configContent);
+        config = yaml.parse(configContent);
       } catch (parseError) {
         console.warn(chalk.yellow(`Warning: YAML parse error in ${configPath}:`, parseError.message));
         return null;
