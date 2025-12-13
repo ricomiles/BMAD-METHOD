@@ -143,22 +143,6 @@ Changes are reviewed and approved by you before being applied.
 - Full module review (option 12) is great for inherited or legacy modules
 - The workflow handles path updates when you reorganize structure
 
-## Source vs Installed Modules
-
-**Source modules** (in src/modules/):
-
-- Have installer files in tools/cli/installers/
-- Can configure web bundles
-- Are the development source of truth
-
-**Installed modules** (in \_bmad/):
-
-- Are deployed to target projects
-- Use config.yaml for user customization
-- Are compiled from source during installation
-
-This workflow works with both, but installer options only apply to source modules.
-
 ## Example Usage
 
 ```

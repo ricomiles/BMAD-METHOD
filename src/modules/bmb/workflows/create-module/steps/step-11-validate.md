@@ -1,6 +1,6 @@
 ---
 workflowFile: '{installed_path}/workflow.md'
-modulePlanFile: '{custom_module_location}/{module_name}/module-plan-{module_name}.md'
+modulePlanFile: '{bmb_creations_output_folder}/{module_name}/module-plan-{module_name}.md'
 validationChecklist: '{installed_path}/validation.md'
 advancedElicitationTask: '{project-root}/_bmad/core/tasks/advanced-elicitation.xml'
 partyModeWorkflow: '{project-root}/_bmad/core/workflows/party-mode/workflow.md'
@@ -197,7 +197,7 @@ Fix issues one by one with user confirmation
 
 - **Name:** {module_display_name}
 - **Code:** {module_name}
-- **Location:** {custom_module_location}/{module_name}
+- **Location:** {bmb_creations_output_folder}/{module_name}
 - **Type:** {module_type}
 - **Status:** Ready for testing
 

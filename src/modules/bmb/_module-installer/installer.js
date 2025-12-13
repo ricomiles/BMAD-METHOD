@@ -20,10 +20,10 @@ async function install(options) {
   try {
     logger.log(chalk.blue('🔧 Setting up BMB Module...'));
 
-    // Generate custom.yaml in custom_stand_alone_location
-    if (config['custom_stand_alone_location']) {
+    // Generate custom.yaml in bmb_creations_output_folder
+    if (config['bmb_creations_output_folder']) {
       // The config value contains {project-root} which needs to be resolved
-      const rawLocation = config['custom_stand_alone_location'];
+      const rawLocation = config['bmb_creations_output_folder'];
       const customLocation = rawLocation.replace('{project-root}', projectRoot);
       const customDestPath = path.join(customLocation, 'custom.yaml');
 
@@ -49,8 +49,8 @@ default_selected: true
     }
 
     // Set up custom module location if configured
-    if (config['custom_module_location']) {
-      const rawModuleLocation = config['custom_module_location'];
+    if (config['bmb_creations_output_folder']) {
+      const rawModuleLocation = config['bmb_creations_output_folder'];
       const moduleLocation = rawModuleLocation.replace('{project-root}', projectRoot);
 
       logger.log(chalk.cyan(`  Setting up custom modules at: ${moduleLocation}`));

@@ -160,7 +160,7 @@ The sidecar folder location is configured during BMAD core installation:
 1. **Agent Declaration**: Agents declare `hasSidecar: true` in their metadata
 2. **Sidecar Detection**: The installer automatically detects folders with "sidecar" in the name
 3. **Installation**: Sidecar content is copied to the configured location
-4. **Path Replacement**: The `{agent_sidecar_folder}` placeholder in agent configurations is replaced with the actual path to the installed instance of the sidecar folder. Now when you use the agent, depending on its design, will use the content in sidecar to record interactions, remember things you tell it, or serve a host of many other issues.
+4. **Path Replacement**: The `{bmad_memory}` placeholder in agent configurations is replaced with the actual path to the installed instance of the sidecar folder. Now when you use the agent, depending on its design, will use the content in sidecar to record interactions, remember things you tell it, or serve a host of many other issues.
 
 ### Example Structure
 
@@ -232,7 +232,7 @@ Custom content can be distributed:
 
 - Ensure the agent has `hasSidecar: true` in metadata
 - Check that sidecar folders contain "sidecar" in the name
-- Verify the agent_sidecar_folder configuration
+- Verify the bmad_memory configuration
 - Ensure the custom agent has proper language in it to actually use the sidecar content, including loading memories on agent load.
 
 ## Support

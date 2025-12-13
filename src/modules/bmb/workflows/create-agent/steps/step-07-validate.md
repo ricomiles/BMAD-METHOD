@@ -7,9 +7,9 @@ workflow_path: '{project-root}/bmb/workflows/create-agent/create-agent'
 
 # File References
 thisStepFile: '{workflow_path}/steps/step-07-validate.md'
-nextStepFile: '{workflow_path}/steps/step-08-setup.md'
+nextStepFile: '{workflow_path}/steps/step-08-celebrate.md'
 workflowFile: '{workflow_path}/workflow.md'
-outputFile: '{output_folder}/agent-validation-{project_name}.md'
+outputFile: '{bmb_creations_output_folder}/agent-validation-{project_name}.md'
 agentValidationChecklist: '{project-root}/_bmad/bmb/workflows/create-agent/agent-validation-checklist.md'
 agentFile: '{{output_file_path}}'
 

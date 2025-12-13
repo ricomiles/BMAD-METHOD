@@ -1,7 +1,7 @@
 ---
 installed_path: '{project-root}/_bmad/bmb/workflows/create-module'
 nextStepFile: '{installed_path}/steps/step-07-workflows.md'
-modulePlanFile: '{custom_module_location}/{module_name}/module-plan-{module_name}.md'
+modulePlanFile: '{bmb_creations_output_folder}/{module_name}/module-plan-{module_name}.md'
 agentTemplate: '{installed_path}/templates/agent.template.md'
 agent_examples_path: '{project-root}/bmb/reference/agents/module-examples'
 advancedElicitationTask: '{project-root}/_bmad/core/tasks/advanced-elicitation.xml'
@@ -217,7 +217,7 @@ agent:
 
 **If agent needs memory:**
 
-1. Create folder: {custom_module_location}/{module_name}/agents/[agent-name]-sidecar/
+1. Create folder: {bmb_creations_output_folder}/{module_name}/agents/[agent-name]-sidecar/
 2. Create files:
    - memories.md (empty, for persistent memory)
    - instructions.md (empty, for agent protocols)
@@ -228,7 +228,7 @@ agent:
 **If agent has workflows:**
 For each workflow that needs separate file:
 
-1. Create folder: {custom_module_location}/{module_name}/workflows/[workflow-name]/
+1. Create folder: {bmb_creations_output_folder}/{module_name}/workflows/[workflow-name]/
 2. Create README.md with workflow plan
 
 ### 4. Repeat for All Agents

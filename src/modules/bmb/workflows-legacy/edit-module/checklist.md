@@ -4,8 +4,7 @@ Use this checklist to validate module edits meet BMAD Core standards.
 
 ## Module Structure Validation
 
-- [ ] Module has clear 3-letter code (bmm, bmb, cis, etc.)
-- [ ] Module is in correct location (src/modules/ for source, \_bmad/ for installed)
+- [ ] Module has clear abbreviation code (bmm, bmb, cis, etc.)
 - [ ] agents/ directory exists
 - [ ] workflows/ directory exists
 - [ ] config.yaml exists in module root
@@ -24,7 +23,7 @@ Use this checklist to validate module edits meet BMAD Core standards.
 
 ### Optional Fields (if used)
 
-- [ ] custom_module_location documented
+- [ ] bmb_creations_output_folder documented
 - [ ] Module-specific fields documented in README
 
 ### File Quality

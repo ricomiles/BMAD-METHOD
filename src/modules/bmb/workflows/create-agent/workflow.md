@@ -80,12 +80,3 @@ brainstorm_context: "{workflow_path}/data/brainstorm-context.md"
 simple_agent_examples: "{project-root}/bmb/reference/agents/simple-examples/"
 expert_agent_examples: "{project-root}/bmb/reference/agents/expert-examples/"
 module_agent_examples: "{project-root}/bmb/reference/agents/module-examples/"
-
-# Output configuration
-
-custom_agent_location: "{project-root}/\_bmad/custom/src/agents"
-module_output_file: "{project-root}/\_bmad/{target_module}/agents/{agent_filename}.agent.yaml"
-standalone_output_folder: "{custom_agent_location}/{agent_filename}"
-standalone_output_file: "{standalone_output_folder}/{agent_filename}.agent.yaml"
-standalone_info_guide: "{standalone_output_folder}/info-and-installation-guide.md"
-config_output_file: "{project-root}/\_bmad/\_config/agents/{target_module}-{agent_filename}.customize.yaml"

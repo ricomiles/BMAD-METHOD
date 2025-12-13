@@ -1,7 +1,7 @@
 ---
 installed_path: '{project-root}/_bmad/bmb/workflows/create-module'
 nextStepFile: '{installed_path}/steps/step-08-installer.md'
-modulePlanFile: '{custom_module_location}/{module_name}/module-plan-{module_name}.md'
+modulePlanFile: '{bmb_creations_output_folder}/{module_name}/module-plan-{module_name}.md'
 workflowPlanTemplate: '{installed_path}/templates/workflow-plan-template.md'
 advancedElicitationTask: '{project-root}/_bmad/core/tasks/advanced-elicitation.xml'
 partyModeWorkflow: '{project-root}/_bmad/core/workflows/party-mode/workflow.md'
@@ -61,7 +61,7 @@ I've already created workflow folders and README.md files for each agent's workf
 
 **Workflow folders found:**
 
-- [List all workflow folders in {custom_module_location}/{module_name}/workflows/]
+- [List all workflow folders in {bmb_creations_output_folder}/{module_name}/workflows/]
 
 **Each workflow folder contains a README.md with:**
 

@@ -875,7 +875,7 @@ class ModuleManager {
           }
         }
 
-        // Load core config to get agent_sidecar_folder
+        // Load core config to get bmad_memory
         const coreConfigPath = path.join(bmadDir, 'bmb', 'config.yaml');
         let coreConfig = {};
 

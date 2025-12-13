@@ -333,9 +333,9 @@ async function compileAgent(yamlContent, answers = {}, agentName = '', targetPat
     finalAnswers = { ...defaults, ...answers };
   }
 
-  // Add agent_sidecar_folder to answers if provided in config
-  if (options.config && options.config.agent_sidecar_folder) {
-    finalAnswers.agent_sidecar_folder = options.config.agent_sidecar_folder;
+  // Add bmad_memory to answers if provided in config
+  if (options.config && options.config.bmad_memory) {
+    finalAnswers.bmad_memory = options.config.bmad_memory;
   }
 
   // Process templates with answers
@@ -344,10 +344,10 @@ async function compileAgent(yamlContent, answers = {}, agentName = '', targetPat
   // Strip install_config from output
   const cleanYaml = stripInstallConfig(processedYaml);
 
-  // Replace {agent_sidecar_folder} in XML content
+  // Replace {bmad_memory} in XML content
   let xml = await compileToXml(cleanYaml, agentName, targetPath);
-  if (finalAnswers.agent_sidecar_folder) {
-    xml = xml.replaceAll('{agent_sidecar_folder}', finalAnswers.agent_sidecar_folder);
+  if (finalAnswers.bmad_memory) {
+    xml = xml.replaceAll('{bmad_memory}', finalAnswers.bmad_memory);
   }
 
   return {

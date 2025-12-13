@@ -9,7 +9,7 @@ workflow_path: '{project-root}/_bmad/bmb/workflows/create-workflow'
 thisStepFile: '{workflow_path}/steps/step-03-tools-configuration.md'
 nextStepFile: '{workflow_path}/steps/step-04-plan-review.md'
 
-targetWorkflowPath: '{custom_stand_alone_location}/workflows/{new_workflow_name}'
+targetWorkflowPath: '{bmb_creations_output_folder}/workflows/{new_workflow_name}'
 workflowPlanFile: '{targetWorkflowPath}/workflow-plan-{new_workflow_name}.md'
 
 # Documentation References

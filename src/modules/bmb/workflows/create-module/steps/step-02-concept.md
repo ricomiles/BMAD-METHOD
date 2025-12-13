@@ -1,7 +1,7 @@
 ---
 installed_path: '{project-root}/_bmad/bmb/workflows/create-module'
 nextStepFile: '{installed_path}/steps/step-03-components.md'
-modulePlanFile: '{custom_module_location}/{module_name}/module-plan-{module_name}.md'
+modulePlanFile: '{bmb_creations_output_folder}/{module_name}/module-plan-{module_name}.md'
 moduleStructureGuide: '{project-root}/bmb/workflows/create-agent-legacy/create-module/module-structure.md'
 advancedElicitationTask: '{project-root}/_bmad/core/tasks/advanced-elicitation.xml'
 partyModeWorkflow: '{project-root}/_bmad/core/workflows/party-mode/workflow.md'

@@ -1,3 +1,6 @@
+code: core
+name: "BMAD™ Core Module"
+
 header: "BMAD™ Core Configuration"
 subheader: "Configure the core settings for your BMAD™ installation.\nThese settings will be used across all modules and agents."
 
@@ -18,10 +21,10 @@ document_output_language:
 
 output_folder:
   prompt: "Where should AI generated artifacts be saved across all modules?"
-  default: "docs"
+  default: "bmad-output"
   result: "{project-root}/{value}"
 
-agent_sidecar_folder:
-  prompt: "Where should users agent sidecar memory folders be stored?"
-  default: "_bmad-user-memory"
+bmad_memory:
+  prompt: "Some agents will record their own memories and history. Where should these be stored?"
+  default: "_bmad/_memory"
   result: "{project-root}/{value}"

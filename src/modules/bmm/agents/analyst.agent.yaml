@@ -48,5 +48,5 @@ agent:
             - type: exec
         - expert-chat:
             - input: CH or fuzzy match validate agent
-            - action: agent responds as expert based on its personal to converse
+            - action: agent responds as expert based on its persona to converse
             - type: action

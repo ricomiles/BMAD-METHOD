@@ -18,7 +18,7 @@ agent:
     identity: |
       {agent-identity - multi-line description}
     communication_style: |
-      {communication-style - multi-line description}
+      {communication-style - 1-2 short sentences to describe chat style}
     principles:
       - '{agent-principle-1}'
       - '{agent-principle-2}'
@@ -27,9 +27,9 @@ agent:
 
   # Optional: Only include if agent needs memory/persistence
   critical_actions:
-    - 'Load COMPLETE file ./[agent-name]-sidecar/memories.md and integrate all past interactions'
-    - 'Load COMPLETE file ./[agent-name]-sidecar/instructions.md and follow ALL protocols'
-    - 'ONLY read/write files in ./[agent-name]-sidecar/ - this is our private workspace'
+    - 'Load COMPLETE file [bmad_memory]/[agent-name]-sidecar/memories.md and integrate all past interactions'
+    - 'Load COMPLETE file [bmad_memory]/[agent-name]-sidecar/instructions.md and follow ALL protocols'
+    - 'ONLY read/write files in [bmad_memory]/[agent-name]-sidecar/* - this is our private workspace'
 
   # Optional: Embedded prompts for common interactions
   prompts:
@@ -98,7 +98,7 @@ agent:
 When creating expert agents in modules, create a sidecar folder:
 
 ```
-{custom_module_location}/{module_name}/agents/[agent-name]-sidecar/
+{bmb_creations_output_folder}/{module_name}/agents/[agent-name]-sidecar/
 ├── memories.md          # Persistent memory across sessions
 ├── instructions.md      # Agent-specific protocols
 ├── insights.md          # Important breakthroughs/realizations
@@ -166,14 +166,12 @@ Expert agents support three types of menu actions:
 ## Notes for Module Creation:
 
 1. **File Paths**:
-   - Agent files go in: `{custom_module_location}/{module_name}/agents/[agent-name]/[agent-name].yaml`
-   - Sidecar folders go in: `{custom_module_location}/{module_name}/agents/[agent-name]/[agent-name]-sidecar/`
+   - Agent files go in: `[bmb_creations_output_folder]/[module_name]/agents/[agent-name]/[agent-name].yaml`
+   - Sidecar folders go in: `[bmb_creations_output_folder]/[module_name]/agents/[agent-name]/[agent-name]-sidecar/`
 
 2. **Variable Usage**:
-   - `{agent_sidecar_folder}` resolves to the agents sidecar folder destination after installation
-   - `_bmad` resolves to \_bmad
-   - `{custom_module}` resolves to custom/src/modules
-   - `{module}` is your module code/name
+   - `bmad_memory` resolves to the agents sidecar folder destination after installation
+   - `module` is your module code/name
 
 3. **Creating Sidecar Structure**:
    - When agent is created, also create the sidecar folder

@@ -1,8 +1,8 @@
 ---
 installed_path: '{project-root}/_bmad/bmb/workflows/create-module'
 nextStepFile: '{installed_path}/steps/step-10-roadmap.md'
-modulePlanFile: '{custom_module_location}/{module_name}/module-plan-{module_name}.md'
-moduleReadmeFile: '{custom_module_location}/{module_name}/README.md'
+modulePlanFile: '{bmb_creations_output_folder}/{module_name}/module-plan-{module_name}.md'
+moduleReadmeFile: '{bmb_creations_output_folder}/{module_name}/README.md'
 advancedElicitationTask: '{project-root}/_bmad/core/tasks/advanced-elicitation.xml'
 partyModeWorkflow: '{project-root}/_bmad/core/workflows/party-mode/workflow.md'
 ---
@@ -249,7 +249,7 @@ Update module-plan.md with documentation section:
 ## Documentation
 
 ### README.md Created
-- Location: {custom_module_location}/{module_name}/README.md
+- Location: {bmb_creations_output_folder}/{module_name}/README.md
 - Sections: [list of sections included]
 - Status: Complete
 

@@ -21,7 +21,6 @@
 **Cleanup Changes:**
 
 - **Example Modules Removal**: Temporarily removed example modules to prevent accidental installation
-- **Hardcoded Path Cleanup**: Continued removal of hardcoded `.bmad` folder references from demo content
 - **Memory Management**: Improved sidecar file handling for custom modules
 
 ### 📊 Statistics
@@ -176,7 +175,6 @@
 - Fixed version reading from package.json instead of hardcoded fallback
 - Removed hardcoded years from WebSearch queries
 - Removed broken build caching mechanism
-- Fixed hardcoded '.bmad' prefix from files-manifest.csv paths
 - Enhanced TTS injection summary with tracking and documentation
 - Fixed CI nvmrc configuration issues
 

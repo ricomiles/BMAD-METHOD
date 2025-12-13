@@ -9,7 +9,7 @@
 <workflow>
 
 <step n="1" goal="Load and deeply understand the target module">
-<ask>What is the path to the module you want to edit? (provide path to module directory like _bmad/bmm/ or src/modules/bmm/)</ask>
+<ask>What is the path to the module source you want to edit?</ask>
 
 <action>Load the module directory structure completely:
 

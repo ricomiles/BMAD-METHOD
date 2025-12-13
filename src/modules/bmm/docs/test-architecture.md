@@ -155,22 +155,6 @@ Epic/Release Gate → TEA: *nfr-assess, *trace Phase 2 (release decision)
 
 **Note**: `*trace` is a two-phase workflow: Phase 1 (traceability) + Phase 2 (gate decision). This reduces cognitive load while maintaining natural workflow.
 
-### Unique Directory Architecture
-
-TEA is the only BMM agent with its own top-level module directory (`bmm/testarch/`):
-
-```
-src/modules/bmm/
-├── agents/
-│   └── tea.agent.yaml          # Agent definition (standard location)
-├── workflows/
-│   └── testarch/               # TEA workflows (standard location)
-└── testarch/                   # Knowledge base (UNIQUE!)
-    ├── knowledge/              # 21 production-ready test pattern fragments
-    ├── tea-index.csv           # Centralized knowledge lookup (21 fragments indexed)
-    └── README.md               # This guide
-```
-
 ### Why TEA Gets Special Treatment
 
 TEA uniquely requires:

@@ -1887,7 +1887,6 @@ If AgentVibes party mode is enabled, immediately trigger TTS with agent's voice:
 
     // Determine project directory (parent of bmad/ directory)
     const bmadDir = path.dirname(modulePath);
-    const projectDir = path.dirname(bmadDir);
     const cfgAgentsDir = path.join(bmadDir, '_config', 'agents');
 
     // Ensure _config/agents directory exists
@@ -2116,7 +2115,7 @@ If AgentVibes party mode is enabled, immediately trigger TTS with agent's voice:
           answers.memories = customizeData.memories;
         }
 
-        // Get core config for agent_sidecar_folder
+        // Get core config for bmad_memory
         const coreConfigPath = path.join(bmadDir, 'bmb', 'config.yaml');
         let coreConfig = {};
         if (await fs.pathExists(coreConfigPath)) {

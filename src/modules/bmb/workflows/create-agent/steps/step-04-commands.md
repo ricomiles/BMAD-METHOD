@@ -9,7 +9,7 @@ workflow_path: '{project-root}/bmb/workflows/create-agent/create-agent'
 thisStepFile: '{workflow_path}/steps/step-04-commands.md'
 nextStepFile: '{workflow_path}/steps/step-05-name.md'
 workflowFile: '{workflow_path}/workflow.md'
-outputFile: '{output_folder}/agent-commands-{project_name}.md'
+agentPlan: '{bmb_creations_output_folder}/agent-plan-{agent_name}.md'
 agentMenuPatterns: '{project-root}/_bmad/bmb/docs/agents/agent-menu-patterns.md'
 simpleArchitecture: '{project-root}/_bmad/bmb/docs/agents/simple-agent-architecture.md'
 expertArchitecture: '{project-root}/_bmad/bmb/docs/agents/expert-agent-architecture.md'
@@ -187,7 +187,7 @@ If user seems engaged, explore special features:
 [Architecture-specific considerations and technical requirements]
 ```
 
-Save this content to `{outputFile}` for reference in subsequent steps.
+Save this content to {agentPlan} for reference in subsequent steps.
 
 ### 7. Present MENU OPTIONS
 
@@ -197,7 +197,7 @@ Display: "**Select an Option:** [A] Advanced Elicitation [P] Party Mode [C] Cont
 
 - IF A: Execute {advancedElicitationTask}
 - IF P: Execute {partyModeWorkflow}
-- IF C: Save content to {outputFile}, update frontmatter, then only then load, read entire file, then execute {nextStepFile}
+- IF C: Save content to {agentPlan}, update frontmatter, then only then load, read entire file, then execute {nextStepFile}
 - IF Any other comments or queries: help user respond then [Redisplay Menu Options](#7-present-menu-options)
 
 #### EXECUTION RULES:

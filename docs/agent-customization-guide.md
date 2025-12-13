@@ -203,6 +203,6 @@ memories:
 
 ## Next Steps
 
-- **[BMM Agents Guide](../src/modules/bmm/docs/agents-guide.md)** - Learn about all 12 BMad Method agents
+- **[BMM Agents Guide](../src/modules/bmm/docs/agents-guide.md)** - Learn about the BMad Method agents
 - **[BMB Create Agent Workflow](../src/modules/bmb/workflows/create-agent/README.md)** - Build completely custom agents
 - **[BMM Complete Documentation](../src/modules/bmm/docs/README.md)** - Full BMad Method reference
