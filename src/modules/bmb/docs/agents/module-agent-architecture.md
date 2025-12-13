@@ -63,7 +63,7 @@ agent:
 
     - trigger: with-data
       exec: '{project-root}/_bmad/{module-code}/tasks/{task-name}.xml'
-      data: '{project-root}/_bmad/_cfg/agent-manifest.csv'
+      data: '{project-root}/_bmad/_config/agent-manifest.csv'
       description: 'Execute task with data file'
 ```
 
@@ -136,7 +136,7 @@ Combines task execution with template file.
 menu:
   - trigger: team-standup
     exec: '{project-root}/_bmad/bmm/tasks/standup.xml'
-    data: '{project-root}/_bmad/_cfg/agent-manifest.csv'
+    data: '{project-root}/_bmad/_config/agent-manifest.csv'
     description: 'Run team standup with agent roster'
 ```
 

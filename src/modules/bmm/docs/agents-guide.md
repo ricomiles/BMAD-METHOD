@@ -663,14 +663,14 @@ You can customize any agent's personality without modifying core agent files.
 
 ### Location
 
-**Customization Directory:** `{project-root}/_bmad/_cfg/agents/`
+**Customization Directory:** `{project-root}/_bmad/_config/agents/`
 
 **Naming Convention:** `{module}-{agent-name}.customize.yaml`
 
 **Examples:**
 
 ```
-_bmad/_cfg/agents/
+_bmad/_config/agents/
 ├── bmm-pm.customize.yaml
 ├── bmm-dev.customize.yaml
 ├── cis-storyteller.customize.yaml
@@ -770,9 +770,9 @@ Other agents collaborate with PM's specialized perspective.
 
 ```bash
 # Create customization file at:
-# {project-root}/_bmad/_cfg/agents/{module}-{agent-name}.customize.yaml
+# {project-root}/_bmad/_config/agents/{module}-{agent-name}.customize.yaml
 
-# Example: _bmad/_cfg/agents/bmm-pm.customize.yaml
+# Example: _bmad/_config/agents/bmm-pm.customize.yaml
 ```
 
 **Step 2: Regenerate Agent Manifest**

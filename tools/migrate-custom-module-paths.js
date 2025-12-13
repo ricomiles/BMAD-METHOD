@@ -95,7 +95,7 @@ async function migrate(directory) {
   console.log(chalk.dim(`Project: ${projectRoot}`));
   console.log(chalk.dim(`BMAD Directory: ${bmadDir}`));
 
-  const manifestPath = path.join(bmadDir, '_cfg', 'manifest.yaml');
+  const manifestPath = path.join(bmadDir, '_config', 'manifest.yaml');
 
   if (!fs.existsSync(manifestPath)) {
     console.error(chalk.red('✗ No manifest.yaml found'));

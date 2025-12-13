@@ -136,7 +136,7 @@ class BaseIdeSetup {
     // Get module agents
     const entries = await fs.readdir(bmadDir, { withFileTypes: true });
     for (const entry of entries) {
-      if (entry.isDirectory() && entry.name !== 'core' && entry.name !== '_cfg' && entry.name !== 'agents') {
+      if (entry.isDirectory() && entry.name !== 'core' && entry.name !== '_config' && entry.name !== 'agents') {
         const moduleAgentsPath = path.join(bmadDir, entry.name, 'agents');
         if (await fs.pathExists(moduleAgentsPath)) {
           const moduleAgents = await this.scanDirectory(moduleAgentsPath, '.md');
@@ -208,7 +208,7 @@ class BaseIdeSetup {
     // Get module tasks
     const entries = await fs.readdir(bmadDir, { withFileTypes: true });
     for (const entry of entries) {
-      if (entry.isDirectory() && entry.name !== 'core' && entry.name !== '_cfg' && entry.name !== 'agents') {
+      if (entry.isDirectory() && entry.name !== 'core' && entry.name !== '_config' && entry.name !== 'agents') {
         const moduleTasksPath = path.join(bmadDir, entry.name, 'tasks');
         if (await fs.pathExists(moduleTasksPath)) {
           const moduleTasks = await this.scanDirectoryWithStandalone(moduleTasksPath, ['.md', '.xml']);
@@ -254,7 +254,7 @@ class BaseIdeSetup {
     // Get module tools
     const entries = await fs.readdir(bmadDir, { withFileTypes: true });
     for (const entry of entries) {
-      if (entry.isDirectory() && entry.name !== 'core' && entry.name !== '_cfg' && entry.name !== 'agents') {
+      if (entry.isDirectory() && entry.name !== 'core' && entry.name !== '_config' && entry.name !== 'agents') {
         const moduleToolsPath = path.join(bmadDir, entry.name, 'tools');
         if (await fs.pathExists(moduleToolsPath)) {
           const moduleTools = await this.scanDirectoryWithStandalone(moduleToolsPath, ['.md', '.xml']);
@@ -300,7 +300,7 @@ class BaseIdeSetup {
     // Get module workflows
     const entries = await fs.readdir(bmadDir, { withFileTypes: true });
     for (const entry of entries) {
-      if (entry.isDirectory() && entry.name !== 'core' && entry.name !== '_cfg' && entry.name !== 'agents') {
+      if (entry.isDirectory() && entry.name !== 'core' && entry.name !== '_config' && entry.name !== 'agents') {
         const moduleWorkflowsPath = path.join(bmadDir, entry.name, 'workflows');
         if (await fs.pathExists(moduleWorkflowsPath)) {
           const moduleWorkflows = await this.findWorkflowYamlFiles(moduleWorkflowsPath);
@@ -635,7 +635,7 @@ class BaseIdeSetup {
    * @param {Object} agent - Agent information
    */
   async createAgentConfig(bmadDir, agent) {
-    const agentConfigDir = path.join(bmadDir, '_cfg', 'agents');
+    const agentConfigDir = path.join(bmadDir, '_config', 'agents');
     await this.ensureDir(agentConfigDir);
 
     // Load agent config template

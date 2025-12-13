@@ -88,4 +88,4 @@ module_output_file: "{project-root}/\_bmad/{target_module}/agents/{agent_filenam
 standalone_output_folder: "{custom_agent_location}/{agent_filename}"
 standalone_output_file: "{standalone_output_folder}/{agent_filename}.agent.yaml"
 standalone_info_guide: "{standalone_output_folder}/info-and-installation-guide.md"
-config_output_file: "{project-root}/\_bmad/\_cfg/agents/{target_module}-{agent_filename}.customize.yaml"
+config_output_file: "{project-root}/\_bmad/\_config/agents/{target_module}-{agent_filename}.customize.yaml"

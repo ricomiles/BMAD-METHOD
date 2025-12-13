@@ -10,10 +10,10 @@ class Manifest {
    * @param {Array} installedFiles - List of installed files (no longer used, files tracked in files-manifest.csv)
    */
   async create(bmadDir, data, installedFiles = []) {
-    const manifestPath = path.join(bmadDir, '_cfg', 'manifest.yaml');
+    const manifestPath = path.join(bmadDir, '_config', 'manifest.yaml');
     const yaml = require('yaml');
 
-    // Ensure _cfg directory exists
+    // Ensure _config directory exists
     await fs.ensureDir(path.dirname(manifestPath));
 
     // Structure the manifest data
@@ -46,7 +46,7 @@ class Manifest {
    * @returns {Object|null} Manifest data or null if not found
    */
   async read(bmadDir) {
-    const yamlPath = path.join(bmadDir, '_cfg', 'manifest.yaml');
+    const yamlPath = path.join(bmadDir, '_config', 'manifest.yaml');
     const yaml = require('yaml');
 
     if (await fs.pathExists(yamlPath)) {
@@ -97,7 +97,7 @@ class Manifest {
       ides: manifest.ides || [],
     };
 
-    const manifestPath = path.join(bmadDir, '_cfg', 'manifest.yaml');
+    const manifestPath = path.join(bmadDir, '_config', 'manifest.yaml');
     await fs.ensureDir(path.dirname(manifestPath));
 
     const yamlContent = yaml.stringify(manifestData, {

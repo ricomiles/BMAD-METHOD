@@ -38,7 +38,7 @@ agent:
 
     - trigger: epic-retrospective
       workflow: "{project-root}/_bmad/bmm/workflows/4-implementation/retrospective/workflow.yaml"
-      data: "{project-root}/_bmad/_cfg/agent-manifest.csv"
+      data: "{project-root}/_bmad/_config/agent-manifest.csv"
       description: Facilitate team retrospective after an epic is completed (Optional)
 
     - trigger: correct-course

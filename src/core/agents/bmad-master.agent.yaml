@@ -24,11 +24,11 @@ agent:
   # Agent menu items
   menu:
     - trigger: "list-tasks"
-      action: "list all tasks from {project-root}/_bmad/_cfg/task-manifest.csv"
+      action: "list all tasks from {project-root}/_bmad/_config/task-manifest.csv"
       description: "List Available Tasks"
 
     - trigger: "list-workflows"
-      action: "list all workflows from {project-root}/_bmad/_cfg/workflow-manifest.csv"
+      action: "list all workflows from {project-root}/_bmad/_config/workflow-manifest.csv"
       description: "List Workflows"
 
     - trigger: "party-mode"

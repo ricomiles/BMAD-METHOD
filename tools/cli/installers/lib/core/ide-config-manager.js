@@ -4,7 +4,7 @@ const yaml = require('yaml');
 
 /**
  * Manages IDE configuration persistence
- * Saves and loads IDE-specific configurations to/from bmad/_cfg/ides/
+ * Saves and loads IDE-specific configurations to/from bmad/_config/ides/
  */
 class IdeConfigManager {
   constructor() {}
@@ -15,7 +15,7 @@ class IdeConfigManager {
    * @returns {string} Path to IDE config directory
    */
   getIdeConfigDir(bmadDir) {
-    return path.join(bmadDir, '_cfg', 'ides');
+    return path.join(bmadDir, '_config', 'ides');
   }
 
   /**

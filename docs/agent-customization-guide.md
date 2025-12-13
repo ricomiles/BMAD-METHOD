@@ -9,7 +9,7 @@ Customize BMad agents without modifying core files. All customizations persist t
 After installation, find agent customization files in:
 
 ```
-_bmad/_cfg/agents/
+_bmad/_config/agents/
 ├── core-bmad-master.customize.yaml
 ├── bmm-dev.customize.yaml
 ├── bmm-pm.customize.yaml
@@ -119,7 +119,7 @@ prompts:
 **Example 1: Customize Developer Agent for TDD**
 
 ```yaml
-# _bmad/_cfg/agents/bmm-dev.customize.yaml
+# _bmad/_config/agents/bmm-dev.customize.yaml
 agent:
   metadata:
     name: 'TDD Developer'
@@ -135,7 +135,7 @@ critical_actions:
 **Example 2: Add Custom Deployment Workflow**
 
 ```yaml
-# _bmad/_cfg/agents/bmm-dev.customize.yaml
+# _bmad/_config/agents/bmm-dev.customize.yaml
 menu:
   - trigger: deploy-staging
     workflow: '{project-root}/_bmad/deploy-staging.yaml'
@@ -148,7 +148,7 @@ menu:
 **Example 3: Multilingual Product Manager**
 
 ```yaml
-# _bmad/_cfg/agents/bmm-pm.customize.yaml
+# _bmad/_config/agents/bmm-pm.customize.yaml
 persona:
   role: 'Bilingual Product Manager'
   identity: 'Expert in US and LATAM markets'
@@ -166,15 +166,15 @@ memories:
 
 - **Start Small:** Customize one section at a time and rebuild to test
 - **Backup:** Copy customization files before major changes
-- **Update-Safe:** Your customizations in `_cfg/` survive all BMad updates
+- **Update-Safe:** Your customizations in `_config/` survive all BMad updates
 - **Per-Project:** Customization files are per-project, not global
-- **Version Control:** Consider committing `_cfg/` to share customizations with your team
+- **Version Control:** Consider committing `_config/` to share customizations with your team
 
 ## Module vs. Global Config
 
 **Module-Level (Recommended):**
 
-- Customize agents per-project in `_bmad/_cfg/agents/`
+- Customize agents per-project in `_bmad/_config/agents/`
 - Different projects can have different agent behaviors
 
 **Global Config (Coming Soon):**

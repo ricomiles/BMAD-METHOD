@@ -10,7 +10,7 @@ thisStepFile: '{workflow_path}/steps/step-09-customize.md'
 nextStepFile: '{workflow_path}/steps/step-10-build-tools.md'
 workflowFile: '{workflow_path}/workflow.md'
 outputFile: '{output_folder}/agent-customization-{project_name}.md'
-configOutputFile: '{project-root}/_bmad/_cfg/agents/{target_module}-{agent_filename}.customize.yaml'
+configOutputFile: '{project-root}/_bmad/_config/agents/{target_module}-{agent_filename}.customize.yaml'
 
 # Template References
 customizationTemplate: '{workflow_path}/templates/agent-customization.md'

@@ -99,7 +99,7 @@ async function buildAgent(projectDir, agentName) {
     // Build the standalone agent
     console.log(chalk.cyan(`  Building standalone agent ${agentName}...`));
 
-    const customizePath = path.join(projectDir, '_bmad', '_cfg', 'agents', `${agentName}.customize.yaml`);
+    const customizePath = path.join(projectDir, '_bmad', '_config', 'agents', `${agentName}.customize.yaml`);
     const customizeExists = await fs.pathExists(customizePath);
 
     await builder.buildAgent(standaloneYamlPath, customizeExists ? customizePath : null, outputPath, { includeMetadata: true });
@@ -125,7 +125,7 @@ async function buildAgent(projectDir, agentName) {
       // Build the agent
       console.log(chalk.cyan(`  Building ${agentName}...`));
 
-      const customizePath = path.join(projectDir, '.claude', '_cfg', 'agents', `${agentName}.customize.yaml`);
+      const customizePath = path.join(projectDir, '.claude', '_config', 'agents', `${agentName}.customize.yaml`);
       const customizeExists = await fs.pathExists(customizePath);
 
       await builder.buildAgent(agentYamlPath, customizeExists ? customizePath : null, outputPath, { includeMetadata: true });
@@ -177,7 +177,7 @@ async function buildAllAgents(projectDir) {
 
       console.log(chalk.cyan(`  Building standalone agent ${agentName}...`));
 
-      const customizePath = path.join(projectDir, '_bmad', '_cfg', 'agents', `${agentName}.customize.yaml`);
+      const customizePath = path.join(projectDir, '_bmad', '_config', 'agents', `${agentName}.customize.yaml`);
       const customizeExists = await fs.pathExists(customizePath);
 
       await builder.buildAgent(agentYamlPath, customizeExists ? customizePath : null, outputPath, { includeMetadata: true });
@@ -213,7 +213,7 @@ async function buildAllAgents(projectDir) {
 
         console.log(chalk.cyan(`  Building ${agentName}...`));
 
-        const customizePath = path.join(projectDir, '.claude', '_cfg', 'agents', `${agentName}.customize.yaml`);
+        const customizePath = path.join(projectDir, '.claude', '_config', 'agents', `${agentName}.customize.yaml`);
         const customizeExists = await fs.pathExists(customizePath);
 
         await builder.buildAgent(agentYamlPath, customizeExists ? customizePath : null, outputPath, { includeMetadata: true });

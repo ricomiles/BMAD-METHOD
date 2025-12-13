@@ -28,8 +28,8 @@ class ManifestGenerator {
    * @param {Array} installedFiles - All installed files (optional, for hash tracking)
    */
   async generateManifests(bmadDir, selectedModules, installedFiles = [], options = {}) {
-    // Create _cfg directory if it doesn't exist
-    const cfgDir = path.join(bmadDir, '_cfg');
+    // Create _config directory if it doesn't exist
+    const cfgDir = path.join(bmadDir, '_config');
     await fs.ensureDir(cfgDir);
 
     // Store modules list (all modules including preserved ones)
@@ -902,7 +902,7 @@ class ManifestGenerator {
 
       for (const entry of entries) {
         // Skip if not a directory or is a special directory
-        if (!entry.isDirectory() || entry.name.startsWith('.') || entry.name === '_cfg') {
+        if (!entry.isDirectory() || entry.name.startsWith('.') || entry.name === '_config') {
           continue;
         }
 

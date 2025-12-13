@@ -132,7 +132,7 @@ Universal attribute for supplementary information.
 menu:
   - trigger: team-standup
     exec: '{project-root}/_bmad/bmm/tasks/standup.xml'
-    data: '{project-root}/_bmad/_cfg/agent-manifest.csv'
+    data: '{project-root}/_bmad/_config/agent-manifest.csv'
     description: 'Run team standup'
 
   - trigger: analyze-metrics

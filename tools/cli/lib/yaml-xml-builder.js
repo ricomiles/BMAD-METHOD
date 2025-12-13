@@ -525,7 +525,7 @@ class YamlXmlBuilder {
     } else if (bmadIndex !== -1 && pathParts[bmadIndex + 1]) {
       // Path contains /bmad/{module}/
       const potentialModule = pathParts[bmadIndex + 1];
-      // Check if it's a known module, not 'agents' or '_cfg'
+      // Check if it's a known module, not 'agents' or '_config'
       if (['bmm', 'bmb', 'cis', 'core'].includes(potentialModule)) {
         module = potentialModule;
       }

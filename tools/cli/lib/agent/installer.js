@@ -410,7 +410,7 @@ function detectBmadProject(targetPath) {
     const possibleNames = ['_bmad'];
     for (const name of possibleNames) {
       const bmadFolder = path.join(checkPath, name);
-      const cfgFolder = path.join(bmadFolder, '_cfg');
+      const cfgFolder = path.join(bmadFolder, '_config');
       const manifestFile = path.join(cfgFolder, 'agent-manifest.csv');
 
       if (fs.existsSync(manifestFile)) {
@@ -596,16 +596,16 @@ function addToManifest(manifestFile, agentData) {
 }
 
 /**
- * Save agent source YAML to _cfg/custom/agents/ for reinstallation
+ * Save agent source YAML to _config/custom/agents/ for reinstallation
  * Stores user answers in a top-level saved_answers section (cleaner than overwriting defaults)
  * @param {Object} agentInfo - Agent info (path, type, etc.)
- * @param {string} cfgFolder - Path to _cfg folder
+ * @param {string} cfgFolder - Path to _config folder
  * @param {string} agentName - Final agent name (e.g., "fred-commit-poet")
  * @param {Object} answers - User answers to save for reinstallation
  * @returns {Object} Info about saved source
  */
 function saveAgentSource(agentInfo, cfgFolder, agentName, answers = {}) {
-  // Save to _cfg/custom/agents/ instead of _cfg/agents/
+  // Save to _config/custom/agents/ instead of _config/agents/
   const customAgentsCfgDir = path.join(cfgFolder, 'custom', 'agents');
 
   if (!fs.existsSync(customAgentsCfgDir)) {
@@ -689,7 +689,7 @@ function saveAgentSource(agentInfo, cfgFolder, agentName, answers = {}) {
  */
 async function createIdeSlashCommands(projectRoot, agentName, agentPath, metadata) {
   // Read manifest.yaml to get installed IDEs
-  const manifestPath = path.join(projectRoot, '_bmad', '_cfg', 'manifest.yaml');
+  const manifestPath = path.join(projectRoot, '_bmad', '_config', 'manifest.yaml');
   let installedIdes = ['claude-code']; // Default to Claude Code if no manifest
 
   if (fs.existsSync(manifestPath)) {

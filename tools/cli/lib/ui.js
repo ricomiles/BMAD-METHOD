@@ -650,11 +650,11 @@ class UI {
       if (stats.isDirectory()) {
         const files = await fs.readdir(directory);
         if (files.length > 0) {
-          // Check for any bmad installation (any folder with _cfg/manifest.yaml)
+          // Check for any bmad installation (any folder with _config/manifest.yaml)
           const { Installer } = require('../installers/lib/core/installer');
           const installer = new Installer();
           const bmadDir = await installer.findBmadDir(directory);
-          const hasBmadInstall = (await fs.pathExists(bmadDir)) && (await fs.pathExists(path.join(bmadDir, '_cfg', 'manifest.yaml')));
+          const hasBmadInstall = (await fs.pathExists(bmadDir)) && (await fs.pathExists(path.join(bmadDir, '_config', 'manifest.yaml')));
 
           console.log(
             chalk.gray(`Directory exists and contains ${files.length} item(s)`) +

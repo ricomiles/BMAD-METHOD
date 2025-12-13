@@ -306,7 +306,7 @@ class CustomHandler {
       const targetMdPath = path.join(targetDir, `${agentName}.md`);
       // Use the actual bmadDir if available (for when installing to temp dir)
       const actualBmadDir = config._bmadDir || bmadDir;
-      const customizePath = path.join(actualBmadDir, '_cfg', 'agents', `custom-${agentName}.customize.yaml`);
+      const customizePath = path.join(actualBmadDir, '_config', 'agents', `custom-${agentName}.customize.yaml`);
 
       // Read and compile the YAML
       try {

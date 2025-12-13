@@ -1,6 +1,6 @@
 /**
  * Custom Module Source Cache
- * Caches custom module sources under _cfg/custom/ to ensure they're never lost
+ * Caches custom module sources under _config/custom/ to ensure they're never lost
  * and can be checked into source control
  */
 
@@ -11,7 +11,7 @@ const crypto = require('node:crypto');
 class CustomModuleCache {
   constructor(bmadDir) {
     this.bmadDir = bmadDir;
-    this.customCacheDir = path.join(bmadDir, '_cfg', 'custom');
+    this.customCacheDir = path.join(bmadDir, '_config', 'custom');
     this.manifestPath = path.join(this.customCacheDir, 'cache-manifest.yaml');
   }
 

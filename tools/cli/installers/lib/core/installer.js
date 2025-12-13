@@ -38,27 +38,40 @@ class Installer {
 
   /**
    * Find the bmad installation directory in a project
-   * V6+ installations can use ANY folder name but ALWAYS have _cfg/manifest.yaml
+   * V6+ installations can use ANY folder name but ALWAYS have _config/manifest.yaml
+   * Also checks for legacy _cfg folder for migration
    * @param {string} projectDir - Project directory
-   * @returns {Promise<string>} Path to bmad directory
+   * @returns {Promise<Object>} { bmadDir: string, hasLegacyCfg: boolean }
    */
   async findBmadDir(projectDir) {
     // Check if project directory exists
     if (!(await fs.pathExists(projectDir))) {
       // Project doesn't exist yet, return default
-      return path.join(projectDir, '_bmad');
+      return { bmadDir: path.join(projectDir, '_bmad'), hasLegacyCfg: false };
     }
 
-    // V6+ strategy: Look for ANY directory with _cfg/manifest.yaml
-    // This is the definitive marker of a V6+ installation
+    // V6+ strategy: Look for ANY directory with _config/manifest.yaml or legacy _cfg/manifest.yaml
+    let bmadDir = null;
+    let hasLegacyCfg = false;
+
     try {
       const entries = await fs.readdir(projectDir, { withFileTypes: true });
       for (const entry of entries) {
         if (entry.isDirectory()) {
-          const manifestPath = path.join(projectDir, entry.name, '_cfg', 'manifest.yaml');
+          const bmadPath = path.join(projectDir, entry.name);
+
+          // Check for current _config folder
+          const manifestPath = path.join(bmadPath, '_config', 'manifest.yaml');
           if (await fs.pathExists(manifestPath)) {
-            // Found a V6+ installation
-            return path.join(projectDir, entry.name);
+            // Found a V6+ installation with current _config folder
+            return { bmadDir: bmadPath, hasLegacyCfg: false };
+          }
+
+          // Check for legacy _cfg folder
+          const legacyManifestPath = path.join(bmadPath, '_cfg', 'manifest.yaml');
+          if (await fs.pathExists(legacyManifestPath)) {
+            bmadDir = bmadPath;
+            hasLegacyCfg = true;
           }
         }
       }
@@ -66,9 +79,14 @@ class Installer {
       // Ignore errors, fall through to default
     }
 
+    // If we found a bmad directory (with or without legacy _cfg)
+    if (bmadDir) {
+      return { bmadDir, hasLegacyCfg };
+    }
+
     // No V6+ installation found, return default
     // This will be used for new installations
-    return path.join(projectDir, '_bmad');
+    return { bmadDir: path.join(projectDir, '_bmad'), hasLegacyCfg: false };
   }
 
   /**
@@ -473,10 +491,13 @@ If AgentVibes party mode is enabled, immediately trigger TTS with agent's voice:
 
       let existingBmadDir = null;
       let existingBmadFolderName = null;
+      let hasLegacyCfg = false;
 
       if (await fs.pathExists(projectDir)) {
-        existingBmadDir = await this.findBmadDir(projectDir);
+        const result = await this.findBmadDir(projectDir);
+        existingBmadDir = result.bmadDir;
         existingBmadFolderName = path.basename(existingBmadDir);
+        hasLegacyCfg = result.hasLegacyCfg;
       }
 
       // Create a project directory if it doesn't exist (user already confirmed)
@@ -500,6 +521,44 @@ If AgentVibes party mode is enabled, immediately trigger TTS with agent's voice:
       }
 
       const bmadDir = path.join(projectDir, bmadFolderName);
+
+      // Check for legacy _cfg folder and prompt for rename
+      if (hasLegacyCfg && !config._quickUpdate) {
+        spinner.stop();
+
+        console.log(chalk.yellow('\n⚠️  Legacy configuration folder detected'));
+        console.log(chalk.dim(`  Found: ${path.join(bmadDir, '_cfg')}`));
+        console.log(chalk.dim('  The configuration folder has been renamed from "_cfg" to "_config"'));
+
+        const inquirer = require('inquirer');
+        const { shouldRename } = await inquirer.prompt([
+          {
+            type: 'confirm',
+            name: 'shouldRename',
+            message: 'Would you like the installer to rename "_cfg" to "_config" for you?',
+            default: true,
+          },
+        ]);
+
+        if (!shouldRename) {
+          console.log(chalk.red('\n❌ Installation cancelled'));
+          console.log(chalk.dim('You must manually rename the "_cfg" folder to "_config" before proceeding.'));
+          return { success: false, cancelled: true };
+        }
+
+        // Perform the rename
+        spinner.start('Renaming configuration folder...');
+        try {
+          const oldCfgPath = path.join(bmadDir, '_cfg');
+          const newCfgPath = path.join(bmadDir, '_config');
+          await fs.move(oldCfgPath, newCfgPath);
+          spinner.succeed('Configuration folder renamed successfully');
+        } catch (error) {
+          spinner.fail('Failed to rename configuration folder');
+          console.error(chalk.red(`Error: ${error.message}`));
+          return { success: false, error: error.message };
+        }
+      }
 
       // Check existing installation
       spinner.text = 'Checking for existing installation...';
@@ -834,8 +893,11 @@ If AgentVibes party mode is enabled, immediately trigger TTS with agent's voice:
             customInfo = config._customModuleSources.get(moduleName);
             isCustomModule = true;
 
-            // Check if this is a cached module (source path starts with _cfg)
-            if (customInfo.sourcePath && (customInfo.sourcePath.startsWith('_cfg') || customInfo.sourcePath.includes('_cfg/custom'))) {
+            // Check if this is a cached module (source path starts with _config)
+            if (
+              customInfo.sourcePath &&
+              (customInfo.sourcePath.startsWith('_config') || customInfo.sourcePath.includes('_config/custom'))
+            ) {
               useCache = true;
               // Make sure we have the right path structure
               if (!customInfo.path) {
@@ -939,9 +1001,9 @@ If AgentVibes party mode is enabled, immediately trigger TTS with agent's voice:
               if (finalCustomContent && finalCustomContent.cachedModules) {
                 sourcePath = finalCustomContent.cachedModules.find((m) => m.id === moduleName)?.relativePath;
               } else {
-                // During update, the sourcePath is already cache-relative if it starts with _cfg
+                // During update, the sourcePath is already cache-relative if it starts with _config
                 sourcePath =
-                  customInfo.sourcePath && customInfo.sourcePath.startsWith('_cfg')
+                  customInfo.sourcePath && customInfo.sourcePath.startsWith('_config')
                     ? customInfo.sourcePath
                     : path.relative(bmadDir, customInfo.path || customInfo.sourcePath);
               }
@@ -1061,7 +1123,7 @@ If AgentVibes party mode is enabled, immediately trigger TTS with agent's voice:
       // Customize templates are now created in processAgentFiles when building YAML agents
 
       // Pre-register manifest files that will be created (except files-manifest.csv to avoid recursion)
-      const cfgDir = path.join(bmadDir, '_cfg');
+      const cfgDir = path.join(bmadDir, '_config');
       this.installedFiles.push(
         path.join(cfgDir, 'manifest.yaml'),
         path.join(cfgDir, 'workflow-manifest.csv'),
@@ -1329,7 +1391,7 @@ If AgentVibes party mode is enabled, immediately trigger TTS with agent's voice:
 
     try {
       const projectDir = path.resolve(config.directory);
-      const bmadDir = await this.findBmadDir(projectDir);
+      const { bmadDir } = await this.findBmadDir(projectDir);
       const existingInstall = await this.detector.detect(bmadDir);
 
       if (!existingInstall.installed) {
@@ -1414,7 +1476,7 @@ If AgentVibes party mode is enabled, immediately trigger TTS with agent's voice:
    */
   async getStatus(directory) {
     const projectDir = path.resolve(directory);
-    const bmadDir = await this.findBmadDir(projectDir);
+    const { bmadDir } = await this.findBmadDir(projectDir);
     return await this.detector.detect(bmadDir);
   }
 
@@ -1430,7 +1492,7 @@ If AgentVibes party mode is enabled, immediately trigger TTS with agent's voice:
    */
   async uninstall(directory) {
     const projectDir = path.resolve(directory);
-    const bmadDir = await this.findBmadDir(projectDir);
+    const { bmadDir } = await this.findBmadDir(projectDir);
 
     if (await fs.pathExists(bmadDir)) {
       await fs.remove(bmadDir);
@@ -1447,9 +1509,9 @@ If AgentVibes party mode is enabled, immediately trigger TTS with agent's voice:
    */
   async createDirectoryStructure(bmadDir) {
     await fs.ensureDir(bmadDir);
-    await fs.ensureDir(path.join(bmadDir, '_cfg'));
-    await fs.ensureDir(path.join(bmadDir, '_cfg', 'agents'));
-    await fs.ensureDir(path.join(bmadDir, '_cfg', 'custom'));
+    await fs.ensureDir(path.join(bmadDir, '_config'));
+    await fs.ensureDir(path.join(bmadDir, '_config', 'agents'));
+    await fs.ensureDir(path.join(bmadDir, '_config', 'custom'));
   }
 
   /**
@@ -1466,7 +1528,7 @@ If AgentVibes party mode is enabled, immediately trigger TTS with agent's voice:
     // Get all installed module directories
     const entries = await fs.readdir(bmadDir, { withFileTypes: true });
     const installedModules = entries
-      .filter((entry) => entry.isDirectory() && entry.name !== '_cfg' && entry.name !== 'docs')
+      .filter((entry) => entry.isDirectory() && entry.name !== '_config' && entry.name !== 'docs')
       .map((entry) => entry.name);
 
     // Generate config.yaml for each installed module
@@ -1826,9 +1888,9 @@ If AgentVibes party mode is enabled, immediately trigger TTS with agent's voice:
     // Determine project directory (parent of bmad/ directory)
     const bmadDir = path.dirname(modulePath);
     const projectDir = path.dirname(bmadDir);
-    const cfgAgentsDir = path.join(bmadDir, '_cfg', 'agents');
+    const cfgAgentsDir = path.join(bmadDir, '_config', 'agents');
 
-    // Ensure _cfg/agents directory exists
+    // Ensure _config/agents directory exists
     await fs.ensureDir(cfgAgentsDir);
 
     // Get all agent files
@@ -1917,7 +1979,7 @@ If AgentVibes party mode is enabled, immediately trigger TTS with agent's voice:
    */
   async buildStandaloneAgents(bmadDir, projectDir) {
     const standaloneAgentsPath = path.join(bmadDir, 'agents');
-    const cfgAgentsDir = path.join(bmadDir, '_cfg', 'agents');
+    const cfgAgentsDir = path.join(bmadDir, '_config', 'agents');
 
     // Check if standalone agents directory exists
     if (!(await fs.pathExists(standaloneAgentsPath))) {
@@ -2018,7 +2080,7 @@ If AgentVibes party mode is enabled, immediately trigger TTS with agent's voice:
     // Determine project directory (parent of bmad/ directory)
     const bmadDir = path.dirname(modulePath);
     const projectDir = path.dirname(bmadDir);
-    const cfgAgentsDir = path.join(bmadDir, '_cfg', 'agents');
+    const cfgAgentsDir = path.join(bmadDir, '_config', 'agents');
     const targetAgentsPath = path.join(modulePath, 'agents');
 
     // Ensure target directory exists
@@ -2143,7 +2205,7 @@ If AgentVibes party mode is enabled, immediately trigger TTS with agent's voice:
   async compileAgents(config) {
     try {
       const projectDir = path.resolve(config.directory);
-      const bmadDir = await this.findBmadDir(projectDir);
+      const { bmadDir } = await this.findBmadDir(projectDir);
 
       // Check if bmad directory exists
       if (!(await fs.pathExists(bmadDir))) {
@@ -2151,7 +2213,7 @@ If AgentVibes party mode is enabled, immediately trigger TTS with agent's voice:
       }
 
       // Get installed modules from manifest
-      const manifestPath = path.join(bmadDir, '_cfg', 'manifest.yaml');
+      const manifestPath = path.join(bmadDir, '_config', 'manifest.yaml');
       let installedModules = [];
       let manifest = null;
       if (await fs.pathExists(manifestPath)) {
@@ -2181,7 +2243,7 @@ If AgentVibes party mode is enabled, immediately trigger TTS with agent's voice:
       const entries = await fs.readdir(bmadDir, { withFileTypes: true });
 
       for (const entry of entries) {
-        if (entry.isDirectory() && entry.name !== '_cfg' && entry.name !== 'docs') {
+        if (entry.isDirectory() && entry.name !== '_config' && entry.name !== 'docs') {
           const modulePath = path.join(bmadDir, entry.name);
 
           // Special handling for standalone agents in bmad/agents/ directory
@@ -2264,7 +2326,7 @@ If AgentVibes party mode is enabled, immediately trigger TTS with agent's voice:
 
     try {
       const projectDir = path.resolve(config.directory);
-      const bmadDir = await this.findBmadDir(projectDir);
+      const { bmadDir } = await this.findBmadDir(projectDir);
 
       // Check if bmad directory exists
       if (!(await fs.pathExists(bmadDir))) {
@@ -2287,8 +2349,8 @@ If AgentVibes party mode is enabled, immediately trigger TTS with agent's voice:
           // Ensure we have an absolute sourcePath
           let absoluteSourcePath = customModule.sourcePath;
 
-          // Check if sourcePath is a cache-relative path (starts with _cfg/)
-          if (absoluteSourcePath && absoluteSourcePath.startsWith('_cfg')) {
+          // Check if sourcePath is a cache-relative path (starts with _config/)
+          if (absoluteSourcePath && absoluteSourcePath.startsWith('_config')) {
             // Convert cache-relative path to absolute path
             absoluteSourcePath = path.join(bmadDir, absoluteSourcePath);
           }
@@ -2695,7 +2757,7 @@ If AgentVibes party mode is enabled, immediately trigger TTS with agent's voice:
    * @returns {Array} Array of file entries from files-manifest.csv
    */
   async readFilesManifest(bmadDir) {
-    const filesManifestPath = path.join(bmadDir, '_cfg', 'files-manifest.csv');
+    const filesManifestPath = path.join(bmadDir, '_config', 'files-manifest.csv');
     if (!(await fs.pathExists(filesManifestPath))) {
       return [];
     }
@@ -2798,12 +2860,12 @@ If AgentVibes party mode is enabled, immediately trigger TTS with agent's voice:
             const relativePath = path.relative(bmadDir, fullPath);
             const fileName = path.basename(fullPath);
 
-            // Skip _cfg directory EXCEPT for modified agent customizations
-            if (relativePath.startsWith('_cfg/') || relativePath.startsWith('_cfg\\')) {
+            // Skip _config directory EXCEPT for modified agent customizations
+            if (relativePath.startsWith('_config/') || relativePath.startsWith('_config\\')) {
               // Special handling for .customize.yaml files - only preserve if modified
               if (relativePath.includes('/agents/') && fileName.endsWith('.customize.yaml')) {
                 // Check if the customization file has been modified from manifest
-                const manifestPath = path.join(bmadDir, '_cfg', 'manifest.yaml');
+                const manifestPath = path.join(bmadDir, '_config', 'manifest.yaml');
                 if (await fs.pathExists(manifestPath)) {
                   const crypto = require('node:crypto');
                   const currentContent = await fs.readFile(fullPath, 'utf8');
@@ -2824,7 +2886,7 @@ If AgentVibes party mode is enabled, immediately trigger TTS with agent's voice:
             }
 
             // Skip config.yaml files - these are regenerated on each install/update
-            // Users should use _cfg/agents/ override files instead
+            // Users should use _config/agents/ override files instead
             if (fileName === 'config.yaml') {
               continue;
             }
@@ -2832,8 +2894,8 @@ If AgentVibes party mode is enabled, immediately trigger TTS with agent's voice:
             if (!fileInfo) {
               // File not in manifest = custom file
               // EXCEPT: Agent .md files in module folders are generated files, not custom
-              // Only treat .md files under _cfg/agents/ as custom
-              if (!(fileName.endsWith('.md') && relativePath.includes('/agents/') && !relativePath.startsWith('_cfg/'))) {
+              // Only treat .md files under _config/agents/ as custom
+              if (!(fileName.endsWith('.md') && relativePath.includes('/agents/') && !relativePath.startsWith('_config/'))) {
                 customFiles.push(fullPath);
               }
             } else if (manifestHasHashes && fileInfo.hash) {
@@ -2866,7 +2928,7 @@ If AgentVibes party mode is enabled, immediately trigger TTS with agent's voice:
    * @param {Object} userInfo - User information including name and language
    */
   async createAgentConfigs(bmadDir, userInfo = null) {
-    const agentConfigDir = path.join(bmadDir, '_cfg', 'agents');
+    const agentConfigDir = path.join(bmadDir, '_config', 'agents');
     await fs.ensureDir(agentConfigDir);
 
     // Get all agents from all modules
@@ -2876,7 +2938,7 @@ If AgentVibes party mode is enabled, immediately trigger TTS with agent's voice:
     // Check modules for agents (including core)
     const entries = await fs.readdir(bmadDir, { withFileTypes: true });
     for (const entry of entries) {
-      if (entry.isDirectory() && entry.name !== '_cfg') {
+      if (entry.isDirectory() && entry.name !== '_config') {
         const moduleAgentsPath = path.join(bmadDir, entry.name, 'agents');
         if (await fs.pathExists(moduleAgentsPath)) {
           const agentFiles = await fs.readdir(moduleAgentsPath);
@@ -2994,7 +3056,7 @@ If AgentVibes party mode is enabled, immediately trigger TTS with agent's voice:
    * @param {Array} agentDetails - Array of agent details
    */
   async generateAgentManifest(bmadDir, agentDetails) {
-    const manifestPath = path.join(bmadDir, '_cfg', 'agent-manifest.csv');
+    const manifestPath = path.join(bmadDir, '_config', 'agent-manifest.csv');
     await AgentPartyGenerator.writeAgentParty(manifestPath, agentDetails, { forWeb: false });
   }
 

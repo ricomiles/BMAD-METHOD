@@ -242,15 +242,15 @@ class ModuleManager {
         }
       }
 
-      // Also check for cached custom modules in _cfg/custom/
+      // Also check for cached custom modules in _config/custom/
       if (this.bmadDir) {
-        const customCacheDir = path.join(this.bmadDir, '_cfg', 'custom');
+        const customCacheDir = path.join(this.bmadDir, '_config', 'custom');
         if (await fs.pathExists(customCacheDir)) {
           const cacheEntries = await fs.readdir(customCacheDir, { withFileTypes: true });
           for (const entry of cacheEntries) {
             if (entry.isDirectory()) {
               const cachePath = path.join(customCacheDir, entry.name);
-              const moduleInfo = await this.getModuleInfo(cachePath, entry.name, '_cfg/custom');
+              const moduleInfo = await this.getModuleInfo(cachePath, entry.name, '_config/custom');
               if (moduleInfo && !modules.some((m) => m.id === moduleInfo.id) && !customModules.some((m) => m.id === moduleInfo.id)) {
                 moduleInfo.isCustom = true;
                 moduleInfo.fromCache = true;
@@ -785,7 +785,7 @@ class ModuleManager {
   async compileModuleAgents(sourcePath, targetPath, moduleName, bmadDir) {
     const sourceAgentsPath = path.join(sourcePath, 'agents');
     const targetAgentsPath = path.join(targetPath, 'agents');
-    const cfgAgentsDir = path.join(bmadDir, '_cfg', 'agents');
+    const cfgAgentsDir = path.join(bmadDir, '_config', 'agents');
 
     // Check if agents directory exists in source
     if (!(await fs.pathExists(sourceAgentsPath))) {
@@ -827,7 +827,7 @@ class ModuleManager {
             const originalHash = crypto.createHash('sha256').update(customizeContent).digest('hex');
 
             // Store in main manifest
-            const manifestPath = path.join(bmadDir, '_cfg', 'manifest.yaml');
+            const manifestPath = path.join(bmadDir, '_config', 'manifest.yaml');
             let manifestData = {};
             if (await fs.pathExists(manifestPath)) {
               const manifestContent = await fs.readFile(manifestPath, 'utf8');

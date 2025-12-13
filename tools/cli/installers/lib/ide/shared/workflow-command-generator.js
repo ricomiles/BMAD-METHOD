@@ -224,7 +224,7 @@ When running any workflow:
   }
 
   async loadWorkflowManifest(bmadDir) {
-    const manifestPath = path.join(bmadDir, '_cfg', 'workflow-manifest.csv');
+    const manifestPath = path.join(bmadDir, '_config', 'workflow-manifest.csv');
 
     if (!(await fs.pathExists(manifestPath))) {
       return null;

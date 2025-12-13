@@ -28,7 +28,7 @@ BMad Core is a modular AI agent framework with intelligent installation, platfor
 ```
 project-root/
 ├── _bmad/             # Centralized installation
-│   ├── _cfg/                  # Configuration
+│   ├── _config/                  # Configuration
 │   │   ├── agents/            # Agent configs
 │   │   └── agent-manifest.csv # Agent manifest
 │   ├── core/                  # Core module
@@ -265,7 +265,7 @@ Extractable config nodes:
 </agent>
 ```
 
-Generated in: `bmad/_cfg/agents/{module}-{agent}.md`
+Generated in: `bmad/_config/agents/{module}-{agent}.md`
 
 ## Troubleshooting
 
@@ -290,7 +290,7 @@ bmad status -v      # Detailed status
 ### Best Practices
 
 1. Run from project root
-2. Backup `_bmad/_cfg/` before updates
+2. Backup `_bmad/_config/` before updates
 3. Use interactive mode for guidance
 4. Review generated configs post-install
 

@@ -92,7 +92,7 @@ class Detector {
       // Fallback: scan directory for modules (legacy installations without manifest)
       const entries = await fs.readdir(bmadDir, { withFileTypes: true });
       for (const entry of entries) {
-        if (entry.isDirectory() && entry.name !== 'core' && entry.name !== '_cfg') {
+        if (entry.isDirectory() && entry.name !== 'core' && entry.name !== '_config') {
           const modulePath = path.join(bmadDir, entry.name);
           const moduleConfigPath = path.join(modulePath, 'config.yaml');
 
@@ -205,7 +205,7 @@ class Detector {
   /**
    * Detect legacy BMAD v4 footprints (case-sensitive path checks)
    * V4 used _bmad-method as default folder name
-   * V6+ uses configurable folder names and ALWAYS has _cfg/manifest.yaml with installation.version
+   * V6+ uses configurable folder names and ALWAYS has _config/manifest.yaml with installation.version
    * @param {string} projectDir - Project directory to check
    * @returns {{ hasLegacyV4: boolean, offenders: string[] }}
    */
@@ -232,7 +232,7 @@ class Detector {
 
     // Helper: check if a directory is a V6+ installation
     const isV6Installation = async (dirPath) => {
-      const manifestPath = path.join(dirPath, '_cfg', 'manifest.yaml');
+      const manifestPath = path.join(dirPath, '_config', 'manifest.yaml');
       if (!(await fs.pathExists(manifestPath))) {
         return false;
       }
@@ -250,7 +250,7 @@ class Detector {
     const offenders = [];
 
     // Strategy:
-    // 1. First scan for ANY V6+ installation (_cfg/manifest.yaml)
+    // 1. First scan for ANY V6+ installation (_config/manifest.yaml)
     // 2. If V6+ found → don't flag anything (user is already on V6+)
     // 3. If NO V6+ found → flag folders with "bmad" in name as potential V4 legacy
 
@@ -271,7 +271,7 @@ class Detector {
             continue; // Skip empty folders
           }
 
-          // Check if it's a V6+ installation by looking for _cfg/manifest.yaml
+          // Check if it's a V6+ installation by looking for _config/manifest.yaml
           // This works for ANY folder name (not just bmad-prefixed)
           const isV6 = await isV6Installation(fullPath);
 

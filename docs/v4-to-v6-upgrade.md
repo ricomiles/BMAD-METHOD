@@ -68,7 +68,7 @@ your-project/
     ├── bmm/             # BMad Method (software/game dev)
     ├── bmb/             # BMad Builder (create agents/workflows)
     ├── cis/             # Creative Intelligence Suite
-    └── _cfg/            # Your customizations
+    └── _config/            # Your customizations
         └── agents/      # Agent customization files
 ```
 
@@ -114,11 +114,11 @@ In v4, you may have modified agent files directly in `_bmad-*` folders.
 
 ### v6 Agent Customization
 
-**All customizations** now go in `_bmad/_cfg/agents/` using customize files:
+**All customizations** now go in `_bmad/_config/agents/` using customize files:
 
 **Example: Renaming an agent and changing communication style**
 
-File: `_bmad/_cfg/agents/bmm-pm.customize.yaml`
+File: `_bmad/_config/agents/bmm-pm.customize.yaml`
 
 ```yaml
 # Customize the PM agent
@@ -134,7 +134,7 @@ persona:
 **How it works:**
 
 - Base agent: `_bmad/bmm/agents/pm.md`
-- Customization: `_bmad/_cfg/agents/bmm-pm.customize.yaml`
+- Customization: `_bmad/_config/agents/bmm-pm.customize.yaml`
 - Result: Agent uses your custom name and style, but updates don't overwrite your changes
 
 ---
@@ -214,7 +214,7 @@ Since you are migrating an existing project from v4, it's most likely **Level 3 
 - [ ] v4 folders backed up to `v4-backup/`
 - [ ] v6 installed to `_bmad/` folder
 - [ ] `workflow-init` run with correct project level selected
-- [ ] Agent customizations migrated to `_bmad/_cfg/agents/` if needed
+- [ ] Agent customizations migrated to `_bmad/_config/agents/` if needed
 - [ ] IDE integration working (test by listing agents)
 - [ ] For active development: `sprint-planning` workflow executed
 
