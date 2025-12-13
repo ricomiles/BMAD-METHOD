@@ -33,10 +33,101 @@ class UI {
       await installer.handleLegacyV4Migration(confirmedDirectory, legacyV4);
     }
 
-    // Check if there's an existing BMAD installation
-    const fs = require('fs-extra');
-    const path = require('node:path');
-    const bmadDir = await installer.findBmadDir(confirmedDirectory);
+    // Check for legacy folders and prompt for rename before showing any menus
+    let hasLegacyCfg = false;
+    let hasLegacyBmadFolder = false;
+    let bmadDir = null;
+    let legacyBmadPath = null;
+
+    // First check for legacy .bmad folder (instead of _bmad)
+    const entries = await fs.readdir(confirmedDirectory, { withFileTypes: true });
+    for (const entry of entries) {
+      if (entry.isDirectory() && entry.name === '.bmad') {
+        hasLegacyBmadFolder = true;
+        legacyBmadPath = path.join(confirmedDirectory, '.bmad');
+        bmadDir = legacyBmadPath;
+
+        // Check if it has _cfg folder
+        const cfgPath = path.join(legacyBmadPath, '_cfg');
+        if (await fs.pathExists(cfgPath)) {
+          hasLegacyCfg = true;
+        }
+        break;
+      }
+    }
+
+    // If no .bmad found, check for current installations
+    if (!hasLegacyBmadFolder) {
+      const bmadResult = await installer.findBmadDir(confirmedDirectory);
+      bmadDir = bmadResult.bmadDir;
+      hasLegacyCfg = bmadResult.hasLegacyCfg;
+    }
+
+    if (hasLegacyBmadFolder || hasLegacyCfg) {
+      console.log(chalk.yellow('\n⚠️  Legacy folder structure detected'));
+
+      let message = 'The following folders need to be renamed:\n';
+      if (hasLegacyBmadFolder) {
+        message += chalk.dim(`  • ".bmad" → "_bmad"\n`);
+      }
+      if (hasLegacyCfg) {
+        message += chalk.dim(`  • "_cfg" → "_config"\n`);
+      }
+      console.log(message);
+
+      const { shouldRename } = await inquirer.prompt([
+        {
+          type: 'confirm',
+          name: 'shouldRename',
+          message: 'Would you like the installer to rename these folders for you?',
+          default: true,
+        },
+      ]);
+
+      if (!shouldRename) {
+        console.log(chalk.red('\n❌ Installation cancelled'));
+        console.log(chalk.dim('You must manually rename the folders before proceeding:'));
+        if (hasLegacyBmadFolder) {
+          console.log(chalk.dim(`  • Rename ".bmad" to "_bmad"`));
+        }
+        if (hasLegacyCfg) {
+          console.log(chalk.dim(`  • Rename "_cfg" to "_config"`));
+        }
+        process.exit(0);
+        return;
+      }
+
+      // Perform the renames
+      const ora = require('ora');
+      const spinner = ora('Updating folder structure...').start();
+
+      try {
+        // First rename .bmad to _bmad if needed
+        if (hasLegacyBmadFolder) {
+          const newBmadPath = path.join(confirmedDirectory, '_bmad');
+          await fs.move(legacyBmadPath, newBmadPath);
+          bmadDir = newBmadPath;
+          spinner.succeed('Renamed ".bmad" to "_bmad"');
+        }
+
+        // Then rename _cfg to _config if needed
+        if (hasLegacyCfg) {
+          spinner.start('Renaming configuration folder...');
+          const oldCfgPath = path.join(bmadDir, '_cfg');
+          const newCfgPath = path.join(bmadDir, '_config');
+          await fs.move(oldCfgPath, newCfgPath);
+          spinner.succeed('Renamed "_cfg" to "_config"');
+        }
+
+        spinner.succeed('Folder structure updated successfully');
+      } catch (error) {
+        spinner.fail('Failed to update folder structure');
+        console.error(chalk.red(`Error: ${error.message}`));
+        process.exit(1);
+      }
+    }
+
+    // Check if there's an existing BMAD installation (after any folder renames)
     const hasExistingInstall = await fs.pathExists(bmadDir);
 
     // Always ask for custom content, but we'll handle it differently for new installs
@@ -190,7 +281,8 @@ class UI {
     const { Installer } = require('../installers/lib/core/installer');
     const detector = new Detector();
     const installer = new Installer();
-    const bmadDir = await installer.findBmadDir(projectDir || process.cwd());
+    const bmadResult = await installer.findBmadDir(projectDir || process.cwd());
+    const bmadDir = bmadResult.bmadDir;
     const existingInstall = await detector.detect(bmadDir);
     const configuredIdes = existingInstall.ides || [];
 

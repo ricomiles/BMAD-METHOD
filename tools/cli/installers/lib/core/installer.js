@@ -491,13 +491,11 @@ If AgentVibes party mode is enabled, immediately trigger TTS with agent's voice:
 
       let existingBmadDir = null;
       let existingBmadFolderName = null;
-      let hasLegacyCfg = false;
 
       if (await fs.pathExists(projectDir)) {
         const result = await this.findBmadDir(projectDir);
         existingBmadDir = result.bmadDir;
         existingBmadFolderName = path.basename(existingBmadDir);
-        hasLegacyCfg = result.hasLegacyCfg;
       }
 
       // Create a project directory if it doesn't exist (user already confirmed)
@@ -521,44 +519,6 @@ If AgentVibes party mode is enabled, immediately trigger TTS with agent's voice:
       }
 
       const bmadDir = path.join(projectDir, bmadFolderName);
-
-      // Check for legacy _cfg folder and prompt for rename
-      if (hasLegacyCfg && !config._quickUpdate) {
-        spinner.stop();
-
-        console.log(chalk.yellow('\n⚠️  Legacy configuration folder detected'));
-        console.log(chalk.dim(`  Found: ${path.join(bmadDir, '_cfg')}`));
-        console.log(chalk.dim('  The configuration folder has been renamed from "_cfg" to "_config"'));
-
-        const inquirer = require('inquirer');
-        const { shouldRename } = await inquirer.prompt([
-          {
-            type: 'confirm',
-            name: 'shouldRename',
-            message: 'Would you like the installer to rename "_cfg" to "_config" for you?',
-            default: true,
-          },
-        ]);
-
-        if (!shouldRename) {
-          console.log(chalk.red('\n❌ Installation cancelled'));
-          console.log(chalk.dim('You must manually rename the "_cfg" folder to "_config" before proceeding.'));
-          return { success: false, cancelled: true };
-        }
-
-        // Perform the rename
-        spinner.start('Renaming configuration folder...');
-        try {
-          const oldCfgPath = path.join(bmadDir, '_cfg');
-          const newCfgPath = path.join(bmadDir, '_config');
-          await fs.move(oldCfgPath, newCfgPath);
-          spinner.succeed('Configuration folder renamed successfully');
-        } catch (error) {
-          spinner.fail('Failed to rename configuration folder');
-          console.error(chalk.red(`Error: ${error.message}`));
-          return { success: false, error: error.message };
-        }
-      }
 
       // Check existing installation
       spinner.text = 'Checking for existing installation...';

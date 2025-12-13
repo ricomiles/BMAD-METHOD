@@ -20,8 +20,8 @@ document_output_language:
   result: "{value}"
 
 output_folder:
-  prompt: "Where should AI generated artifacts be saved across all modules?"
-  default: "bmad-output"
+  prompt: "Where should default output files be saved unless specified in other modules?"
+  default: "_bmad-output"
   result: "{project-root}/{value}"
 
 bmad_memory:

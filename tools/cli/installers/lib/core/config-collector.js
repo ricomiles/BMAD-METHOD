@@ -105,7 +105,13 @@ class ConfigCollector {
 
     for (const entry of entries) {
       if (entry.isDirectory()) {
+        // Skip the _config directory - it's for system use
+        if (entry.name === '_config' || entry.name === '_memory') {
+          continue;
+        }
+
         const moduleConfigPath = path.join(bmadDir, entry.name, 'config.yaml');
+
         if (await fs.pathExists(moduleConfigPath)) {
           try {
             const content = await fs.readFile(moduleConfigPath, 'utf8');
