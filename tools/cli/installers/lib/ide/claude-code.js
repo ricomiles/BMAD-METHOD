@@ -44,7 +44,7 @@ class ClaudeCodeSetup extends BaseIdeSetup {
       const injectionConfigPath = path.join(sourceModulesPath, moduleName, 'sub-modules', 'claude-code', 'injections.yaml');
 
       if (await this.exists(injectionConfigPath)) {
-        const yaml = require('js-yaml');
+        const yaml = require('yaml');
 
         try {
           // Load injection configuration

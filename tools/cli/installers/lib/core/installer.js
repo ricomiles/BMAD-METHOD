@@ -18,6 +18,7 @@ const { CLIUtils } = require('../../../lib/cli-utils');
 const { ManifestGenerator } = require('./manifest-generator');
 const { IdeConfigManager } = require('./ide-config-manager');
 const { CustomHandler } = require('../custom/handler');
+const { filterCustomizationData } = require('../../../lib/agent/compiler');
 
 class Installer {
   constructor() {
@@ -1457,7 +1458,7 @@ If AgentVibes party mode is enabled, immediately trigger TTS with agent's voice:
    * @param {Object} moduleConfigs - Collected configuration values
    */
   async generateModuleConfigs(bmadDir, moduleConfigs) {
-    const yaml = require('js-yaml');
+    const yaml = require('yaml');
 
     // Extract core config values to share with other modules
     const coreConfig = moduleConfigs.core || {};
@@ -1504,11 +1505,10 @@ If AgentVibes party mode is enabled, immediately trigger TTS with agent's voice:
         }
 
         // Convert config to YAML
-        let yamlContent = yaml.dump(finalConfig, {
+        let yamlContent = yaml.stringify(finalConfig, {
           indent: 2,
-          lineWidth: -1,
-          noRefs: true,
-          sortKeys: false,
+          lineWidth: 0,
+          minContentWidth: 0,
         });
 
         // If we have core values, reorganize the YAML to group them with their comment
@@ -1949,7 +1949,7 @@ If AgentVibes party mode is enabled, immediately trigger TTS with agent's voice:
 
       if (customizeExists) {
         const customizeContent = await fs.readFile(customizePath, 'utf8');
-        const yaml = require('js-yaml');
+        const yaml = require('yaml');
         const customizeYaml = yaml.parse(customizeContent);
 
         // Detect what fields are customized (similar to rebuildAgentFiles)
@@ -2040,8 +2040,8 @@ If AgentVibes party mode is enabled, immediately trigger TTS with agent's voice:
 
         if (customizeExists) {
           const customizeContent = await fs.readFile(customizePath, 'utf8');
-          const yaml = require('js-yaml');
-          const customizeYaml = yaml.load(customizeContent);
+          const yaml = require('yaml');
+          const customizeYaml = yaml.parse(customizeContent);
 
           // Detect what fields are customized
           if (customizeYaml) {
@@ -2085,18 +2085,21 @@ If AgentVibes party mode is enabled, immediately trigger TTS with agent's voice:
           customizeData = yaml.parse(customizeContent);
         }
 
-        // Build agent answers from customize data
+        // Build agent answers from customize data (filter empty values)
         const answers = {};
         if (customizeData.persona) {
-          Object.assign(answers, customizeData.persona);
+          Object.assign(answers, filterCustomizationData(customizeData.persona));
         }
         if (customizeData.agent?.metadata) {
-          Object.assign(answers, { metadata: customizeData.agent.metadata });
+          const filteredMetadata = filterCustomizationData(customizeData.agent.metadata);
+          if (Object.keys(filteredMetadata).length > 0) {
+            Object.assign(answers, { metadata: filteredMetadata });
+          }
         }
-        if (customizeData.critical_actions) {
+        if (customizeData.critical_actions && customizeData.critical_actions.length > 0) {
           answers.critical_actions = customizeData.critical_actions;
         }
-        if (customizeData.memories) {
+        if (customizeData.memories && customizeData.memories.length > 0) {
           answers.memories = customizeData.memories;
         }
 
@@ -2153,8 +2156,8 @@ If AgentVibes party mode is enabled, immediately trigger TTS with agent's voice:
       let manifest = null;
       if (await fs.pathExists(manifestPath)) {
         const manifestContent = await fs.readFile(manifestPath, 'utf8');
-        const yaml = require('js-yaml');
-        manifest = yaml.load(manifestContent);
+        const yaml = require('yaml');
+        manifest = yaml.parse(manifestContent);
         installedModules = manifest.modules || [];
       }
 

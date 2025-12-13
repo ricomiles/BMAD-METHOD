@@ -1,9 +1,10 @@
 const path = require('node:path');
 const fs = require('fs-extra');
-const yaml = require('js-yaml');
+const yaml = require('yaml');
 const chalk = require('chalk');
 const { XmlHandler } = require('../../../lib/xml-handler');
 const { getProjectRoot, getSourcePath, getModulePath } = require('../../../lib/project-root');
+const { filterCustomizationData } = require('../../../lib/agent/compiler');
 
 /**
  * Manages the installation, updating, and removal of BMAD modules.
@@ -12,7 +13,7 @@ const { getProjectRoot, getSourcePath, getModulePath } = require('../../../lib/p
  *
  * @class ModuleManager
  * @requires fs-extra
- * @requires js-yaml
+ * @requires yaml
  * @requires chalk
  * @requires XmlHandler
  *
@@ -312,7 +313,7 @@ class ModuleManager {
     // Read module config for metadata
     try {
       const configContent = await fs.readFile(configPath, 'utf8');
-      const config = yaml.load(configContent);
+      const config = yaml.parse(configContent);
 
       // Use the code property as the id if available
       if (config.code) {
@@ -387,7 +388,7 @@ class ModuleManager {
       if (configPath) {
         try {
           const configContent = await fs.readFile(configPath, 'utf8');
-          const config = yaml.load(configContent);
+          const config = yaml.parse(configContent);
           if (config.code === moduleName) {
             return modulePath;
           }
@@ -427,14 +428,14 @@ class ModuleManager {
     if (await fs.pathExists(rootCustomConfigPath)) {
       try {
         const customContent = await fs.readFile(rootCustomConfigPath, 'utf8');
-        customConfig = yaml.load(customContent);
+        customConfig = yaml.parse(customContent);
       } catch (error) {
         console.warn(chalk.yellow(`Warning: Failed to read custom.yaml for ${moduleName}:`, error.message));
       }
     } else if (await fs.pathExists(moduleInstallerCustomPath)) {
       try {
         const customContent = await fs.readFile(moduleInstallerCustomPath, 'utf8');
-        customConfig = yaml.load(customContent);
+        customConfig = yaml.parse(customContent);
       } catch (error) {
         console.warn(chalk.yellow(`Warning: Failed to read custom.yaml for ${moduleName}:`, error.message));
       }
@@ -569,7 +570,7 @@ class ModuleManager {
     if (await fs.pathExists(configPath)) {
       try {
         const configContent = await fs.readFile(configPath, 'utf8');
-        const config = yaml.load(configContent);
+        const config = yaml.parse(configContent);
         Object.assign(moduleInfo, config);
       } catch (error) {
         console.warn(`Failed to read installed module config:`, error.message);
@@ -700,7 +701,7 @@ class ModuleManager {
 
     try {
       // First check if web_bundle exists by parsing
-      const workflowConfig = yaml.load(yamlContent);
+      const workflowConfig = yaml.parse(yamlContent);
 
       if (workflowConfig.web_bundle === undefined) {
         // No web_bundle section, just write (placeholders already replaced above)
@@ -827,20 +828,23 @@ class ModuleManager {
         let answers = {};
         if (await fs.pathExists(customizePath)) {
           const customizeContent = await fs.readFile(customizePath, 'utf8');
-          const customizeData = yaml.load(customizeContent);
+          const customizeData = yaml.parse(customizeContent);
           customizedFields = customizeData.customized_fields || [];
 
-          // Build answers object from customizations
+          // Build answers object from customizations (filter empty values)
           if (customizeData.persona) {
-            Object.assign(answers, customizeData.persona);
+            Object.assign(answers, filterCustomizationData(customizeData.persona));
           }
           if (customizeData.agent?.metadata) {
-            Object.assign(answers, { metadata: customizeData.agent.metadata });
+            const filteredMetadata = filterCustomizationData(customizeData.agent.metadata);
+            if (Object.keys(filteredMetadata).length > 0) {
+              Object.assign(answers, { metadata: filteredMetadata });
+            }
           }
-          if (customizeData.critical_actions) {
+          if (customizeData.critical_actions && customizeData.critical_actions.length > 0) {
             answers.critical_actions = customizeData.critical_actions;
           }
-          if (customizeData.memories) {
+          if (customizeData.memories && customizeData.memories.length > 0) {
             answers.memories = customizeData.memories;
           }
         }
@@ -852,7 +856,7 @@ class ModuleManager {
         if (await fs.pathExists(coreConfigPath)) {
           const yaml = require('yaml');
           const coreConfigContent = await fs.readFile(coreConfigPath, 'utf8');
-          coreConfig = yaml.load(coreConfigContent);
+          coreConfig = yaml.parse(coreConfigContent);
         }
 
         // Check if agent has sidecar
@@ -1017,7 +1021,7 @@ class ModuleManager {
 
     for (const agentFile of yamlFiles) {
       const agentPath = path.join(sourceAgentsPath, agentFile);
-      const agentYaml = yaml.load(await fs.readFile(agentPath, 'utf8'));
+      const agentYaml = yaml.parse(await fs.readFile(agentPath, 'utf8'));
 
       // Check if agent has menu items with workflow-install
       const menuItems = agentYaml?.agent?.menu || [];

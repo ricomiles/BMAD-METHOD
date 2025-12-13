@@ -11,7 +11,7 @@ class Manifest {
    */
   async create(bmadDir, data, installedFiles = []) {
     const manifestPath = path.join(bmadDir, '_cfg', 'manifest.yaml');
-    const yaml = require('js-yaml');
+    const yaml = require('yaml');
 
     // Ensure _cfg directory exists
     await fs.ensureDir(path.dirname(manifestPath));
@@ -28,10 +28,9 @@ class Manifest {
     };
 
     // Write YAML manifest
-    const yamlContent = yaml.dump(manifestData, {
+    const yamlContent = yaml.stringify(manifestData, {
       indent: 2,
-      lineWidth: -1,
-      noRefs: true,
+      lineWidth: 0,
       sortKeys: false,
     });
 
@@ -48,12 +47,12 @@ class Manifest {
    */
   async read(bmadDir) {
     const yamlPath = path.join(bmadDir, '_cfg', 'manifest.yaml');
-    const yaml = require('js-yaml');
+    const yaml = require('yaml');
 
     if (await fs.pathExists(yamlPath)) {
       try {
         const content = await fs.readFile(yamlPath, 'utf8');
-        const manifestData = yaml.load(content);
+        const manifestData = yaml.parse(content);
 
         // Flatten the structure for compatibility with existing code
         return {
@@ -79,7 +78,7 @@ class Manifest {
    * @param {Array} installedFiles - Updated list of installed files
    */
   async update(bmadDir, updates, installedFiles = null) {
-    const yaml = require('js-yaml');
+    const yaml = require('yaml');
     const manifest = (await this.read(bmadDir)) || {};
 
     // Merge updates
@@ -101,10 +100,9 @@ class Manifest {
     const manifestPath = path.join(bmadDir, '_cfg', 'manifest.yaml');
     await fs.ensureDir(path.dirname(manifestPath));
 
-    const yamlContent = yaml.dump(manifestData, {
+    const yamlContent = yaml.stringify(manifestData, {
       indent: 2,
-      lineWidth: -1,
-      noRefs: true,
+      lineWidth: 0,
       sortKeys: false,
     });
 
@@ -526,9 +524,9 @@ class Manifest {
 
       try {
         if (await fs.pathExists(configPath)) {
-          const yaml = require('js-yaml');
+          const yaml = require('yaml');
           const content = await fs.readFile(configPath, 'utf8');
-          configs[moduleName] = yaml.load(content);
+          configs[moduleName] = yaml.parse(content);
         }
       } catch (error) {
         console.warn(`Could not load config for module ${moduleName}:`, error.message);

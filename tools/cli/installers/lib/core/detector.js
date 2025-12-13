@@ -1,6 +1,6 @@
 const path = require('node:path');
 const fs = require('fs-extra');
-const yaml = require('js-yaml');
+const yaml = require('yaml');
 const { Manifest } = require('./manifest');
 
 class Detector {
@@ -237,7 +237,7 @@ class Detector {
         return false;
       }
       try {
-        const yaml = require('js-yaml');
+        const yaml = require('yaml');
         const manifestContent = await fs.readFile(manifestPath, 'utf8');
         const manifest = yaml.parse(manifestContent);
         // V6+ manifest has installation.version

@@ -1,6 +1,6 @@
 const path = require('node:path');
 const fs = require('fs-extra');
-const yaml = require('js-yaml');
+const yaml = require('yaml');
 const chalk = require('chalk');
 const inquirer = require('inquirer');
 const { getProjectRoot, getModulePath } = require('../../../lib/project-root');
@@ -109,7 +109,7 @@ class ConfigCollector {
         if (await fs.pathExists(moduleConfigPath)) {
           try {
             const content = await fs.readFile(moduleConfigPath, 'utf8');
-            const moduleConfig = yaml.load(content);
+            const moduleConfig = yaml.parse(content);
             if (moduleConfig) {
               this.existingConfig[entry.name] = moduleConfig;
               foundAny = true;
@@ -238,7 +238,7 @@ class ConfigCollector {
     }
 
     const configContent = await fs.readFile(configPath, 'utf8');
-    const moduleConfig = yaml.load(configContent);
+    const moduleConfig = yaml.parse(configContent);
 
     if (!moduleConfig) {
       return false;
@@ -514,7 +514,7 @@ class ConfigCollector {
     }
 
     const configContent = await fs.readFile(configPath, 'utf8');
-    const moduleConfig = yaml.load(configContent);
+    const moduleConfig = yaml.parse(configContent);
 
     if (!moduleConfig) {
       return;

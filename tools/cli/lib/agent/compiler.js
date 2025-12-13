@@ -313,7 +313,11 @@ async function compileAgent(yamlContent, answers = {}, agentName = '', targetPat
   // Apply customization merges before template processing
   // Handle metadata overrides (like name)
   if (answers.metadata) {
-    agentYaml.agent.metadata = { ...agentYaml.agent.metadata, ...answers.metadata };
+    // Filter out empty values from metadata
+    const filteredMetadata = filterCustomizationData(answers.metadata);
+    if (Object.keys(filteredMetadata).length > 0) {
+      agentYaml.agent.metadata = { ...agentYaml.agent.metadata, ...filteredMetadata };
+    }
     // Remove from answers so it doesn't get processed as template variables
     const { metadata, ...templateAnswers } = answers;
     answers = templateAnswers;
@@ -351,6 +355,36 @@ async function compileAgent(yamlContent, answers = {}, agentName = '', targetPat
     metadata: cleanYaml.agent.metadata,
     processedYaml: cleanYaml,
   };
+}
+
+/**
+ * Filter customization data to remove empty/null values
+ * @param {Object} data - Raw customization data
+ * @returns {Object} Filtered customization data
+ */
+function filterCustomizationData(data) {
+  const filtered = {};
+
+  for (const [key, value] of Object.entries(data)) {
+    if (value === null || value === undefined || value === '') {
+      continue; // Skip null/undefined/empty values
+    }
+
+    if (Array.isArray(value)) {
+      if (value.length > 0) {
+        filtered[key] = value;
+      }
+    } else if (typeof value === 'object') {
+      const nested = filterCustomizationData(value);
+      if (Object.keys(nested).length > 0) {
+        filtered[key] = nested;
+      }
+    } else {
+      filtered[key] = value;
+    }
+  }
+
+  return filtered;
 }
 
 /**
@@ -431,4 +465,5 @@ module.exports = {
   buildPersonaXml,
   buildPromptsXml,
   buildMenuXml,
+  filterCustomizationData,
 };

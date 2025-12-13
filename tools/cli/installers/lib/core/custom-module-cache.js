@@ -31,7 +31,7 @@ class CustomModuleCache {
     }
 
     const content = await fs.readFile(this.manifestPath, 'utf8');
-    const yaml = require('js-yaml');
+    const yaml = require('yaml');
     return yaml.parse(content) || {};
   }
 
@@ -39,11 +39,10 @@ class CustomModuleCache {
    * Update cache manifest
    */
   async updateCacheManifest(manifest) {
-    const yaml = require('js-yaml');
-    const content = yaml.dump(manifest, {
+    const yaml = require('yaml');
+    const content = yaml.stringify(manifest, {
       indent: 2,
-      lineWidth: -1,
-      noRefs: true,
+      lineWidth: 0,
       sortKeys: false,
     });
 

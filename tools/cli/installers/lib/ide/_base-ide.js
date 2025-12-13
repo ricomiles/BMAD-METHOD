@@ -346,7 +346,7 @@ class BaseIdeSetup {
       } else if (entry.isFile() && entry.name === 'workflow.yaml') {
         // Read workflow.yaml to get name and standalone property
         try {
-          const yaml = require('js-yaml');
+          const yaml = require('yaml');
           const content = await fs.readFile(fullPath, 'utf8');
           const workflowData = yaml.parse(content);
 
@@ -454,7 +454,7 @@ class BaseIdeSetup {
               // Check for standalone: true in YAML frontmatter
               const frontmatterMatch = content.match(/^---\s*\n([\s\S]*?)\n---/);
               if (frontmatterMatch) {
-                const yaml = require('js-yaml');
+                const yaml = require('yaml');
                 try {
                   const frontmatter = yaml.parse(frontmatterMatch[1]);
                   standalone = frontmatter.standalone === true;

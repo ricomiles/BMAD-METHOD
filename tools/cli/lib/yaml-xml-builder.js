@@ -1,4 +1,4 @@
-const yaml = require('js-yaml');
+const yaml = require('yaml');
 const fs = require('fs-extra');
 const path = require('node:path');
 const crypto = require('node:crypto');
@@ -64,13 +64,13 @@ class YamlXmlBuilder {
   async loadAndMergeAgent(agentYamlPath, customizeYamlPath = null) {
     // Load base agent
     const agentContent = await fs.readFile(agentYamlPath, 'utf8');
-    const agentYaml = yaml.load(agentContent);
+    const agentYaml = yaml.parse(agentContent);
 
     // Load customization if exists
     let merged = agentYaml;
     if (customizeYamlPath && (await fs.pathExists(customizeYamlPath))) {
       const customizeContent = await fs.readFile(customizeYamlPath, 'utf8');
-      const customizeYaml = yaml.load(customizeContent);
+      const customizeYaml = yaml.parse(customizeContent);
 
       if (customizeYaml) {
         // Special handling: persona fields are merged, but only non-empty values override

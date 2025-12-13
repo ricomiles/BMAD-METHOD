@@ -1,6 +1,6 @@
 const path = require('node:path');
 const fs = require('fs-extra');
-const yaml = require('js-yaml');
+const yaml = require('yaml');
 
 /**
  * Manages IDE configuration persistence
@@ -61,10 +61,9 @@ class IdeConfigManager {
       configuration: configuration || {},
     };
 
-    const yamlContent = yaml.dump(configData, {
+    const yamlContent = yaml.stringify(configData, {
       indent: 2,
-      lineWidth: -1,
-      noRefs: true,
+      lineWidth: 0,
       sortKeys: false,
     });
 
@@ -88,7 +87,7 @@ class IdeConfigManager {
 
     try {
       const content = await fs.readFile(configPath, 'utf8');
-      const config = yaml.load(content);
+      const config = yaml.parse(content);
       return config;
     } catch (error) {
       console.warn(`Warning: Failed to load IDE config for ${ideName}:`, error.message);

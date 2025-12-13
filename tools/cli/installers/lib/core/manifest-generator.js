@@ -1,6 +1,6 @@
 const path = require('node:path');
 const fs = require('fs-extra');
-const yaml = require('js-yaml');
+const yaml = require('yaml');
 const crypto = require('node:crypto');
 const { getSourcePath, getModulePath } = require('../../../lib/project-root');
 
@@ -480,10 +480,9 @@ class ManifestGenerator {
       ides: this.selectedIdes,
     };
 
-    const yamlStr = yaml.dump(manifest, {
+    const yamlStr = yaml.stringify(manifest, {
       indent: 2,
-      lineWidth: -1,
-      noRefs: true,
+      lineWidth: 0,
       sortKeys: false,
     });
 

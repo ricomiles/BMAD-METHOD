@@ -1,7 +1,7 @@
 const path = require('node:path');
 const fs = require('fs-extra');
 const chalk = require('chalk');
-const yaml = require('js-yaml');
+const yaml = require('yaml');
 const { FileOps } = require('../../../lib/file-ops');
 const { XmlHandler } = require('../../../lib/xml-handler');
 

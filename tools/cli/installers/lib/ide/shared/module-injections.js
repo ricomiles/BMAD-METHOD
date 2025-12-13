@@ -1,6 +1,6 @@
 const path = require('node:path');
 const fs = require('fs-extra');
-const yaml = require('js-yaml');
+const yaml = require('yaml');
 const { glob } = require('glob');
 const { getSourcePath } = require('../../../../lib/project-root');
 
