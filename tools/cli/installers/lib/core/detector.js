@@ -135,7 +135,7 @@ class Detector {
   }
 
   /**
-   * Detect legacy installation (.bmad-method, .bmm, .cis)
+   * Detect legacy installation (_bmad-method, .bmm, .cis)
    * @param {string} projectDir - Project directory to check
    * @returns {Object} Legacy installation details
    */
@@ -147,8 +147,8 @@ class Detector {
       paths: [],
     };
 
-    // Check for legacy core (.bmad-method)
-    const legacyCorePath = path.join(projectDir, '.bmad-method');
+    // Check for legacy core (_bmad-method)
+    const legacyCorePath = path.join(projectDir, '_bmad-method');
     if (await fs.pathExists(legacyCorePath)) {
       result.hasLegacy = true;
       result.legacyCore = true;
@@ -161,7 +161,7 @@ class Detector {
       if (
         entry.isDirectory() &&
         entry.name.startsWith('.') &&
-        entry.name !== '.bmad-method' &&
+        entry.name !== '_bmad-method' &&
         !entry.name.startsWith('.git') &&
         !entry.name.startsWith('.vscode') &&
         !entry.name.startsWith('.idea')
@@ -204,7 +204,7 @@ class Detector {
 
   /**
    * Detect legacy BMAD v4 footprints (case-sensitive path checks)
-   * V4 used .bmad-method as default folder name
+   * V4 used _bmad-method as default folder name
    * V6+ uses configurable folder names and ALWAYS has _cfg/manifest.yaml with installation.version
    * @param {string} projectDir - Project directory to check
    * @returns {{ hasLegacyV4: boolean, offenders: string[] }}

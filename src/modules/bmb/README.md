@@ -18,7 +18,7 @@ Specialized tools and workflows for creating, customizing, and extending BMad co
 
 **BMad Builder** - Master builder agent orchestrating all creation workflows with deep knowledge of BMad architecture and conventions.
 
-- Location: `.bmad/bmb/agents/bmad-builder.md`
+- Location: `_bmad/bmb/agents/bmad-builder.md`
 
 ### 📋 Workflows
 

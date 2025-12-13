@@ -316,7 +316,7 @@ class CustomHandler {
         // Create customize template if it doesn't exist
         if (!(await fs.pathExists(customizePath))) {
           const { getSourcePath } = require('../../../lib/project-root');
-          const genericTemplatePath = getSourcePath('utility', 'templates', 'agent.customize.template.yaml');
+          const genericTemplatePath = getSourcePath('utility', 'agent-components', 'agent.customize.template.yaml');
           if (await fs.pathExists(genericTemplatePath)) {
             // Copy with placeholder replacement
             let templateContent = await fs.readFile(genericTemplatePath, 'utf8');
@@ -355,7 +355,7 @@ class CustomHandler {
           const projectDir = path.dirname(bmadDir);
           const resolvedSidecarFolder = config.agent_sidecar_folder
             .replaceAll('{project-root}', projectDir)
-            .replaceAll('.bmad', path.basename(bmadDir));
+            .replaceAll('_bmad', path.basename(bmadDir));
 
           // Create sidecar directory for this agent
           const agentSidecarDir = path.join(resolvedSidecarFolder, agentName);

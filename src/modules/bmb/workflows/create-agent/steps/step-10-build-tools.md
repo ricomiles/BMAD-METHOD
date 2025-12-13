@@ -17,8 +17,8 @@ compiledAgentFile: '{{output_folder}}/{{agent_filename}}.md'
 buildHandlingTemplate: '{workflow_path}/templates/build-results.md'
 
 # Task References
-advancedElicitationTask: '{project-root}/.bmad/core/tasks/advanced-elicitation.xml'
-partyModeWorkflow: '{project-root}/.bmad/core/workflows/party-mode/workflow.md'
+advancedElicitationTask: '{project-root}/_bmad/core/tasks/advanced-elicitation.xml'
+partyModeWorkflow: '{project-root}/_bmad/core/workflows/party-mode/workflow.md'
 ---
 
 # Step 10: Build Tools Handling

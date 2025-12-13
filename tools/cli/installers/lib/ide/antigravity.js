@@ -119,7 +119,7 @@ class AntigravitySetup extends BaseIdeSetup {
     await this.ensureDir(bmadWorkflowsDir);
 
     // Generate agent launchers using AgentCommandGenerator
-    // This creates small launcher files that reference the actual agents in .bmad/
+    // This creates small launcher files that reference the actual agents in _bmad/
     const agentGen = new AgentCommandGenerator(this.bmadFolderName);
     const { artifacts: agentArtifacts, counts: agentCounts } = await agentGen.collectAgentArtifacts(bmadDir, options.selectedModules || []);
 

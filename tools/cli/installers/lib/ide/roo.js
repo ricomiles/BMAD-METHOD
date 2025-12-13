@@ -45,11 +45,11 @@ class RooSetup extends BaseIdeSetup {
         continue;
       }
 
-      // Read the actual agent file from .bmad for metadata extraction (installed agents are .md files)
+      // Read the actual agent file from _bmad for metadata extraction (installed agents are .md files)
       const agentPath = path.join(bmadDir, artifact.module, 'agents', `${artifact.name}.md`);
       const content = await this.readFile(agentPath);
 
-      // Create command file that references the actual .bmad agent
+      // Create command file that references the actual _bmad agent
       await this.createCommandFile({ module: artifact.module, name: artifact.name, path: agentPath }, content, commandPath, projectDir);
 
       addedCount++;

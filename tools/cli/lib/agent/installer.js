@@ -17,7 +17,7 @@ const { extractInstallConfig, getDefaultValues } = require('./template-engine');
  */
 function findBmadConfig(startPath = process.cwd()) {
   // Look for common BMAD folder names
-  const possibleNames = ['.bmad', 'bmad', '.bmad-method'];
+  const possibleNames = ['_bmad'];
 
   for (const name of possibleNames) {
     const configPath = path.join(startPath, name, 'bmb', 'config.yaml');
@@ -42,7 +42,7 @@ function findBmadConfig(startPath = process.cwd()) {
  * @returns {string} Resolved path
  */
 function resolvePath(pathStr, context) {
-  return pathStr.replaceAll('{project-root}', context.projectRoot).replaceAll('{bmad-folder}', context.bmadFolder);
+  return pathStr.replaceAll('{project-root}', context.projectRoot).replaceAll('{bmad-folder}', context_bmadFolder);
 }
 
 /**
@@ -273,7 +273,7 @@ function installAgent(agentInfo, answers, targetPath, options = {}) {
     // Resolve path variables
     const resolvedSidecarFolder = agentSidecarFolder
       .replaceAll('{project-root}', options.projectRoot || process.cwd())
-      .replaceAll('.bmad', options.bmadFolder || '.bmad');
+      .replaceAll('_bmad', options_bmadFolder || '_bmad');
 
     // Create sidecar directory for this agent
     const agentSidecarDir = path.join(resolvedSidecarFolder, agentFolderName);
@@ -407,7 +407,7 @@ function detectBmadProject(targetPath) {
 
   // Walk up directory tree looking for BMAD installation
   while (checkPath !== root) {
-    const possibleNames = ['.bmad'];
+    const possibleNames = ['_bmad'];
     for (const name of possibleNames) {
       const bmadFolder = path.join(checkPath, name);
       const cfgFolder = path.join(bmadFolder, '_cfg');
@@ -689,7 +689,7 @@ function saveAgentSource(agentInfo, cfgFolder, agentName, answers = {}) {
  */
 async function createIdeSlashCommands(projectRoot, agentName, agentPath, metadata) {
   // Read manifest.yaml to get installed IDEs
-  const manifestPath = path.join(projectRoot, '.bmad', '_cfg', 'manifest.yaml');
+  const manifestPath = path.join(projectRoot, '_bmad', '_cfg', 'manifest.yaml');
   let installedIdes = ['claude-code']; // Default to Claude Code if no manifest
 
   if (fs.existsSync(manifestPath)) {

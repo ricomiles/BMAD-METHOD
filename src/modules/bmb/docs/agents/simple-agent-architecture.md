@@ -14,7 +14,7 @@ Self-contained agents with prompts, menus, and optional install-time customizati
 ```yaml
 agent:
   metadata:
-    id: .bmad/agents/{agent-name}/{agent-name}.md
+    id: _bmad/agents/{agent-name}/{agent-name}.md
     name: 'Persona Name'
     title: 'Agent Title'
     icon: 'emoji'
@@ -104,7 +104,7 @@ agent:
 
 ### Metadata
 
-- **id**: Final compiled path (`.bmad/agents/{name}/{name}.md` for standalone)
+- **id**: Final compiled path (`_bmad/agents/{name}/{name}.md` for standalone)
 - **name**: Agent's persona name displayed to users
 - **title**: Professional role/function
 - **icon**: Single emoji for visual identification
@@ -215,7 +215,7 @@ Features demonstrated:
 
 ```bash
 # Copy to your project
-cp /path/to/commit-poet.agent.yaml .bmad/custom/agents/
+cp /path/to/commit-poet.agent.yaml _bmad/custom/agents/
 
 # Create custom.yaml and install
 echo "code: my-agent

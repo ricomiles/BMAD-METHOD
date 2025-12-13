@@ -23,5 +23,5 @@ output_folder:
 
 agent_sidecar_folder:
   prompt: "Where should users agent sidecar memory folders be stored?"
-  default: ".bmad-user-memory"
+  default: "_bmad-user-memory"
   result: "{project-root}/{value}"

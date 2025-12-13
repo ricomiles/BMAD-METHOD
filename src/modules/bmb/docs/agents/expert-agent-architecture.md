@@ -202,7 +202,7 @@ Special variable resolved during installation:
 
 - Points to the agent's installation directory
 - Used to reference sidecar files
-- Example: `.bmad/custom/agents/journal-keeper/`
+- Example: `_bmad/custom/agents/journal-keeper/`
 
 ## What Gets Injected at Compile Time
 
@@ -238,7 +238,7 @@ Features demonstrated:
 
 ```bash
 # Copy entire folder to your project
-cp -r /path/to/journal-keeper/ .bmad/custom/agents/
+cp -r /path/to/journal-keeper/ _bmad/custom/agents/
 
 # Install with personalization
 bmad agent-install

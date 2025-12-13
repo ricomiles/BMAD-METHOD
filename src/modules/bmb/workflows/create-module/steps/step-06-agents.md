@@ -1,11 +1,11 @@
 ---
-installed_path: '{project-root}/.bmad/bmb/workflows/create-module'
+installed_path: '{project-root}/_bmad/bmb/workflows/create-module'
 nextStepFile: '{installed_path}/steps/step-07-workflows.md'
 modulePlanFile: '{custom_module_location}/{module_name}/module-plan-{module_name}.md'
 agentTemplate: '{installed_path}/templates/agent.template.md'
 agent_examples_path: '{project-root}/bmb/reference/agents/module-examples'
-advancedElicitationTask: '{project-root}/.bmad/core/tasks/advanced-elicitation.xml'
-partyModeWorkflow: '{project-root}/.bmad/core/workflows/party-mode/workflow.md'
+advancedElicitationTask: '{project-root}/_bmad/core/tasks/advanced-elicitation.xml'
+partyModeWorkflow: '{project-root}/_bmad/core/workflows/party-mode/workflow.md'
 ---
 
 # Step 6: Create Module Agents
@@ -183,7 +183,7 @@ agent:
       triggers:
         - party-mode:
           input: SPM
-          route: '{project-root}/.bmad/core/workflows/edit-agent/workflow.md'
+          route: '{project-root}/_bmad/core/workflows/edit-agent/workflow.md'
           type: exec
         - expert-chat:
           input: CH
@@ -204,7 +204,7 @@ agent:
 
     # Workflow only for complex processes
     - trigger: 'complex-process'
-      route: '{project-root}/.bmad/{custom_module}/workflows/[workflow]/workflow.md'
+      route: '{project-root}/_bmad/{custom_module}/workflows/[workflow]/workflow.md'
       description: 'Complex process [icon]'
 
     # Quick inline actions

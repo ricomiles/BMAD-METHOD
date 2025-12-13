@@ -106,7 +106,7 @@ Modules can share workflows:
 
 ```yaml
 # In agent menu item:
-workflow: '{project-root}/.bmad/other-module/workflows/shared-workflow/workflow.yaml'
+workflow: '{project-root}/_bmad/other-module/workflows/shared-workflow/workflow.yaml'
 ```
 
 Common patterns:
@@ -151,7 +151,7 @@ Changes are reviewed and approved by you before being applied.
 - Can configure web bundles
 - Are the development source of truth
 
-**Installed modules** (in .bmad/):
+**Installed modules** (in \_bmad/):
 
 - Are deployed to target projects
 - Use config.yaml for user customization

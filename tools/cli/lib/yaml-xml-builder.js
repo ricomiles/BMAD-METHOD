@@ -4,6 +4,7 @@ const path = require('node:path');
 const crypto = require('node:crypto');
 const { AgentAnalyzer } = require('./agent-analyzer');
 const { ActivationBuilder } = require('./activation-builder');
+const { escapeXml } = require('../../lib/xml-utils');
 
 /**
  * Converts agent YAML files to XML format with smart activation injection
@@ -241,15 +242,15 @@ class YamlXmlBuilder {
     let xml = '  <persona>\n';
 
     if (persona.role) {
-      xml += `    <role>${this.escapeXml(persona.role)}</role>\n`;
+      xml += `    <role>${escapeXml(persona.role)}</role>\n`;
     }
 
     if (persona.identity) {
-      xml += `    <identity>${this.escapeXml(persona.identity)}</identity>\n`;
+      xml += `    <identity>${escapeXml(persona.identity)}</identity>\n`;
     }
 
     if (persona.communication_style) {
-      xml += `    <communication_style>${this.escapeXml(persona.communication_style)}</communication_style>\n`;
+      xml += `    <communication_style>${escapeXml(persona.communication_style)}</communication_style>\n`;
     }
 
     if (persona.principles) {
@@ -260,7 +261,7 @@ class YamlXmlBuilder {
       } else {
         principlesText = persona.principles;
       }
-      xml += `    <principles>${this.escapeXml(principlesText)}</principles>\n`;
+      xml += `    <principles>${escapeXml(principlesText)}</principles>\n`;
     }
 
     xml += '  </persona>\n';
@@ -277,7 +278,7 @@ class YamlXmlBuilder {
     let xml = '  <memories>\n';
 
     for (const memory of memories) {
-      xml += `    <memory>${this.escapeXml(memory)}</memory>\n`;
+      xml += `    <memory>${escapeXml(memory)}</memory>\n`;
     }
 
     xml += '  </memories>\n';
@@ -314,7 +315,7 @@ class YamlXmlBuilder {
     for (const prompt of promptsArray) {
       xml += `    <prompt id="${prompt.id || ''}">\n`;
       xml += `      <content>\n`;
-      xml += `${this.escapeXml(prompt.content || '')}\n`;
+      xml += `${escapeXml(prompt.content || '')}\n`;
       xml += `      </content>\n`;
       xml += `    </prompt>\n`;
     }
@@ -351,7 +352,7 @@ class YamlXmlBuilder {
 
         // Handle multi format menu items with nested handlers
         if (item.multi && item.triggers && Array.isArray(item.triggers)) {
-          xml += `    <item type="multi">${this.escapeXml(item.multi)}\n`;
+          xml += `    <item type="multi">${escapeXml(item.multi)}\n`;
           xml += this.buildNestedHandlers(item.triggers);
           xml += `    </item>\n`;
         }
@@ -381,7 +382,7 @@ class YamlXmlBuilder {
           if (item.data) attrs.push(`data="${item.data}"`);
           if (item.action) attrs.push(`action="${item.action}"`);
 
-          xml += `    <item ${attrs.join(' ')}>${this.escapeXml(item.description || '')}</item>\n`;
+          xml += `    <item ${attrs.join(' ')}>${escapeXml(item.description || '')}</item>\n`;
         }
       }
     }
@@ -412,7 +413,7 @@ class YamlXmlBuilder {
 
         // For nested handlers in multi items, we don't need cmd attribute
         // The match attribute will handle fuzzy matching
-        const attrs = [`match="${this.escapeXml(execData.description || '')}"`];
+        const attrs = [`match="${escapeXml(execData.description || '')}"`];
 
         // Add handler attributes based on exec data
         if (execData.route) attrs.push(`exec="${execData.route}"`);
@@ -480,19 +481,6 @@ class YamlXmlBuilder {
     }
 
     return result;
-  }
-
-  /**
-   * Escape XML special characters
-   */
-  escapeXml(text) {
-    if (!text) return '';
-    return text
-      .replaceAll('&', '&amp;')
-      .replaceAll('<', '&lt;')
-      .replaceAll('>', '&gt;')
-      .replaceAll('"', '&quot;')
-      .replaceAll("'", '&apos;');
   }
 
   /**

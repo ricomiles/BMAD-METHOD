@@ -31,18 +31,11 @@ class BaseIdeSetup {
 
   /**
    * Get the agent command activation header from the central template
-   * @returns {string} The activation header text (without XML tags)
+   * @returns {string} The activation header text
    */
   async getAgentCommandHeader() {
-    const headerPath = path.join(getSourcePath(), 'src', 'utility', 'models', 'agent-command-header.md');
-    try {
-      const content = await fs.readFile(headerPath, 'utf8');
-      // Strip the <critical> tags to get plain text
-      return content.replaceAll(/<critical>|<\/critical>/g, '').trim();
-    } catch {
-      // Fallback if file doesn't exist
-      return "You must fully embody this agent's persona and follow all activation instructions, steps and rules exactly as specified. NEVER break character until given an exit command.";
-    }
+    const headerPath = path.join(getSourcePath(), 'src', 'utility', 'agent-components', 'agent-command-header.md');
+    return await fs.readFile(headerPath, 'utf8');
   }
 
   /**
@@ -527,26 +520,26 @@ class BaseIdeSetup {
   }
 
   /**
-   * Write file with content (replaces .bmad placeholder)
+   * Write file with content (replaces _bmad placeholder)
    * @param {string} filePath - File path
    * @param {string} content - File content
    */
   async writeFile(filePath, content) {
-    // Replace .bmad placeholder if present
-    if (typeof content === 'string' && content.includes('.bmad')) {
-      content = content.replaceAll('.bmad', this.bmadFolderName);
+    // Replace _bmad placeholder if present
+    if (typeof content === 'string' && content.includes('_bmad')) {
+      content = content.replaceAll('_bmad', this.bmadFolderName);
     }
 
-    // Replace escape sequence .bmad with literal .bmad
-    if (typeof content === 'string' && content.includes('.bmad')) {
-      content = content.replaceAll('.bmad', '.bmad');
+    // Replace escape sequence _bmad with literal _bmad
+    if (typeof content === 'string' && content.includes('_bmad')) {
+      content = content.replaceAll('_bmad', '_bmad');
     }
     await this.ensureDir(path.dirname(filePath));
     await fs.writeFile(filePath, content, 'utf8');
   }
 
   /**
-   * Copy file from source to destination (replaces .bmad placeholder in text files)
+   * Copy file from source to destination (replaces _bmad placeholder in text files)
    * @param {string} source - Source file path
    * @param {string} dest - Destination file path
    */
@@ -563,14 +556,14 @@ class BaseIdeSetup {
         // Read the file content
         let content = await fs.readFile(source, 'utf8');
 
-        // Replace .bmad placeholder with actual folder name
-        if (content.includes('.bmad')) {
-          content = content.replaceAll('.bmad', this.bmadFolderName);
+        // Replace _bmad placeholder with actual folder name
+        if (content.includes('_bmad')) {
+          content = content.replaceAll('_bmad', this.bmadFolderName);
         }
 
-        // Replace escape sequence .bmad with literal .bmad
-        if (content.includes('.bmad')) {
-          content = content.replaceAll('.bmad', '.bmad');
+        // Replace escape sequence _bmad with literal _bmad
+        if (content.includes('_bmad')) {
+          content = content.replaceAll('_bmad', '_bmad');
         }
 
         // Write to dest with replaced content

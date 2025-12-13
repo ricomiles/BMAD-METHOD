@@ -1,23 +1,3 @@
-/**
- * File: tools/cli/installers/lib/core/installer.js
- *
- * BMAD Method - Business Model Agile Development Method
- * Repository: https://github.com/paulpreibisch/BMAD-METHOD
- *
- * Copyright (c) 2025 Paul Preibisch
- * Licensed under the Apache License, Version 2.0
- *
- * ---
- *
- * @fileoverview Core BMAD installation orchestrator with AgentVibes injection point support
- * @context Manages complete BMAD installation flow including core agents, modules, IDE configs, and optional TTS integration
- * @architecture Orchestrator pattern - coordinates Detector, ModuleManager, IdeManager, and file operations to build complete BMAD installation
- * @dependencies fs-extra, ora, chalk, detector.js, module-manager.js, ide-manager.js, config.js
- * @entrypoints Called by install.js command via installer.install(config)
- * @patterns Injection point processing (AgentVibes), placeholder replacement (.bmad), module dependency resolution
- * @related GitHub AgentVibes#34 (injection points), ui.js (user prompts), copyFileWithPlaceholderReplacement()
- */
-
 const path = require('node:path');
 const fs = require('fs-extra');
 const chalk = require('chalk');
@@ -32,13 +12,11 @@ const { Config } = require('../../../lib/config');
 const { XmlHandler } = require('../../../lib/xml-handler');
 const { DependencyResolver } = require('./dependency-resolver');
 const { ConfigCollector } = require('./config-collector');
-// processInstallation no longer needed - LLMs understand {project-root}
 const { getProjectRoot, getSourcePath, getModulePath } = require('../../../lib/project-root');
 const { AgentPartyGenerator } = require('../../../lib/agent-party-generator');
 const { CLIUtils } = require('../../../lib/cli-utils');
 const { ManifestGenerator } = require('./manifest-generator');
 const { IdeConfigManager } = require('./ide-config-manager');
-const { replaceAgentSidecarFolders } = require('./post-install-sidecar-replacement');
 const { CustomHandler } = require('../custom/handler');
 
 class Installer {
@@ -67,7 +45,7 @@ class Installer {
     // Check if project directory exists
     if (!(await fs.pathExists(projectDir))) {
       // Project doesn't exist yet, return default
-      return path.join(projectDir, '.bmad');
+      return path.join(projectDir, '_bmad');
     }
 
     // V6+ strategy: Look for ANY directory with _cfg/manifest.yaml
@@ -89,13 +67,13 @@ class Installer {
 
     // No V6+ installation found, return default
     // This will be used for new installations
-    return path.join(projectDir, '.bmad');
+    return path.join(projectDir, '_bmad');
   }
 
   /**
    * @function copyFileWithPlaceholderReplacement
    * @intent Copy files from BMAD source to installation directory with dynamic content transformation
-   * @why Enables installation-time customization: .bmad replacement + optional AgentVibes TTS injection
+   * @why Enables installation-time customization: _bmad replacement + optional AgentVibes TTS injection
    * @param {string} sourcePath - Absolute path to source file in BMAD repository
    * @param {string} targetPath - Absolute path to destination file in user's project
    * @param {string} bmadFolderName - User's chosen bmad folder name (default: 'bmad')
@@ -472,8 +450,8 @@ If AgentVibes party mode is enabled, immediately trigger TTS with agent's voice:
       });
     }
 
-    // Always use .bmad as the folder name
-    const bmadFolderName = '.bmad';
+    // Always use _bmad as the folder name
+    const bmadFolderName = '_bmad';
     this.bmadFolderName = bmadFolderName; // Store for use in other methods
 
     // Store AgentVibes configuration for injection point processing
@@ -602,7 +580,7 @@ If AgentVibes party mode is enabled, immediately trigger TTS with agent's voice:
 
           // If there are custom files, back them up temporarily
           if (customFiles.length > 0) {
-            const tempBackupDir = path.join(projectDir, '.bmad-custom-backup-temp');
+            const tempBackupDir = path.join(projectDir, '_bmad-custom-backup-temp');
             await fs.ensureDir(tempBackupDir);
 
             spinner.start(`Backing up ${customFiles.length} custom files...`);
@@ -619,7 +597,7 @@ If AgentVibes party mode is enabled, immediately trigger TTS with agent's voice:
 
           // For modified files, back them up to temp directory (will be restored as .bak files after install)
           if (modifiedFiles.length > 0) {
-            const tempModifiedBackupDir = path.join(projectDir, '.bmad-modified-backup-temp');
+            const tempModifiedBackupDir = path.join(projectDir, '_bmad-modified-backup-temp');
             await fs.ensureDir(tempModifiedBackupDir);
 
             console.log(chalk.yellow(`\nDEBUG: Backing up ${modifiedFiles.length} modified files to temp location`));
@@ -653,7 +631,7 @@ If AgentVibes party mode is enabled, immediately trigger TTS with agent's voice:
 
         // Back up custom files
         if (customFiles.length > 0) {
-          const tempBackupDir = path.join(projectDir, '.bmad-custom-backup-temp');
+          const tempBackupDir = path.join(projectDir, '_bmad-custom-backup-temp');
           await fs.ensureDir(tempBackupDir);
 
           spinner.start(`Backing up ${customFiles.length} custom files...`);
@@ -669,7 +647,7 @@ If AgentVibes party mode is enabled, immediately trigger TTS with agent's voice:
 
         // Back up modified files
         if (modifiedFiles.length > 0) {
-          const tempModifiedBackupDir = path.join(projectDir, '.bmad-modified-backup-temp');
+          const tempModifiedBackupDir = path.join(projectDir, '_bmad-modified-backup-temp');
           await fs.ensureDir(tempModifiedBackupDir);
 
           spinner.start(`Backing up ${modifiedFiles.length} modified files...`);
@@ -1316,29 +1294,6 @@ If AgentVibes party mode is enabled, immediately trigger TTS with agent's voice:
         console.log(chalk.dim('Review the .bak files to see your changes and merge if needed.\n'));
       }
 
-      // Reinstall custom agents from _cfg/custom/agents/ sources
-      const customAgentResults = await this.reinstallCustomAgents(projectDir, bmadDir);
-      if (customAgentResults.count > 0) {
-        console.log(chalk.green(`\n✓ Reinstalled ${customAgentResults.count} custom agent${customAgentResults.count > 1 ? 's' : ''}`));
-        for (const agent of customAgentResults.agents) {
-          console.log(chalk.dim(`  - ${agent}`));
-        }
-      }
-
-      // Replace {agent_sidecar_folder} placeholders in all agent files
-      console.log(chalk.dim('\n  Configuring agent sidecar folders...'));
-      const sidecarResults = await replaceAgentSidecarFolders(bmadDir);
-
-      if (sidecarResults.filesReplaced > 0) {
-        console.log(
-          chalk.green(
-            `  ✓ Updated ${sidecarResults.filesReplaced} agent file(s) with ${sidecarResults.totalReplacements} sidecar reference(s)`,
-          ),
-        );
-      } else {
-        console.log(chalk.dim('  No agent sidecar references found'));
-      }
-
       // Display completion message
       const { UI } = require('../../../lib/ui');
       const ui = new UI();
@@ -1852,7 +1807,7 @@ If AgentVibes party mode is enabled, immediately trigger TTS with agent's voice:
 
         // Create customize template if it doesn't exist
         if (!(await fs.pathExists(customizePath))) {
-          const genericTemplatePath = getSourcePath('utility', 'templates', 'agent.customize.template.yaml');
+          const genericTemplatePath = getSourcePath('utility', 'agent-components', 'agent.customize.template.yaml');
           if (await fs.pathExists(genericTemplatePath)) {
             await this.copyFileWithPlaceholderReplacement(genericTemplatePath, customizePath, this.bmadFolderName || 'bmad');
             console.log(chalk.dim(`  Created customize: ${moduleName}-${agentName}.customize.yaml`));
@@ -1868,8 +1823,8 @@ If AgentVibes party mode is enabled, immediately trigger TTS with agent's voice:
         // DO NOT replace {project-root} - LLMs understand this placeholder at runtime
         // const processedContent = xmlContent.replaceAll('{project-root}', projectDir);
 
-        // Replace .bmad with actual folder name
-        xmlContent = xmlContent.replaceAll('.bmad', this.bmadFolderName || 'bmad');
+        // Replace _bmad with actual folder name
+        xmlContent = xmlContent.replaceAll('_bmad', this.bmadFolderName || 'bmad');
 
         // Replace {agent_sidecar_folder} if configured
         const coreConfig = this.configCollector.collectedConfig.core || {};
@@ -1916,7 +1871,7 @@ If AgentVibes party mode is enabled, immediately trigger TTS with agent's voice:
           // Resolve path variables
           const resolvedSidecarFolder = agentSidecarFolder
             .replaceAll('{project-root}', projectDir)
-            .replaceAll('.bmad', this.bmadFolderName || 'bmad');
+            .replaceAll('_bmad', this.bmadFolderName || 'bmad');
 
           // Create sidecar directory for this agent
           const agentSidecarDir = path.join(resolvedSidecarFolder, agentName);
@@ -1941,20 +1896,6 @@ If AgentVibes party mode is enabled, immediately trigger TTS with agent's voice:
         await fs.remove(yamlPath);
 
         console.log(chalk.dim(`  Built agent: ${agentName}.md${hasSidecar ? ' (with sidecar)' : ''}`));
-      }
-      // Handle legacy .md agents - inject activation if needed
-      else if (agentFile.endsWith('.md')) {
-        const agentPath = path.join(agentsPath, agentFile);
-        let content = await fs.readFile(agentPath, 'utf8');
-
-        // Check if content has agent XML and no activation block
-        if (content.includes('<agent') && !content.includes('<activation')) {
-          // Inject the activation block using XML handler
-          content = this.xmlHandler.injectActivationSimple(content);
-          // Ensure POSIX-compliant final newline
-          const finalContent = content.endsWith('\n') ? content : content + '\n';
-          await fs.writeFile(agentPath, finalContent, 'utf8');
-        }
       }
     }
   }
@@ -2169,23 +2110,18 @@ If AgentVibes party mode is enabled, immediately trigger TTS with agent's voice:
    * @returns {Object} Compilation results
    */
   async compileAgents(config) {
-    const ora = require('ora');
-    const spinner = ora('Starting agent compilation...').start();
-
     try {
       const projectDir = path.resolve(config.directory);
       const bmadDir = await this.findBmadDir(projectDir);
 
       // Check if bmad directory exists
       if (!(await fs.pathExists(bmadDir))) {
-        spinner.fail('No BMAD installation found');
         throw new Error(`BMAD not installed at ${bmadDir}`);
       }
 
       // Check for custom modules with missing sources
       const manifest = await this.manifest.read(bmadDir);
       if (manifest && manifest.customModules && manifest.customModules.length > 0) {
-        spinner.stop();
         console.log(chalk.yellow('\nChecking custom module sources before compilation...'));
 
         const customModuleSources = new Map();
@@ -2196,15 +2132,12 @@ If AgentVibes party mode is enabled, immediately trigger TTS with agent's voice:
         const projectRoot = getProjectRoot();
         const installedModules = manifest.modules || [];
         await this.handleMissingCustomSources(customModuleSources, bmadDir, projectRoot, 'compile-agents', installedModules);
-
-        spinner.start('Rebuilding agent files...');
       }
 
       let agentCount = 0;
       let taskCount = 0;
 
       // Process all modules in bmad directory
-      spinner.text = 'Rebuilding agent files...';
       const entries = await fs.readdir(bmadDir, { withFileTypes: true });
 
       for (const entry of entries) {
@@ -2213,7 +2146,6 @@ If AgentVibes party mode is enabled, immediately trigger TTS with agent's voice:
 
           // Special handling for standalone agents in bmad/agents/ directory
           if (entry.name === 'agents') {
-            spinner.text = 'Building standalone agents...';
             await this.buildStandaloneAgents(bmadDir, projectDir);
 
             // Count standalone agents
@@ -2245,16 +2177,6 @@ If AgentVibes party mode is enabled, immediately trigger TTS with agent's voice:
         }
       }
 
-      // Reinstall custom agents from _cfg/custom/agents/ sources
-      spinner.start('Rebuilding custom agents...');
-      const customAgentResults = await this.reinstallCustomAgents(projectDir, bmadDir);
-      if (customAgentResults.count > 0) {
-        spinner.succeed(`Rebuilt ${customAgentResults.count} custom agent${customAgentResults.count > 1 ? 's' : ''}`);
-        agentCount += customAgentResults.count;
-      } else {
-        spinner.succeed('No custom agents found to rebuild');
-      }
-
       // Skip full manifest regeneration during compileAgents to preserve custom agents
       // Custom agents are already added to manifests during individual installation
       // Only regenerate YAML manifest for IDE updates if needed
@@ -2269,36 +2191,20 @@ If AgentVibes party mode is enabled, immediately trigger TTS with agent's voice:
 
       // Update IDE configurations using the existing IDE list from manifest
       if (existingIdes && existingIdes.length > 0) {
-        spinner.start('Updating IDE configurations...');
-
         for (const ide of existingIdes) {
-          spinner.text = `Updating ${ide}...`;
-
-          // Stop spinner before IDE setup to prevent blocking any potential prompts
-          // However, we pass _alreadyConfigured to skip all prompts during compile
-          spinner.stop();
-
           await this.ideManager.setup(ide, projectDir, bmadDir, {
             selectedModules: installedModules,
             skipModuleInstall: true, // Skip module installation, just update IDE files
             verbose: config.verbose,
             preCollectedConfig: { _alreadyConfigured: true }, // Skip all interactive prompts during compile
           });
-
-          // Restart spinner for next IDE
-          if (existingIdes.indexOf(ide) < existingIdes.length - 1) {
-            spinner.start('Updating IDE configurations...');
-          }
         }
-
         console.log(chalk.green('✓ IDE configurations updated'));
       } else {
         console.log(chalk.yellow('⚠️  No IDEs configured. Skipping IDE update.'));
       }
-
       return { agentCount, taskCount };
     } catch (error) {
-      spinner.fail('Compilation failed');
       throw error;
     }
   }
@@ -2610,19 +2516,6 @@ If AgentVibes party mode is enabled, immediately trigger TTS with agent's voice:
         lastModified: new Date().toISOString(),
       };
 
-      const existingBmadFolderName = path.basename(bmadDir);
-      const newBmadFolderName = this.configCollector.collectedConfig.core?.bmad_folder || existingBmadFolderName;
-
-      if (existingBmadFolderName === newBmadFolderName) {
-        // Normal quick update - start the spinner
-        console.log(chalk.cyan('Updating BMAD installation...'));
-      } else {
-        // Folder name has changed - stop spinner and let install() handle it
-        spinner.stop();
-        console.log(chalk.yellow(`\n⚠️  Folder name will change: ${existingBmadFolderName} → ${newBmadFolderName}`));
-        console.log(chalk.yellow('The installer will handle the folder migration.\n'));
-      }
-
       // Build the config object for the installer
       const installConfig = {
         directory: projectDir,
@@ -2690,14 +2583,14 @@ If AgentVibes party mode is enabled, immediately trigger TTS with agent's voice:
     console.log(chalk.yellow.bold('\n⚠️  Legacy BMAD v4 detected'));
     console.log(chalk.dim('The installer found legacy artefacts in your project.\n'));
 
-    // Separate .bmad* folders (auto-backup) from other offending paths (manual cleanup)
+    // Separate _bmad* folders (auto-backup) from other offending paths (manual cleanup)
     const bmadFolders = legacyV4.offenders.filter((p) => {
       const name = path.basename(p);
-      return name.startsWith('.bmad'); // Only dot-prefixed folders get auto-backed up
+      return name.startsWith('_bmad'); // Only dot-prefixed folders get auto-backed up
     });
     const otherOffenders = legacyV4.offenders.filter((p) => {
       const name = path.basename(p);
-      return !name.startsWith('.bmad'); // Everything else is manual cleanup
+      return !name.startsWith('_bmad'); // Everything else is manual cleanup
     });
 
     const inquirer = require('inquirer');
@@ -2730,7 +2623,7 @@ If AgentVibes party mode is enabled, immediately trigger TTS with agent's voice:
       }
     }
 
-    // Handle .bmad* folders with automatic backup
+    // Handle _bmad* folders with automatic backup
     if (bmadFolders.length > 0) {
       console.log(chalk.cyan('The following legacy folders will be moved to v4-backup:'));
       for (const p of bmadFolders) console.log(chalk.dim(` - ${p}`));
@@ -2846,7 +2739,7 @@ If AgentVibes party mode is enabled, immediately trigger TTS with agent's voice:
       if (fileEntry.path) {
         // Paths are relative to bmadDir. Legacy manifests incorrectly prefixed 'bmad/' -
         // strip it if present. This is safe because no real path inside bmadDir would
-        // start with 'bmad/' (you'd never have .bmad/bmad/... as an actual structure).
+        // start with 'bmad/' (you'd never have _bmad/bmad/... as an actual structure).
         const relativePath = fileEntry.path.startsWith('bmad/') ? fileEntry.path.slice(5) : fileEntry.path;
         const absolutePath = path.join(bmadDir, relativePath);
         installedFilesMap.set(path.normalize(absolutePath), {
@@ -3097,165 +2990,6 @@ If AgentVibes party mode is enabled, immediately trigger TTS with agent's voice:
     }
 
     return nodes;
-  }
-
-  /**
-   * Reinstall custom agents from backup and source locations
-   * This preserves custom agents across quick updates/reinstalls
-   * @param {string} projectDir - Project directory
-   * @param {string} bmadDir - BMAD installation directory
-   * @returns {Object} Result with count and agent names
-   */
-  async reinstallCustomAgents(projectDir, bmadDir) {
-    const {
-      discoverAgents,
-      loadAgentConfig,
-      extractManifestData,
-      addToManifest,
-      createIdeSlashCommands,
-      updateManifestYaml,
-    } = require('../../../lib/agent/installer');
-    const { compileAgent } = require('../../../lib/agent/compiler');
-
-    const results = { count: 0, agents: [] };
-
-    // Check multiple locations for custom agents
-    const sourceLocations = [
-      path.join(bmadDir, '_cfg', 'custom', 'agents'), // Backup location
-      path.join(bmadDir, 'custom', 'src', 'agents'), // BMAD folder source location
-      path.join(projectDir, 'custom', 'src', 'agents'), // Project root source location
-    ];
-
-    let foundAgents = [];
-    let processedAgents = new Set(); // Track to avoid duplicates
-
-    // Discover agents from all locations
-    for (const location of sourceLocations) {
-      if (await fs.pathExists(location)) {
-        const agents = discoverAgents(location);
-        // Only add agents we haven't processed yet
-        const newAgents = agents.filter((agent) => !processedAgents.has(agent.name));
-        foundAgents.push(...newAgents);
-        for (const agent of newAgents) processedAgents.add(agent.name);
-      }
-    }
-
-    if (foundAgents.length === 0) {
-      return results;
-    }
-
-    try {
-      const customAgentsDir = path.join(bmadDir, 'custom', 'agents');
-      await fs.ensureDir(customAgentsDir);
-
-      const manifestFile = path.join(bmadDir, '_cfg', 'agent-manifest.csv');
-      const manifestYamlFile = path.join(bmadDir, '_cfg', 'manifest.yaml');
-
-      for (const agent of foundAgents) {
-        try {
-          const agentConfig = loadAgentConfig(agent.yamlFile);
-          const finalAgentName = agent.name; // Already named correctly from save
-
-          // Determine agent type from the name (e.g., "fred-commit-poet" → "commit-poet")
-          let agentType = finalAgentName;
-          const parts = finalAgentName.split('-');
-          if (parts.length >= 2) {
-            // Try to extract type (last part or last two parts)
-            // For "fred-commit-poet", we want "commit-poet"
-            // This is heuristic - could be improved with metadata storage
-            agentType = parts.slice(-2).join('-'); // Take last 2 parts as type
-          }
-
-          // Create target directory - use relative path if agent is in a subdirectory
-          const agentTargetDir = agent.relativePath
-            ? path.join(customAgentsDir, agent.relativePath)
-            : path.join(customAgentsDir, finalAgentName);
-          await fs.ensureDir(agentTargetDir);
-
-          // Calculate paths
-          const compiledFileName = `${finalAgentName}.md`;
-          const compiledPath = path.join(agentTargetDir, compiledFileName);
-          const relativePath = path.relative(projectDir, compiledPath);
-
-          // Compile with embedded defaults (answers are already in defaults section)
-          const { xml, metadata } = compileAgent(
-            await fs.readFile(agent.yamlFile, 'utf8'),
-            agentConfig.defaults || {},
-            finalAgentName,
-            relativePath,
-            { config: config.coreConfig },
-          );
-
-          // Write compiled agent
-          await fs.writeFile(compiledPath, xml, 'utf8');
-
-          // Backup source YAML to _cfg/custom/agents if not already there
-          const cfgAgentsBackupDir = path.join(bmadDir, '_cfg', 'custom', 'agents');
-          await fs.ensureDir(cfgAgentsBackupDir);
-          const backupYamlPath = path.join(cfgAgentsBackupDir, `${finalAgentName}.agent.yaml`);
-
-          // Only backup if source is not already in backup location
-          if (agent.yamlFile !== backupYamlPath) {
-            await fs.copy(agent.yamlFile, backupYamlPath);
-          }
-
-          // Copy sidecar files for agents with hasSidecar flag
-          if (agentConfig.hasSidecar === true && agent.type === 'expert') {
-            const { copyAgentSidecarFiles } = require('../../../lib/agent/installer');
-
-            // Get agent sidecar folder from config or use default
-            const agentSidecarFolder = config.coreConfig?.agent_sidecar_folder;
-
-            // Resolve path variables
-            const resolvedSidecarFolder = agentSidecarFolder.replaceAll('{project-root}', projectDir).replaceAll('.bmad', bmadDir);
-
-            // Create sidecar directory for this agent
-            const agentSidecarDir = path.join(resolvedSidecarFolder, finalAgentName);
-            await fs.ensureDir(agentSidecarDir);
-
-            // Copy sidecar files (preserve existing, add new)
-            const sidecarResult = copyAgentSidecarFiles(agent.path, agentSidecarDir, agent.yamlFile);
-
-            if (sidecarResult.copied.length > 0 || sidecarResult.preserved.length > 0) {
-              console.log(chalk.dim(`  Sidecar: ${sidecarResult.copied.length} new, ${sidecarResult.preserved.length} preserved`));
-            }
-          }
-
-          // Update manifest CSV
-          if (await fs.pathExists(manifestFile)) {
-            // Preserve YAML metadata for persona name, but override id for filename
-            const manifestMetadata = {
-              ...metadata,
-              id: relativePath, // Use the compiled agent path for id
-              name: metadata.name || finalAgentName, // Use YAML metadata.name (persona name) or fallback
-              title: metadata.title, // Use YAML title
-              icon: metadata.icon, // Use YAML icon
-            };
-            const manifestData = extractManifestData(xml, manifestMetadata, relativePath, 'custom');
-            manifestData.name = finalAgentName; // Use filename for the name field
-            manifestData.path = relativePath;
-            addToManifest(manifestFile, manifestData);
-          }
-
-          // Create IDE slash commands (async function)
-          await createIdeSlashCommands(projectDir, finalAgentName, relativePath, metadata);
-
-          // Update manifest.yaml
-          if (await fs.pathExists(manifestYamlFile)) {
-            updateManifestYaml(manifestYamlFile, finalAgentName, agentType);
-          }
-
-          results.count++;
-          results.agents.push(finalAgentName);
-        } catch (agentError) {
-          console.log(chalk.yellow(`  ⚠️  Failed to reinstall ${agent.name}: ${agentError.message}`));
-        }
-      }
-    } catch (error) {
-      console.log(chalk.yellow(`  ⚠️  Error reinstalling custom agents: ${error.message}`));
-    }
-
-    return results;
   }
 
   /**

@@ -135,7 +135,7 @@ The installer presents a unified selection interface:
 
 ## Agent Sidecar Support
 
-Agents with sidecar content can store personal data, memories, and working files outside of the `.bmad` directory. This separation keeps personal content separate from BMAD's core files.
+Agents with sidecar content can store personal data, memories, and working files outside of the `_bmad` directory. This separation keeps personal content separate from BMAD's core files.
 
 ### What is Sidecar Content?
 
@@ -152,7 +152,7 @@ The sidecar folder location is configured during BMAD core installation:
 
 ```
 ? Where should users' agent sidecar memory folders be stored?
-❯ .bmad-user-memory
+❯ _bmad-user-memory
 ```
 
 ### How It Works
@@ -175,7 +175,7 @@ my-agent/
 
 ### Git Integration
 
-Since sidecar content is stored outside the `.bmad` directory (and typically outside version control), users can:
+Since sidecar content is stored outside the `_bmad` directory (and typically outside version control), users can:
 
 - Add the sidecar folder to `.gitignore` to exclude personal data
 - Share agent definitions without exposing personal content
@@ -185,7 +185,7 @@ Example `.gitignore` entry:
 
 ```
 # Exclude agent personal data
-.bmad-user-memory/
+_bmad-user-memory/
 ```
 
 ## Creating Custom Content with BMAD Builder

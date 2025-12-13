@@ -8,22 +8,7 @@ const yaml = require('yaml');
 const fs = require('node:fs');
 const path = require('node:path');
 const { processAgentYaml, extractInstallConfig, stripInstallConfig, getDefaultValues } = require('./template-engine');
-
-// Use existing BMAD builder if available
-let YamlXmlBuilder;
-try {
-  YamlXmlBuilder = require('../../lib/yaml-xml-builder').YamlXmlBuilder;
-} catch {
-  YamlXmlBuilder = null;
-}
-
-/**
- * Escape XML special characters
- */
-function escapeXml(text) {
-  if (!text) return '';
-  return text.replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;').replaceAll('"', '&quot;').replaceAll("'", '&apos;');
-}
+const { escapeXml } = require('../../../lib/xml-utils');
 
 /**
  * Build frontmatter for agent

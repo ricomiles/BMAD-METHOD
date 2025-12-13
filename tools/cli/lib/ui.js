@@ -136,7 +136,7 @@ class UI {
       // Create the bmad directory based on core config
       const path = require('node:path');
       const fs = require('fs-extra');
-      const bmadFolderName = '.bmad';
+      const bmadFolderName = '_bmad';
       const bmadDir = path.join(confirmedDirectory, bmadFolderName);
 
       await fs.ensureDir(bmadDir);
@@ -535,7 +535,7 @@ class UI {
       // Show backup info and restore command
       console.log('\n' + chalk.white.bold('Backups & Recovery:\n'));
       console.log(chalk.dim('  Pre-injection backups are stored in:'));
-      console.log(chalk.cyan('    ~/.bmad-tts-backups/\n'));
+      console.log(chalk.cyan('    ~/_bmad-tts-backups/\n'));
       console.log(chalk.dim('  To restore original files (removes TTS instructions):'));
       console.log(chalk.cyan(`    bmad-tts-injector.sh --restore ${result.path}\n`));
 

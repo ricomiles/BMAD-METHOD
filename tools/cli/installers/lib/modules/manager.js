@@ -47,7 +47,7 @@ class ModuleManager {
   }
 
   /**
-   * Copy a file and replace .bmad placeholder with actual folder name
+   * Copy a file and replace _bmad placeholder with actual folder name
    * @param {string} sourcePath - Source file path
    * @param {string} targetPath - Target file path
    */
@@ -62,14 +62,14 @@ class ModuleManager {
         // Read the file content
         let content = await fs.readFile(sourcePath, 'utf8');
 
-        // Replace escape sequence .bmad with literal .bmad
-        if (content.includes('.bmad')) {
-          content = content.replaceAll('.bmad', '.bmad');
+        // Replace escape sequence _bmad with literal _bmad
+        if (content.includes('_bmad')) {
+          content = content.replaceAll('_bmad', '_bmad');
         }
 
-        // Replace .bmad placeholder with actual folder name
-        if (content.includes('.bmad')) {
-          content = content.replaceAll('.bmad', this.bmadFolderName);
+        // Replace _bmad placeholder with actual folder name
+        if (content.includes('_bmad')) {
+          content = content.replaceAll('_bmad', this.bmadFolderName);
         }
 
         // Write to target with replaced content
@@ -695,8 +695,8 @@ class ModuleManager {
 
     // IMPORTANT: Replace escape sequence and placeholder BEFORE parsing YAML
     // Otherwise parsing will fail on the placeholder
-    yamlContent = yamlContent.replaceAll('.bmad', '.bmad');
-    yamlContent = yamlContent.replaceAll('.bmad', this.bmadFolderName);
+    yamlContent = yamlContent.replaceAll('_bmad', '_bmad');
+    yamlContent = yamlContent.replaceAll('_bmad', this.bmadFolderName);
 
     try {
       // First check if web_bundle exists by parsing
@@ -815,7 +815,7 @@ class ModuleManager {
         // Create customize template if it doesn't exist
         if (!(await fs.pathExists(customizePath))) {
           const { getSourcePath } = require('../../../lib/project-root');
-          const genericTemplatePath = getSourcePath('utility', 'templates', 'agent.customize.template.yaml');
+          const genericTemplatePath = getSourcePath('utility', 'agent-components', 'agent.customize.template.yaml');
           if (await fs.pathExists(genericTemplatePath)) {
             await this.copyFileWithPlaceholderReplacement(genericTemplatePath, customizePath);
             console.log(chalk.dim(`  Created customize: ${moduleName}-${agentName}.customize.yaml`));
@@ -853,9 +853,9 @@ class ModuleManager {
         // Compile with customizations if any
         const { xml } = compileAgent(yamlContent, {}, agentName, relativePath, { config: this.coreConfig });
 
-        // Replace .bmad placeholder if needed
-        if (xml.includes('.bmad') && this.bmadFolderName) {
-          const processedXml = xml.replaceAll('.bmad', this.bmadFolderName);
+        // Replace _bmad placeholder if needed
+        if (xml.includes('_bmad') && this.bmadFolderName) {
+          const processedXml = xml.replaceAll('_bmad', this.bmadFolderName);
           await fs.writeFile(targetMdPath, processedXml, 'utf8');
         } else {
           await fs.writeFile(targetMdPath, xml, 'utf8');
@@ -872,7 +872,7 @@ class ModuleManager {
           const projectDir = path.dirname(bmadDir);
           const resolvedSidecarFolder = agentSidecarFolder
             .replaceAll('{project-root}', projectDir)
-            .replaceAll('.bmad', path.basename(bmadDir));
+            .replaceAll('_bmad', path.basename(bmadDir));
 
           // Create sidecar directory for this agent
           const agentSidecarDir = path.join(resolvedSidecarFolder, agentName);
@@ -931,28 +931,23 @@ class ModuleManager {
    * @param {string} moduleName - Module name
    */
   async processAgentFiles(modulePath, moduleName) {
-    const agentsPath = path.join(modulePath, 'agents');
-
-    // Check if agents directory exists
-    if (!(await fs.pathExists(agentsPath))) {
-      return; // No agents to process
-    }
-
-    // Get all agent MD files recursively
-    const agentFiles = await this.findAgentMdFiles(agentsPath);
-
-    for (const agentFile of agentFiles) {
-      if (!agentFile.endsWith('.md')) continue;
-
-      let content = await fs.readFile(agentFile, 'utf8');
-
-      // Check if content has agent XML and no activation block
-      if (content.includes('<agent') && !content.includes('<activation')) {
-        // Inject the activation block using XML handler
-        content = this.xmlHandler.injectActivationSimple(content);
-        await fs.writeFile(agentFile, content, 'utf8');
-      }
-    }
+    // const agentsPath = path.join(modulePath, 'agents');
+    // // Check if agents directory exists
+    // if (!(await fs.pathExists(agentsPath))) {
+    //   return; // No agents to process
+    // }
+    // // Get all agent MD files recursively
+    // const agentFiles = await this.findAgentMdFiles(agentsPath);
+    // for (const agentFile of agentFiles) {
+    //   if (!agentFile.endsWith('.md')) continue;
+    //   let content = await fs.readFile(agentFile, 'utf8');
+    //   // Check if content has agent XML and no activation block
+    //   if (content.includes('<agent') && !content.includes('<activation')) {
+    //     // Inject the activation block using XML handler
+    //     content = this.xmlHandler.injectActivationSimple(content);
+    //     await fs.writeFile(agentFile, content, 'utf8');
+    //   }
+    // }
   }
 
   /**
@@ -1030,10 +1025,10 @@ class ModuleManager {
         const installWorkflowPath = item['workflow-install']; // Where to copy TO
 
         // Parse SOURCE workflow path
-        // Handle both .bmad placeholder and hardcoded 'bmad'
-        // Example: {project-root}/.bmad/bmm/workflows/4-implementation/create-story/workflow.yaml
+        // Handle both _bmad placeholder and hardcoded 'bmad'
+        // Example: {project-root}/_bmad/bmm/workflows/4-implementation/create-story/workflow.yaml
         // Or: {project-root}/bmad/bmm/workflows/4-implementation/create-story/workflow.yaml
-        const sourceMatch = sourceWorkflowPath.match(/\{project-root\}\/(?:\.bmad)\/([^/]+)\/workflows\/(.+)/);
+        const sourceMatch = sourceWorkflowPath.match(/\{project-root\}\/(?:_bmad)\/([^/]+)\/workflows\/(.+)/);
         if (!sourceMatch) {
           console.warn(chalk.yellow(`      Could not parse workflow path: ${sourceWorkflowPath}`));
           continue;
@@ -1042,9 +1037,9 @@ class ModuleManager {
         const [, sourceModule, sourceWorkflowSubPath] = sourceMatch;
 
         // Parse INSTALL workflow path
-        // Handle.bmad
-        // Example: {project-root}/.bmad/bmgd/workflows/4-production/create-story/workflow.yaml
-        const installMatch = installWorkflowPath.match(/\{project-root\}\/(\.bmad)\/([^/]+)\/workflows\/(.+)/);
+        // Handle_bmad
+        // Example: {project-root}/_bmad/bmgd/workflows/4-production/create-story/workflow.yaml
+        const installMatch = installWorkflowPath.match(/\{project-root\}\/(_bmad)\/([^/]+)\/workflows\/(.+)/);
         if (!installMatch) {
           console.warn(chalk.yellow(`      Could not parse workflow-install path: ${installWorkflowPath}`));
           continue;
@@ -1096,9 +1091,9 @@ class ModuleManager {
   async updateWorkflowConfigSource(workflowYamlPath, newModuleName) {
     let yamlContent = await fs.readFile(workflowYamlPath, 'utf8');
 
-    // Replace config_source: "{project-root}/.bmad/OLD_MODULE/config.yaml"
-    // with config_source: "{project-root}/.bmad/NEW_MODULE/config.yaml"
-    // Note: At this point .bmad has already been replaced with actual folder name
+    // Replace config_source: "{project-root}/_bmad/OLD_MODULE/config.yaml"
+    // with config_source: "{project-root}/_bmad/NEW_MODULE/config.yaml"
+    // Note: At this point _bmad has already been replaced with actual folder name
     const configSourcePattern = /config_source:\s*["']?\{project-root\}\/[^/]+\/[^/]+\/config\.yaml["']?/g;
     const newConfigSource = `config_source: "{project-root}/${this.bmadFolderName}/${newModuleName}/config.yaml"`;
 
