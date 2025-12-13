@@ -11,8 +11,6 @@ subheader: "Agent and Workflow Configuration for this module"
 ## user_name
 ## communication_language
 ## output_folder
-## install_user_docs
-## kb_install
 
 project_name:
   prompt: "What is the title of your project you will be working on?"
@@ -21,9 +19,8 @@ project_name:
 
 user_skill_level:
   prompt:
-    - "What is your technical experience level?"
-    - "This affects how agents explain concepts to you (NOT document content)."
-    - "Documents are always concise for LLM efficiency."
+    - "What is your development experience level?"
+    - "This affects how agents explain concepts in chat."
   default: "intermediate"
   result: "{value}"
   single-select:
@@ -35,7 +32,7 @@ user_skill_level:
       label: "Expert - Deep technical knowledge, be direct and technical"
 
 sprint_artifacts:
-  prompt: "Where should Sprint Artifacts be stored (sprint status, stories, story context, temp context, etc...)?"
+  prompt: "Where should sprint artifacts be stored (sprint status, stories, retrospectives)?"
   default: "{output_folder}/sprint-artifacts"
   result: "{project-root}/{value}"
 
