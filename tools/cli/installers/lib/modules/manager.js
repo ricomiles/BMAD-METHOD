@@ -820,6 +820,32 @@ class ModuleManager {
           if (await fs.pathExists(genericTemplatePath)) {
             await this.copyFileWithPlaceholderReplacement(genericTemplatePath, customizePath);
             console.log(chalk.dim(`  Created customize: ${moduleName}-${agentName}.customize.yaml`));
+
+            // Store original hash for modification detection
+            const crypto = require('node:crypto');
+            const customizeContent = await fs.readFile(customizePath, 'utf8');
+            const originalHash = crypto.createHash('sha256').update(customizeContent).digest('hex');
+
+            // Store in main manifest
+            const manifestPath = path.join(bmadDir, '_cfg', 'manifest.yaml');
+            let manifestData = {};
+            if (await fs.pathExists(manifestPath)) {
+              const manifestContent = await fs.readFile(manifestPath, 'utf8');
+              const yaml = require('yaml');
+              manifestData = yaml.parse(manifestContent);
+            }
+            if (!manifestData.agentCustomizations) {
+              manifestData.agentCustomizations = {};
+            }
+            manifestData.agentCustomizations[path.relative(bmadDir, customizePath)] = originalHash;
+
+            // Write back to manifest
+            const yaml = require('yaml');
+            const updatedContent = yaml.stringify(manifestData, {
+              indent: 2,
+              lineWidth: 0,
+            });
+            await fs.writeFile(manifestPath, updatedContent, 'utf8');
           }
         }
 

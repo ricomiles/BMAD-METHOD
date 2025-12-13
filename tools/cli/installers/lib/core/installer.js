@@ -2798,11 +2798,28 @@ If AgentVibes party mode is enabled, immediately trigger TTS with agent's voice:
             const relativePath = path.relative(bmadDir, fullPath);
             const fileName = path.basename(fullPath);
 
-            // Skip _cfg directory EXCEPT for agent customizations
-            if (
-              (relativePath.startsWith('_cfg/') || relativePath.startsWith('_cfg\\')) && // Allow .customize.yaml files in _cfg/agents/
-              !(relativePath.includes('/agents/') && fileName.endsWith('.customize.yaml'))
-            ) {
+            // Skip _cfg directory EXCEPT for modified agent customizations
+            if (relativePath.startsWith('_cfg/') || relativePath.startsWith('_cfg\\')) {
+              // Special handling for .customize.yaml files - only preserve if modified
+              if (relativePath.includes('/agents/') && fileName.endsWith('.customize.yaml')) {
+                // Check if the customization file has been modified from manifest
+                const manifestPath = path.join(bmadDir, '_cfg', 'manifest.yaml');
+                if (await fs.pathExists(manifestPath)) {
+                  const crypto = require('node:crypto');
+                  const currentContent = await fs.readFile(fullPath, 'utf8');
+                  const currentHash = crypto.createHash('sha256').update(currentContent).digest('hex');
+
+                  const yaml = require('yaml');
+                  const manifestContent = await fs.readFile(manifestPath, 'utf8');
+                  const manifestData = yaml.parse(manifestContent);
+                  const originalHash = manifestData.agentCustomizations?.[relativePath];
+
+                  // Only add to customFiles if hash differs (user modified)
+                  if (originalHash && currentHash !== originalHash) {
+                    customFiles.push(fullPath);
+                  }
+                }
+              }
               continue;
             }
 
@@ -2814,7 +2831,11 @@ If AgentVibes party mode is enabled, immediately trigger TTS with agent's voice:
 
             if (!fileInfo) {
               // File not in manifest = custom file
-              customFiles.push(fullPath);
+              // EXCEPT: Agent .md files in module folders are generated files, not custom
+              // Only treat .md files under _cfg/agents/ as custom
+              if (!(fileName.endsWith('.md') && relativePath.includes('/agents/') && !relativePath.startsWith('_cfg/'))) {
+                customFiles.push(fullPath);
+              }
             } else if (manifestHasHashes && fileInfo.hash) {
               // File in manifest with hash - check if it was modified
               const currentHash = await this.manifest.calculateFileHash(fullPath);
