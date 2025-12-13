@@ -18,7 +18,6 @@
 - Load README.md
 - List all agents in agents/ directory
 - List all workflows in workflows/ directory
-- Check for installer files (if in src/modules/)
 - Identify any custom structure or patterns
   </action>
 

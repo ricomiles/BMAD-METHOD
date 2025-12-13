@@ -51,32 +51,8 @@ This uses **step-file architecture** for disciplined execution:
 
 Load and read full config from `{project-root}/_bmad/bmb/config.yaml`:
 
-- `project_name`, `output_folder`, `user_name`, `communication_language`, `document_output_language`
+- `project_name`, `user_name`, `bmad_memory`, `communication_language`, `document_output_language`, `bmb_creations_output_folder`
 
 ### 2. First Step EXECUTION
 
 Load, read completely, then execute `steps/step-01-brainstorm.md` to begin the workflow.
-
----
-
-## PATH DEFINITIONS
-
-# Technical documentation for agent building
-
-agent_compilation: "{project-root}/\_bmad/bmb/docs/agents/agent-compilation.md"
-understanding_agent_types: "{project-root}/\_bmad/bmb/docs/agents/understanding-agent-types.md"
-simple_agent_architecture: "{project-root}/\_bmad/bmb/docs/agents/simple-agent-architecture.md"
-expert_agent_architecture: "{project-root}/\_bmad/bmb/docs/agents/expert-agent-architecture.md"
-module_agent_architecture: "{project-root}/\_bmad/bmb/docs/agents/module-agent-architecture.md"
-agent_menu_patterns: "{project-root}/\_bmad/bmb/docs/agents/agent-menu-patterns.md"
-
-# Data and templates
-
-communication_presets: "{workflow_path}/data/communication-presets.csv"
-brainstorm_context: "{workflow_path}/data/brainstorm-context.md"
-
-# Reference examples
-
-simple_agent_examples: "{project-root}/bmb/reference/agents/simple-examples/"
-expert_agent_examples: "{project-root}/bmb/reference/agents/expert-examples/"
-module_agent_examples: "{project-root}/bmb/reference/agents/module-examples/"
