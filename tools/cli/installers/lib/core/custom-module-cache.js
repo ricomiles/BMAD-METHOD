@@ -144,12 +144,18 @@ class CustomModuleCache {
     const sourceHash = await this.calculateHash(sourcePath);
     const cacheHash = await this.calculateHash(cacheDir);
 
-    // Update manifest - don't store originalPath for source control friendliness
+    // Update manifest - don't store absolute paths for portability
+    // Clean metadata to remove absolute paths
+    const cleanMetadata = { ...metadata };
+    if (cleanMetadata.sourcePath) {
+      delete cleanMetadata.sourcePath;
+    }
+
     cacheManifest[moduleId] = {
       originalHash: sourceHash,
       cacheHash: cacheHash,
       cachedAt: new Date().toISOString(),
-      ...metadata,
+      ...cleanMetadata,
     };
 
     await this.updateCacheManifest(cacheManifest);

@@ -29,6 +29,7 @@ class ModuleManager {
     this.xmlHandler = new XmlHandler();
     this.bmadFolderName = 'bmad'; // Default, can be overridden
     this.scanProjectForModules = options.scanProjectForModules !== false; // Default to true for backward compatibility
+    this.customModulePaths = new Map(); // Initialize custom module paths
   }
 
   /**
@@ -45,6 +46,14 @@ class ModuleManager {
    */
   setCoreConfig(coreConfig) {
     this.coreConfig = coreConfig;
+  }
+
+  /**
+   * Set custom module paths for priority lookup
+   * @param {Map<string, string>} customModulePaths - Map of module ID to source path
+   */
+  setCustomModulePaths(customModulePaths) {
+    this.customModulePaths = customModulePaths;
   }
 
   /**
@@ -339,6 +348,11 @@ class ModuleManager {
    */
   async findModuleSource(moduleName) {
     const projectRoot = getProjectRoot();
+
+    // First check custom module paths if they exist
+    if (this.customModulePaths && this.customModulePaths.has(moduleName)) {
+      return this.customModulePaths.get(moduleName);
+    }
 
     // First, check src/modules
     const srcModulePath = path.join(this.modulesSourcePath, moduleName);

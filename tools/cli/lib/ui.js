@@ -40,19 +40,22 @@ class UI {
     let legacyBmadPath = null;
 
     // First check for legacy .bmad folder (instead of _bmad)
-    const entries = await fs.readdir(confirmedDirectory, { withFileTypes: true });
-    for (const entry of entries) {
-      if (entry.isDirectory() && entry.name === '.bmad') {
-        hasLegacyBmadFolder = true;
-        legacyBmadPath = path.join(confirmedDirectory, '.bmad');
-        bmadDir = legacyBmadPath;
+    // Only check if directory exists
+    if (await fs.pathExists(confirmedDirectory)) {
+      const entries = await fs.readdir(confirmedDirectory, { withFileTypes: true });
+      for (const entry of entries) {
+        if (entry.isDirectory() && entry.name === '.bmad') {
+          hasLegacyBmadFolder = true;
+          legacyBmadPath = path.join(confirmedDirectory, '.bmad');
+          bmadDir = legacyBmadPath;
 
-        // Check if it has _cfg folder
-        const cfgPath = path.join(legacyBmadPath, '_cfg');
-        if (await fs.pathExists(cfgPath)) {
-          hasLegacyCfg = true;
+          // Check if it has _cfg folder
+          const cfgPath = path.join(legacyBmadPath, '_cfg');
+          if (await fs.pathExists(cfgPath)) {
+            hasLegacyCfg = true;
+          }
+          break;
         }
-        break;
       }
     }
 
@@ -154,6 +157,7 @@ class UI {
           choices: [
             { name: 'Quick Update (Settings Preserved)', value: 'quick-update' },
             { name: 'Modify BMAD Installation (Confirm or change each setting)', value: 'update' },
+            { name: 'Add Custom Content', value: 'add-custom' },
             { name: 'Remove BMad Folder and Reinstall (Full clean install - BMad Customization Will Be Lost)', value: 'reinstall' },
             { name: 'Compile Agents (Quick rebuild of all agent .md files)', value: 'compile' },
             { name: 'Cancel', value: 'cancel' },
@@ -172,6 +176,56 @@ class UI {
           actionType: 'quick-update',
           directory: confirmedDirectory,
           customContent: { hasCustomContent: false },
+        };
+      }
+
+      // Handle add custom content separately
+      if (actionType === 'add-custom') {
+        customContentConfig = await this.promptCustomContentSource();
+        // After adding custom content, continue to select additional modules
+        const { installedModuleIds } = await this.getExistingInstallation(confirmedDirectory);
+
+        // Ask if user wants to add additional modules
+        const { wantsMoreModules } = await inquirer.prompt([
+          {
+            type: 'confirm',
+            name: 'wantsMoreModules',
+            message: 'Do you want to add any additional modules?',
+            default: false,
+          },
+        ]);
+
+        let selectedModules = [];
+        if (wantsMoreModules) {
+          const moduleChoices = await this.getModuleChoices(installedModuleIds, customContentConfig);
+          selectedModules = await this.selectModules(moduleChoices);
+
+          // Process custom content selection
+          const selectedCustomContent = selectedModules.filter((mod) => mod.startsWith('__CUSTOM_CONTENT__'));
+
+          if (selectedCustomContent.length > 0) {
+            customContentConfig.selected = true;
+            customContentConfig.selectedFiles = selectedCustomContent.map((mod) => mod.replace('__CUSTOM_CONTENT__', ''));
+
+            // Convert to module IDs
+            const customContentModuleIds = [];
+            const customHandler = new CustomHandler();
+            for (const customFile of customContentConfig.selectedFiles) {
+              const customInfo = await customHandler.getCustomInfo(customFile);
+              if (customInfo) {
+                customContentModuleIds.push(customInfo.id);
+              }
+            }
+            selectedModules = [...selectedModules.filter((mod) => !mod.startsWith('__CUSTOM_CONTENT__')), ...customContentModuleIds];
+          }
+        }
+
+        return {
+          actionType: 'update',
+          directory: confirmedDirectory,
+          installCore: false, // Don't reinstall core
+          modules: selectedModules,
+          customContent: customContentConfig,
         };
       }
 
@@ -196,6 +250,24 @@ class UI {
       // For now, just note that we're in reinstall mode and continue below
 
       // If actionType === 'update' or 'reinstall', continue with normal flow below
+    }
+
+    // Handle custom content for new installations
+    if (!hasExistingInstall) {
+      const { wantsCustomContent } = await inquirer.prompt([
+        {
+          type: 'confirm',
+          name: 'wantsCustomContent',
+          message: 'Will you be installing any custom content?',
+          default: false,
+        },
+      ]);
+
+      if (wantsCustomContent) {
+        customContentConfig = await this.promptCustomContentSource();
+      } else {
+        customContentConfig._shouldAsk = true; // Ask later after modules are selected
+      }
     }
 
     const { installedModuleIds } = await this.getExistingInstallation(confirmedDirectory);
@@ -237,6 +309,9 @@ class UI {
         }
         // Filter out custom content markers and add module IDs
         selectedModules = [...selectedModules.filter((mod) => !mod.startsWith('__CUSTOM_CONTENT__')), ...customContentModuleIds];
+      } else if (customContentConfig.selectedModuleIds && customContentConfig.selectedModuleIds.length > 0) {
+        // Custom modules were selected from sources
+        selectedModules = [...selectedModules, ...customContentConfig.selectedModuleIds];
       } else if (customContentConfig.hasCustomContent) {
         // User provided custom content but didn't select any
         customContentConfig.selected = false;
@@ -1183,6 +1258,127 @@ class UI {
       console.error(chalk.red('Error configuring custom content:'), error);
       return { hasCustomContent: false };
     }
+  }
+
+  /**
+   * Prompt user for custom content source location
+   * @returns {Object} Custom content configuration
+   */
+  async promptCustomContentSource() {
+    const customContentConfig = { hasCustomContent: true, sources: [] };
+
+    // Keep asking for more sources until user is done
+    while (true) {
+      console.log(chalk.cyan('\n📦 Adding Custom Content'));
+
+      let sourcePath;
+      let isValid = false;
+
+      while (!isValid) {
+        const { path: inputPath } = await inquirer.prompt([
+          {
+            type: 'input',
+            name: 'path',
+            message: 'Enter the path to your custom content folder:',
+            validate: async (input) => {
+              if (!input || input.trim() === '') {
+                return 'Path is required';
+              }
+
+              try {
+                // Expand the path
+                const expandedPath = this.expandUserPath(input.trim());
+
+                // Check if path exists
+                if (!(await fs.pathExists(expandedPath))) {
+                  return 'Path does not exist';
+                }
+
+                // Check if it's a directory
+                const stat = await fs.stat(expandedPath);
+                if (!stat.isDirectory()) {
+                  return 'Path must be a directory';
+                }
+
+                // Check for module.yaml in the root
+                const moduleYamlPath = path.join(expandedPath, 'module.yaml');
+                if (!(await fs.pathExists(moduleYamlPath))) {
+                  return 'Directory must contain a module.yaml file in the root';
+                }
+
+                // Try to parse the module.yaml to get the module ID
+                try {
+                  const yaml = require('yaml');
+                  const content = await fs.readFile(moduleYamlPath, 'utf8');
+                  const moduleData = yaml.parse(content);
+                  if (!moduleData.code) {
+                    return 'module.yaml must contain a "code" field for the module ID';
+                  }
+                } catch (error) {
+                  return 'Invalid module.yaml file: ' + error.message;
+                }
+
+                return true;
+              } catch (error) {
+                return 'Error validating path: ' + error.message;
+              }
+            },
+          },
+        ]);
+
+        sourcePath = this.expandUserPath(inputPath);
+        isValid = true;
+      }
+
+      // Read module.yaml to get module info
+      const yaml = require('yaml');
+      const moduleYamlPath = path.join(sourcePath, 'module.yaml');
+      const moduleContent = await fs.readFile(moduleYamlPath, 'utf8');
+      const moduleData = yaml.parse(moduleContent);
+
+      // Add to sources
+      customContentConfig.sources.push({
+        path: sourcePath,
+        id: moduleData.code,
+        name: moduleData.name || moduleData.code,
+      });
+
+      console.log(chalk.green(`✓ Added custom module: ${moduleData.name || moduleData.code}`));
+
+      // Ask if user wants to add more
+      const { addMore } = await inquirer.prompt([
+        {
+          type: 'confirm',
+          name: 'addMore',
+          message: 'Add another custom module?',
+          default: false,
+        },
+      ]);
+
+      if (!addMore) {
+        break;
+      }
+    }
+
+    // Ask if user wants to add these to the installation
+    const { shouldInstall } = await inquirer.prompt([
+      {
+        type: 'confirm',
+        name: 'shouldInstall',
+        message: `Install ${customContentConfig.sources.length} custom module(s) now?`,
+        default: true,
+      },
+    ]);
+
+    if (shouldInstall) {
+      customContentConfig.selected = true;
+      // Store paths to module.yaml files, not directories
+      customContentConfig.selectedFiles = customContentConfig.sources.map((s) => path.join(s.path, 'module.yaml'));
+      // Also include module IDs for installation
+      customContentConfig.selectedModuleIds = customContentConfig.sources.map((s) => s.id);
+    }
+
+    return customContentConfig;
   }
 }
 

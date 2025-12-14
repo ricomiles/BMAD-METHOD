@@ -34,13 +34,19 @@ class ManifestGenerator {
 
     // Store modules list (all modules including preserved ones)
     const preservedModules = options.preservedModules || [];
+    const customModules = options.customModules || [];
 
     // Scan the bmad directory to find all actually installed modules
     const installedModules = await this.scanInstalledModules(bmadDir);
 
-    // Deduplicate modules list to prevent duplicates
-    this.modules = [...new Set(['core', ...selectedModules, ...preservedModules, ...installedModules])];
-    this.updatedModules = [...new Set(['core', ...selectedModules, ...installedModules])]; // All installed modules get rescanned
+    // Filter out custom modules from the regular modules list
+    const customModuleIds = new Set(customModules.map((cm) => cm.id));
+    const regularModules = [...new Set(['core', ...selectedModules, ...preservedModules, ...installedModules])].filter(
+      (module) => !customModuleIds.has(module),
+    );
+
+    this.modules = regularModules;
+    this.updatedModules = [...new Set(['core', ...selectedModules, ...installedModules])].filter((module) => !customModuleIds.has(module)); // Also exclude custom modules from rescanning
 
     // For CSV manifests, we need to include ALL modules that are installed
     // preservedModules controls which modules stay as-is in the CSV (don't get rescanned)

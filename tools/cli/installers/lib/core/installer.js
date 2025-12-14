@@ -417,12 +417,13 @@ If AgentVibes party mode is enabled, immediately trigger TTS with agent's voice:
 
     // Collect configurations for modules (skip if quick update already collected them)
     let moduleConfigs;
+    let customModulePaths = new Map();
+
     if (config._quickUpdate) {
       // Quick update already collected all configs, use them directly
       moduleConfigs = this.configCollector.collectedConfig;
     } else {
       // Build custom module paths map from customContent
-      const customModulePaths = new Map();
 
       // Handle selectedFiles (from existing install path or manual directory input)
       if (config.customContent && config.customContent.selected && config.customContent.selectedFiles) {
@@ -432,6 +433,13 @@ If AgentVibes party mode is enabled, immediately trigger TTS with agent's voice:
           if (customInfo && customInfo.id) {
             customModulePaths.set(customInfo.id, customInfo.path);
           }
+        }
+      }
+
+      // Handle new custom content sources from UI
+      if (config.customContent && config.customContent.sources) {
+        for (const source of config.customContent.sources) {
+          customModulePaths.set(source.id, source.path);
         }
       }
 
@@ -479,6 +487,7 @@ If AgentVibes party mode is enabled, immediately trigger TTS with agent's voice:
     // Set bmad folder name on module manager and IDE manager for placeholder replacement
     this.moduleManager.setBmadFolderName(bmadFolderName);
     this.moduleManager.setCoreConfig(moduleConfigs.core || {});
+    this.moduleManager.setCustomModulePaths(customModulePaths);
     this.ideManager.setBmadFolderName(bmadFolderName);
 
     // Tool selection will be collected after we determine if it's a reinstall/update/new install
@@ -733,6 +742,26 @@ If AgentVibes party mode is enabled, immediately trigger TTS with agent's voice:
       spinner.text = 'Creating directory structure...';
       await this.createDirectoryStructure(bmadDir);
 
+      // Cache custom modules if any
+      if (customModulePaths && customModulePaths.size > 0) {
+        spinner.text = 'Caching custom modules...';
+        const { CustomModuleCache } = require('./custom-module-cache');
+        const customCache = new CustomModuleCache(bmadDir);
+
+        for (const [moduleId, sourcePath] of customModulePaths) {
+          const cachedInfo = await customCache.cacheModule(moduleId, sourcePath, {
+            sourcePath: sourcePath, // Store original path for updates
+          });
+
+          // Update the customModulePaths to use the cached location
+          customModulePaths.set(moduleId, cachedInfo.cachePath);
+        }
+
+        // Update module manager with the cached paths
+        this.moduleManager.setCustomModulePaths(customModulePaths);
+        spinner.succeed('Custom modules cached');
+      }
+
       // Get project root
       const projectRoot = getProjectRoot();
 
@@ -790,6 +819,20 @@ If AgentVibes party mode is enabled, immediately trigger TTS with agent's voice:
 
       const modulesToInstall = allModules;
 
+      // For dependency resolution, we only need regular modules (not custom modules)
+      // Custom modules are already installed in _bmad and don't need dependency resolution from source
+      const regularModulesForResolution = allModules.filter((module) => {
+        // Check if this is a custom module
+        const isCustom =
+          customModulePaths.has(module) ||
+          (finalCustomContent && finalCustomContent.cachedModules && finalCustomContent.cachedModules.some((cm) => cm.id === module)) ||
+          (finalCustomContent &&
+            finalCustomContent.selected &&
+            finalCustomContent.selectedFiles &&
+            finalCustomContent.selectedFiles.some((f) => f.includes(module)));
+        return !isCustom;
+      });
+
       // For dependency resolution, we need to pass the project root
       // Create a temporary module manager that knows about custom content locations
       const tempModuleManager = new ModuleManager({
@@ -797,13 +840,7 @@ If AgentVibes party mode is enabled, immediately trigger TTS with agent's voice:
         bmadDir: bmadDir, // Pass bmadDir so we can check cache
       });
 
-      // Make sure custom modules are discoverable
-      if (config.customContent && config.customContent.selected && config.customContent.selectedFiles) {
-        // The dependency resolver needs to know about these modules
-        // We'll handle custom modules separately in the installation loop
-      }
-
-      const resolution = await this.dependencyResolver.resolve(projectRoot, allModules, {
+      const resolution = await this.dependencyResolver.resolve(projectRoot, regularModulesForResolution, {
         verbose: config.verbose,
         moduleManager: tempModuleManager,
       });
@@ -974,7 +1011,7 @@ If AgentVibes party mode is enabled, immediately trigger TTS with agent's voice:
             config._customModulesToTrack.push({
               id: customInfo.id,
               name: customInfo.name,
-              sourcePath: sourcePath,
+              sourcePath: useCache ? `_config/custom/${customInfo.id}` : sourcePath,
               installDate: new Date().toISOString(),
             });
           } else {
@@ -1116,6 +1153,7 @@ If AgentVibes party mode is enabled, immediately trigger TTS with agent's voice:
       const manifestStats = await manifestGen.generateManifests(bmadDir, allModulesForManifest, this.installedFiles, {
         ides: config.ides || [],
         preservedModules: modulesForCsvPreserve, // Scan these from installed bmad/ dir
+        customModules: config._customModulesToTrack || [], // Custom modules to exclude from regular modules list
       });
 
       // Add custom modules to manifest (now that it exists)
@@ -2086,12 +2124,17 @@ If AgentVibes party mode is enabled, immediately trigger TTS with agent's voice:
 
         // Compile using the same compiler as initial installation
         const { compileAgent } = require('../../../lib/agent/compiler');
-        const { xml } = await compileAgent(yamlContent, answers, agentName, path.relative(bmadDir, targetMdPath), {
+        const result = await compileAgent(yamlContent, answers, agentName, path.relative(bmadDir, targetMdPath), {
           config: coreConfig,
         });
 
+        // Check if compilation succeeded
+        if (!result || !result.xml) {
+          throw new Error(`Failed to compile agent ${agentName}: No XML returned from compiler`);
+        }
+
         // Replace _bmad with actual folder name if needed
-        const finalXml = xml.replaceAll('_bmad', path.basename(bmadDir));
+        const finalXml = result.xml.replaceAll('_bmad', path.basename(bmadDir));
 
         // Write the rebuilt .md file with POSIX-compliant final newline
         const content = finalXml.endsWith('\n') ? finalXml : finalXml + '\n';
