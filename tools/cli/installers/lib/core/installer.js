@@ -394,11 +394,14 @@ If AgentVibes party mode is enabled, immediately trigger TTS with agent's voice:
     // Clone config to avoid mutating the caller's object
     const config = { ...originalConfig };
 
-    // Display BMAD logo
-    CLIUtils.displayLogo();
+    // Only display logo if core config wasn't already collected (meaning we're not continuing from UI)
+    if (!config.coreConfig) {
+      // Display BMAD logo
+      CLIUtils.displayLogo();
 
-    // Display welcome message
-    CLIUtils.displaySection('BMAD™ Installation', 'Version ' + require(path.join(getProjectRoot(), 'package.json')).version);
+      // Display welcome message
+      CLIUtils.displaySection('BMAD™ Installation', 'Version ' + require(path.join(getProjectRoot(), 'package.json')).version);
+    }
 
     // Note: Legacy V4 detection now happens earlier in UI.promptInstall()
     // before any config collection, so we don't need to check again here
