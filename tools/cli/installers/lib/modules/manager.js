@@ -410,7 +410,10 @@ class ModuleManager {
 
     // Check if source module exists
     if (!sourcePath) {
-      throw new Error(`Module '${moduleName}' not found in any source location`);
+      // Provide a more user-friendly error message
+      throw new Error(
+        `Source for module '${moduleName}' is not available. It will be retained but cannot be updated without its source files.`,
+      );
     }
 
     // Check if this is a custom module and read its custom.yaml values
@@ -444,7 +447,6 @@ class ModuleManager {
 
     // Check if already installed
     if (await fs.pathExists(targetPath)) {
-      console.log(chalk.yellow(`Module '${moduleName}' already installed, updating...`));
       await fs.remove(targetPath);
     }
 

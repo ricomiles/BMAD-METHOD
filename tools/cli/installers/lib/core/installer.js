@@ -431,6 +431,13 @@ If AgentVibes party mode is enabled, immediately trigger TTS with agent's voice:
     if (config._quickUpdate) {
       // Quick update already collected all configs, use them directly
       moduleConfigs = this.configCollector.collectedConfig;
+
+      // For quick update, populate customModulePaths from _customModuleSources
+      if (config._customModuleSources) {
+        for (const [moduleId, customInfo] of config._customModuleSources) {
+          customModulePaths.set(moduleId, customInfo.sourcePath);
+        }
+      }
     } else {
       // Build custom module paths map from customContent
 
@@ -847,7 +854,9 @@ If AgentVibes party mode is enabled, immediately trigger TTS with agent's voice:
           }
           installedModuleNames.add(moduleName);
 
-          spinner.start(`Installing module: ${moduleName}...`);
+          // Show appropriate message based on whether this is a quick update
+          const isQuickUpdate = config._quickUpdate || false;
+          spinner.start(`${isQuickUpdate ? 'Updating' : 'Installing'} module: ${moduleName}...`);
 
           // Check if this is a custom module
           let isCustomModule = false;
@@ -920,6 +929,7 @@ If AgentVibes party mode is enabled, immediately trigger TTS with agent's voice:
               {
                 isCustom: true,
                 moduleConfig: collectedModuleConfig,
+                isQuickUpdate: config._quickUpdate || false,
               },
             );
 
@@ -939,7 +949,7 @@ If AgentVibes party mode is enabled, immediately trigger TTS with agent's voice:
             }
           }
 
-          spinner.succeed(`Module installed: ${moduleName}`);
+          spinner.succeed(`Module ${isQuickUpdate ? 'updated' : 'installed'}: ${moduleName}`);
         }
 
         // Install partial modules (only dependencies)
@@ -1243,9 +1253,41 @@ If AgentVibes party mode is enabled, immediately trigger TTS with agent's voice:
 
       // Check for custom modules with missing sources before update
       const customModuleSources = new Map();
+
+      // Check manifest for backward compatibility
       if (existingInstall.customModules) {
         for (const customModule of existingInstall.customModules) {
           customModuleSources.set(customModule.id, customModule);
+        }
+      }
+
+      // Also check cache directory
+      const cacheDir = path.join(bmadDir, '_config', 'custom');
+      if (await fs.pathExists(cacheDir)) {
+        const cachedModules = await fs.readdir(cacheDir, { withFileTypes: true });
+
+        for (const cachedModule of cachedModules) {
+          if (cachedModule.isDirectory()) {
+            const moduleId = cachedModule.name;
+
+            // Skip if we already have this module
+            if (customModuleSources.has(moduleId)) {
+              continue;
+            }
+
+            const cachedPath = path.join(cacheDir, moduleId);
+
+            // Check if this is actually a custom module (has module.yaml)
+            const moduleYamlPath = path.join(cachedPath, 'module.yaml');
+            if (await fs.pathExists(moduleYamlPath)) {
+              customModuleSources.set(moduleId, {
+                id: moduleId,
+                name: moduleId,
+                sourcePath: path.join('_config', 'custom', moduleId), // Relative path
+                cached: true,
+              });
+            }
+          }
         }
       }
 
@@ -2144,8 +2186,10 @@ If AgentVibes party mode is enabled, immediately trigger TTS with agent's voice:
       const configuredIdes = existingInstall.ides || [];
       const projectRoot = path.dirname(bmadDir);
 
-      // Get custom module sources from manifest
+      // Get custom module sources from manifest and cache
       const customModuleSources = new Map();
+
+      // First check manifest for backward compatibility
       if (existingInstall.customModules) {
         for (const customModule of existingInstall.customModules) {
           // Ensure we have an absolute sourcePath
@@ -2173,6 +2217,37 @@ If AgentVibes party mode is enabled, immediately trigger TTS with agent's voice:
           };
 
           customModuleSources.set(customModule.id, updatedModule);
+        }
+      }
+
+      // Also check cache directory for any modules not in manifest
+      const cacheDir = path.join(bmadDir, '_config', 'custom');
+      if (await fs.pathExists(cacheDir)) {
+        const cachedModules = await fs.readdir(cacheDir, { withFileTypes: true });
+
+        for (const cachedModule of cachedModules) {
+          if (cachedModule.isDirectory()) {
+            const moduleId = cachedModule.name;
+
+            // Skip if we already have this module from manifest
+            if (customModuleSources.has(moduleId)) {
+              continue;
+            }
+
+            const cachedPath = path.join(cacheDir, moduleId);
+
+            // Check if this is actually a custom module (has module.yaml)
+            const moduleYamlPath = path.join(cachedPath, 'module.yaml');
+            if (await fs.pathExists(moduleYamlPath)) {
+              // For quick update, we always rebuild from cache
+              customModuleSources.set(moduleId, {
+                id: moduleId,
+                name: moduleId, // We'll read the actual name if needed
+                sourcePath: cachedPath,
+                cached: true, // Flag to indicate this is from cache
+              });
+            }
+          }
         }
       }
 
@@ -2928,13 +3003,23 @@ If AgentVibes party mode is enabled, immediately trigger TTS with agent's voice:
           info: customInfo,
         });
       } else {
-        customModulesWithMissingSources.push({
-          id: moduleId,
-          name: customInfo.name,
-          sourcePath: customInfo.sourcePath,
-          relativePath: customInfo.relativePath,
-          info: customInfo,
-        });
+        // For cached modules that are missing, we just skip them without prompting
+        if (customInfo.cached) {
+          // Skip cached modules without prompting
+          keptModulesWithoutSources.push({
+            id: moduleId,
+            name: customInfo.name,
+            cached: true,
+          });
+        } else {
+          customModulesWithMissingSources.push({
+            id: moduleId,
+            name: customInfo.name,
+            sourcePath: customInfo.sourcePath,
+            relativePath: customInfo.relativePath,
+            info: customInfo,
+          });
+        }
       }
     }
 
