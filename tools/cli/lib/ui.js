@@ -463,8 +463,6 @@ class UI {
       }
     }
 
-    CLIUtils.displaySection('Tool Integration', 'Select AI coding assistants and IDEs to configure');
-
     let answers;
     let userConfirmedNoTools = false;
 
@@ -502,9 +500,8 @@ class UI {
       ]);
 
       if (goBack) {
-        // Re-display the section header before looping back
+        // Re-display a message before looping back
         console.log();
-        CLIUtils.displaySection('Tool Integration', 'Select AI coding assistants and IDEs to configure');
       } else {
         // User explicitly chose to proceed without tools
         userConfirmedNoTools = true;
