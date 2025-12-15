@@ -16,7 +16,7 @@ communication_language:
 
 document_output_language:
   prompt: "Preferred document output language?"
-  default: "{communication_language}"
+  default: "English"
   result: "{value}"
 
 output_folder:

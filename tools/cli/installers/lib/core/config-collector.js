@@ -563,6 +563,9 @@ class ConfigCollector {
       // Get friendly module name from config or use uppercase module name
       const moduleDisplayName = moduleConfig.header || `${moduleName.toUpperCase()} Module`;
 
+      // Add blank line for better readability
+      console.log();
+
       // Display the module name in color first
       console.log(chalk.cyan('?') + ' ' + chalk.magenta(moduleDisplayName));
 
