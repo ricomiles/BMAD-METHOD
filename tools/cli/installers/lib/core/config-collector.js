@@ -303,7 +303,7 @@ class ConfigCollector {
         }
       }
       // Show "no config" message for modules with no new questions
-      CLIUtils.displayModuleNoConfig(moduleName, moduleConfig.header, moduleConfig.subheader);
+      console.log(chalk.dim(`  ✓ ${moduleName.toUpperCase()} module already up to date`));
       return false; // No new fields
     }
 
@@ -339,7 +339,7 @@ class ConfigCollector {
         Object.assign(allAnswers, promptedAnswers);
       } else if (newStaticKeys.length > 0) {
         // Only static fields, no questions - show no config message
-        CLIUtils.displayModuleNoConfig(moduleName, moduleConfig.header, moduleConfig.subheader);
+        console.log(chalk.dim(`  ✓ ${moduleName.toUpperCase()} module configuration updated`));
       }
 
       // Store all answers for cross-referencing
@@ -558,21 +558,57 @@ class ConfigCollector {
     // Collect all answers (static + prompted)
     let allAnswers = { ...staticAnswers };
 
-    // Display appropriate header based on whether there are questions
+    // If there are questions to ask, prompt for accepting defaults vs customizing
     if (questions.length > 0) {
-      CLIUtils.displayModuleConfigHeader(moduleName, moduleConfig.header, moduleConfig.subheader);
-      console.log(); // Line break before questions
-      const promptedAnswers = await inquirer.prompt(questions);
+      // Get friendly module name from config or use uppercase module name
+      const moduleDisplayName = moduleConfig.header || `${moduleName.toUpperCase()} Module`;
 
-      // Merge prompted answers with static answers
-      Object.assign(allAnswers, promptedAnswers);
+      // Display the module name in color first
+      console.log(chalk.cyan('?') + ' ' + chalk.magenta(moduleDisplayName));
+
+      // Ask user if they want to accept defaults or customize on the next line
+      const { customize } = await inquirer.prompt([
+        {
+          type: 'confirm',
+          name: 'customize',
+          message: 'Accept Defaults (no to customize)?',
+          default: true,
+        },
+      ]);
+
+      if (customize) {
+        // Accept defaults - only ask questions that have NO default value
+        const questionsWithoutDefaults = questions.filter((q) => q.default === undefined || q.default === null || q.default === '');
+
+        if (questionsWithoutDefaults.length > 0) {
+          console.log(chalk.dim(`\n  Asking required questions for ${moduleName.toUpperCase()}...`));
+          const promptedAnswers = await inquirer.prompt(questionsWithoutDefaults);
+          Object.assign(allAnswers, promptedAnswers);
+        }
+
+        // For questions with defaults that weren't asked, we need to process them with their default values
+        const questionsWithDefaults = questions.filter((q) => q.default !== undefined && q.default !== null && q.default !== '');
+        for (const question of questionsWithDefaults) {
+          // Skip function defaults - these are dynamic and will be evaluated later
+          if (typeof question.default === 'function') {
+            continue;
+          }
+          allAnswers[question.name] = question.default;
+        }
+      } else {
+        // Customize - ask all questions
+        console.log(chalk.dim(`\n  Configuring ${moduleName.toUpperCase()}...`));
+        const promptedAnswers = await inquirer.prompt(questions);
+        Object.assign(allAnswers, promptedAnswers);
+      }
     }
 
     // Store all answers for cross-referencing
     Object.assign(this.allAnswers, allAnswers);
 
     // Process all answers (both static and prompted)
-    if (Object.keys(allAnswers).length > 0) {
+    // Always process if we have any answers or static answers
+    if (Object.keys(allAnswers).length > 0 || Object.keys(staticAnswers).length > 0) {
       const answers = allAnswers;
 
       // Process answers and build result values
@@ -672,7 +708,32 @@ class ConfigCollector {
       // No longer display completion boxes - keep output clean
     } else {
       // No questions for this module - show completion message
-      CLIUtils.displayModuleNoConfig(moduleName, moduleConfig.header, moduleConfig.subheader);
+      console.log(chalk.dim(`  ✓ ${moduleName.toUpperCase()} module configured`));
+    }
+
+    // If we have no collected config for this module, but we have a module schema,
+    // ensure we have at least an empty object
+    if (!this.collectedConfig[moduleName]) {
+      this.collectedConfig[moduleName] = {};
+
+      // If we accepted defaults and have no answers, we still need to check
+      // if there are any static values in the schema that should be applied
+      if (moduleConfig) {
+        for (const key of Object.keys(moduleConfig)) {
+          if (key !== 'prompt' && moduleConfig[key] && typeof moduleConfig[key] === 'object') {
+            const item = moduleConfig[key];
+            // For static items (no prompt, just result), apply the result
+            if (!item.prompt && item.result) {
+              // Apply any placeholder replacements to the result
+              let result = item.result;
+              if (typeof result === 'string') {
+                result = this.replacePlaceholders(result, moduleName, moduleConfig);
+              }
+              this.collectedConfig[moduleName][key] = result;
+            }
+          }
+        }
+      }
     }
   }
 

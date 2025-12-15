@@ -28,7 +28,10 @@ class Manifest {
     };
 
     // Write YAML manifest
-    const yamlContent = yaml.stringify(manifestData, {
+    // Clean the manifest data to remove any non-serializable values
+    const cleanManifestData = structuredClone(manifestData);
+
+    const yamlContent = yaml.stringify(cleanManifestData, {
       indent: 2,
       lineWidth: 0,
       sortKeys: false,
@@ -100,7 +103,10 @@ class Manifest {
     const manifestPath = path.join(bmadDir, '_config', 'manifest.yaml');
     await fs.ensureDir(path.dirname(manifestPath));
 
-    const yamlContent = yaml.stringify(manifestData, {
+    // Clean the manifest data to remove any non-serializable values
+    const cleanManifestData = structuredClone(manifestData);
+
+    const yamlContent = yaml.stringify(cleanManifestData, {
       indent: 2,
       lineWidth: 0,
       sortKeys: false,

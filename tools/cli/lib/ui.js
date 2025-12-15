@@ -703,7 +703,9 @@ class UI {
     // Now collect with existing values as defaults (false = don't skip loading, true = skip completion message)
     await configCollector.collectModuleConfig('core', directory, false, true);
 
-    return configCollector.collectedConfig.core;
+    const coreConfig = configCollector.collectedConfig.core;
+    // Ensure we always have a core config object, even if empty
+    return coreConfig || {};
   }
 
   /**

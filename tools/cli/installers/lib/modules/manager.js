@@ -859,7 +859,10 @@ class ModuleManager {
 
             // Write back to manifest
             const yaml = require('yaml');
-            const updatedContent = yaml.stringify(manifestData, {
+            // Clean the manifest data to remove any non-serializable values
+            const cleanManifestData = structuredClone(manifestData);
+
+            const updatedContent = yaml.stringify(cleanManifestData, {
               indent: 2,
               lineWidth: 0,
             });

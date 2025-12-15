@@ -13,5 +13,4 @@ default_selected: false # This module will not be selected by default for new in
 
 creativity_self_assessment:
   prompt: "On a scale of 1 to 10, how would you rate your current level of creativity?"
-  default: 7
   result: "{value}"

@@ -486,7 +486,10 @@ class ManifestGenerator {
       ides: this.selectedIdes,
     };
 
-    const yamlStr = yaml.stringify(manifest, {
+    // Clean the manifest to remove any non-serializable values
+    const cleanManifest = structuredClone(manifest);
+
+    const yamlStr = yaml.stringify(cleanManifest, {
       indent: 2,
       lineWidth: 0,
       sortKeys: false,

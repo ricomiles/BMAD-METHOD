@@ -394,8 +394,14 @@ If AgentVibes party mode is enabled, immediately trigger TTS with agent's voice:
     // Clone config to avoid mutating the caller's object
     const config = { ...originalConfig };
 
+    // Check if core config was already collected in UI
+    const hasCoreConfig = config.coreConfig && Object.keys(config.coreConfig).length > 0;
+
     // Only display logo if core config wasn't already collected (meaning we're not continuing from UI)
-    if (!config.coreConfig) {
+    if (hasCoreConfig) {
+      // Core config was already collected in UI, show smooth continuation
+      // Don't clear screen, just continue flow
+    } else {
       // Display BMAD logo
       CLIUtils.displayLogo();
 
@@ -409,7 +415,7 @@ If AgentVibes party mode is enabled, immediately trigger TTS with agent's voice:
     const projectDir = path.resolve(config.directory);
 
     // If core config was pre-collected (from interactive mode), use it
-    if (config.coreConfig) {
+    if (config.coreConfig && Object.keys(config.coreConfig).length > 0) {
       this.configCollector.collectedConfig.core = config.coreConfig;
       // Also store in allAnswers for cross-referencing
       this.configCollector.allAnswers = {};
@@ -1583,8 +1589,11 @@ If AgentVibes party mode is enabled, immediately trigger TTS with agent's voice:
           coreSection = '\n# Core Configuration Values\n';
         }
 
+        // Clean the config to remove any non-serializable values (like functions)
+        const cleanConfig = structuredClone(finalConfig);
+
         // Convert config to YAML
-        let yamlContent = yaml.stringify(finalConfig, {
+        let yamlContent = yaml.stringify(cleanConfig, {
           indent: 2,
           lineWidth: 0,
           minContentWidth: 0,

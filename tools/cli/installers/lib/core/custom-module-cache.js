@@ -40,7 +40,10 @@ class CustomModuleCache {
    */
   async updateCacheManifest(manifest) {
     const yaml = require('yaml');
-    const content = yaml.stringify(manifest, {
+    // Clean the manifest to remove any non-serializable values
+    const cleanManifest = structuredClone(manifest);
+
+    const content = yaml.stringify(cleanManifest, {
       indent: 2,
       lineWidth: 0,
       sortKeys: false,
