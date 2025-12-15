@@ -32,7 +32,7 @@ class Installer {
     this.dependencyResolver = new DependencyResolver();
     this.configCollector = new ConfigCollector();
     this.ideConfigManager = new IdeConfigManager();
-    this.installedFiles = []; // Track all installed files
+    this.installedFiles = new Set(); // Track all installed files
     this.ttsInjectedFiles = []; // Track files with TTS injection applied
   }
 
@@ -924,7 +924,7 @@ If AgentVibes party mode is enabled, immediately trigger TTS with agent's voice:
               moduleName,
               bmadDir,
               (filePath) => {
-                this.installedFiles.push(filePath);
+                this.installedFiles.add(filePath);
               },
               {
                 isCustom: true,
@@ -984,12 +984,10 @@ If AgentVibes party mode is enabled, immediately trigger TTS with agent's voice:
 
       // Pre-register manifest files that will be created (except files-manifest.csv to avoid recursion)
       const cfgDir = path.join(bmadDir, '_config');
-      this.installedFiles.push(
-        path.join(cfgDir, 'manifest.yaml'),
-        path.join(cfgDir, 'workflow-manifest.csv'),
-        path.join(cfgDir, 'agent-manifest.csv'),
-        path.join(cfgDir, 'task-manifest.csv'),
-      );
+      this.installedFiles.add(path.join(cfgDir, 'manifest.yaml'));
+      this.installedFiles.add(path.join(cfgDir, 'workflow-manifest.csv'));
+      this.installedFiles.add(path.join(cfgDir, 'agent-manifest.csv'));
+      this.installedFiles.add(path.join(cfgDir, 'task-manifest.csv'));
 
       // Generate CSV manifests for workflows, agents, tasks AND ALL FILES with hashes BEFORE IDE setup
       spinner.start('Generating workflow and agent manifests...');
@@ -1013,7 +1011,7 @@ If AgentVibes party mode is enabled, immediately trigger TTS with agent's voice:
         modulesForCsvPreserve = config._preserveModules ? [...allModules, ...config._preserveModules] : allModules;
       }
 
-      const manifestStats = await manifestGen.generateManifests(bmadDir, allModulesForManifest, this.installedFiles, {
+      const manifestStats = await manifestGen.generateManifests(bmadDir, allModulesForManifest, [...this.installedFiles], {
         ides: config.ides || [],
         preservedModules: modulesForCsvPreserve, // Scan these from installed bmad/ dir
       });
@@ -1483,7 +1481,7 @@ If AgentVibes party mode is enabled, immediately trigger TTS with agent's voice:
         await fs.writeFile(configPath, content.endsWith('\n') ? content : content + '\n', 'utf8');
 
         // Track the config file in installedFiles
-        this.installedFiles.push(configPath);
+        this.installedFiles.add(configPath);
       }
     }
   }
@@ -1522,7 +1520,7 @@ If AgentVibes party mode is enabled, immediately trigger TTS with agent's voice:
       moduleName,
       bmadDir,
       (filePath) => {
-        this.installedFiles.push(filePath);
+        this.installedFiles.add(filePath);
       },
       {
         skipModuleInstaller: true, // We'll run it later after IDE setup
@@ -1559,7 +1557,7 @@ If AgentVibes party mode is enabled, immediately trigger TTS with agent's voice:
 
         if (await fs.pathExists(sourcePath)) {
           await this.copyFileWithPlaceholderReplacement(sourcePath, targetPath, this.bmadFolderName || 'bmad');
-          this.installedFiles.push(targetPath);
+          this.installedFiles.add(targetPath);
         }
       }
     }
@@ -1575,7 +1573,7 @@ If AgentVibes party mode is enabled, immediately trigger TTS with agent's voice:
 
         if (await fs.pathExists(sourcePath)) {
           await this.copyFileWithPlaceholderReplacement(sourcePath, targetPath, this.bmadFolderName || 'bmad');
-          this.installedFiles.push(targetPath);
+          this.installedFiles.add(targetPath);
         }
       }
     }
@@ -1591,7 +1589,7 @@ If AgentVibes party mode is enabled, immediately trigger TTS with agent's voice:
 
         if (await fs.pathExists(sourcePath)) {
           await this.copyFileWithPlaceholderReplacement(sourcePath, targetPath, this.bmadFolderName || 'bmad');
-          this.installedFiles.push(targetPath);
+          this.installedFiles.add(targetPath);
         }
       }
     }
@@ -1607,7 +1605,7 @@ If AgentVibes party mode is enabled, immediately trigger TTS with agent's voice:
 
         if (await fs.pathExists(sourcePath)) {
           await this.copyFileWithPlaceholderReplacement(sourcePath, targetPath, this.bmadFolderName || 'bmad');
-          this.installedFiles.push(targetPath);
+          this.installedFiles.add(targetPath);
         }
       }
     }
@@ -1622,7 +1620,7 @@ If AgentVibes party mode is enabled, immediately trigger TTS with agent's voice:
 
         if (await fs.pathExists(dataPath)) {
           await this.copyFileWithPlaceholderReplacement(dataPath, targetPath, this.bmadFolderName || 'bmad');
-          this.installedFiles.push(targetPath);
+          this.installedFiles.add(targetPath);
         }
       }
     }
@@ -1721,7 +1719,7 @@ If AgentVibes party mode is enabled, immediately trigger TTS with agent's voice:
       }
 
       // Track the installed file
-      this.installedFiles.push(targetFile);
+      this.installedFiles.add(targetFile);
     }
   }
 
@@ -2700,14 +2698,10 @@ If AgentVibes party mode is enabled, immediately trigger TTS with agent's voice:
     const installedFilesMap = new Map();
     for (const fileEntry of existingFilesManifest) {
       if (fileEntry.path) {
-        // Paths are relative to bmadDir. Legacy manifests incorrectly prefixed 'bmad/' -
-        // strip it if present. This is safe because no real path inside bmadDir would
-        // start with 'bmad/' (you'd never have _bmad/bmad/... as an actual structure).
-        const relativePath = fileEntry.path.startsWith('bmad/') ? fileEntry.path.slice(5) : fileEntry.path;
-        const absolutePath = path.join(bmadDir, relativePath);
+        const absolutePath = path.join(bmadDir, fileEntry.path);
         installedFilesMap.set(path.normalize(absolutePath), {
           hash: fileEntry.hash,
-          relativePath: relativePath,
+          relativePath: fileEntry.path,
         });
       }
     }
@@ -2759,7 +2753,6 @@ If AgentVibes party mode is enabled, immediately trigger TTS with agent's voice:
             }
 
             // Skip config.yaml files - these are regenerated on each install/update
-            // Users should use _config/agents/ override files instead
             if (fileName === 'config.yaml') {
               continue;
             }
@@ -2782,8 +2775,6 @@ If AgentVibes party mode is enabled, immediately trigger TTS with agent's voice:
                 });
               }
             }
-            // If manifest doesn't have hashes, we can't detect modifications
-            // so we just skip files that are in the manifest
           }
         }
       } catch {
@@ -2913,7 +2904,7 @@ If AgentVibes party mode is enabled, immediately trigger TTS with agent's voice:
       }
 
       await fs.writeFile(configPath, configContent, 'utf8');
-      this.installedFiles.push(configPath); // Track agent config files
+      this.installedFiles.add(configPath); // Track agent config files
       createdCount++;
     }
 
