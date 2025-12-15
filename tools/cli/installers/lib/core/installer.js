@@ -406,7 +406,7 @@ If AgentVibes party mode is enabled, immediately trigger TTS with agent's voice:
       CLIUtils.displayLogo();
 
       // Display welcome message
-      CLIUtils.displaySection('BMAD™ Installation', 'Version ' + require(path.join(getProjectRoot(), 'package.json')).version);
+      CLIUtils.displaySection('BMad™  Installation', 'Version ' + require(path.join(getProjectRoot(), 'package.json')).version);
     }
 
     // Note: Legacy V4 detection now happens earlier in UI.promptInstall()
@@ -834,13 +834,7 @@ If AgentVibes party mode is enabled, immediately trigger TTS with agent's voice:
         moduleManager: tempModuleManager,
       });
 
-      if (config.verbose) {
-        spinner.succeed('Dependencies resolved');
-      } else {
-        spinner.succeed('Dependencies resolved');
-      }
-
-      // Core is already installed above, skip if included in resolution
+      spinner.succeed('Dependencies resolved');
 
       // Install modules with their dependencies
       if (allModules && allModules.length > 0) {
@@ -1217,14 +1211,6 @@ If AgentVibes party mode is enabled, immediately trigger TTS with agent's voice:
             console.log(chalk.green(`✓ Configured: ${validIdes.join(', ')}`));
           }
         }
-
-        // Copy IDE-specific documentation (only for valid IDEs)
-        const validIdesForDocs = (config.ides || []).filter((ide) => ide && typeof ide === 'string');
-        if (validIdesForDocs.length > 0) {
-          spinner.start('Copying IDE documentation...');
-          await this.copyIdeDocumentation(validIdesForDocs, bmadDir);
-          spinner.succeed('IDE documentation copied');
-        }
       }
 
       // Run module-specific installers after IDE setup
@@ -1328,20 +1314,20 @@ If AgentVibes party mode is enabled, immediately trigger TTS with agent's voice:
       if (customFiles.length > 0) {
         console.log(chalk.cyan(`\n📁 Custom files preserved: ${customFiles.length}`));
         console.log(chalk.dim('The following custom files were found and restored:\n'));
-        for (const file of customFiles) {
-          console.log(chalk.dim(`  - ${path.relative(bmadDir, file)}`));
+        for (const customFile of customFiles) {
+          const relativePath = path.relative(projectDir, customFile);
+          console.log(chalk.dim(`  • ${relativePath}`));
         }
-        console.log('');
       }
 
       if (modifiedFiles.length > 0) {
-        console.log(chalk.yellow(`\n⚠️  Modified files detected: ${modifiedFiles.length}`));
-        console.log(chalk.dim('The following files were modified and backed up with .bak extension:\n'));
-        for (const file of modifiedFiles) {
-          console.log(chalk.dim(`  - ${file.relativePath} → ${file.relativePath}.bak`));
-        }
-        console.log(chalk.dim('\nThese files have been updated with the new version.'));
-        console.log(chalk.dim('Review the .bak files to see your changes and merge if needed.\n'));
+        console.log(chalk.yellow(`\n⚠️  User modified files detected: ${modifiedFiles.length}`));
+        console.log(
+          chalk.dim(
+            '\nThese user modified files have been updated with the new version, search the project for .bak files that had your customizations.',
+          ),
+        );
+        console.log(chalk.dim('Remove these .bak files it no longer needed\n'));
       }
 
       // Display completion message
@@ -1906,7 +1892,6 @@ If AgentVibes party mode is enabled, immediately trigger TTS with agent's voice:
         const genericTemplatePath = getSourcePath('utility', 'agent-components', 'agent.customize.template.yaml');
         if (await fs.pathExists(genericTemplatePath)) {
           await this.copyFileWithPlaceholderReplacement(genericTemplatePath, customizePath, this.bmadFolderName || 'bmad');
-          // Only show customize creation in verbose mode
           if (process.env.BMAD_VERBOSE_INSTALL === 'true') {
             console.log(chalk.dim(`  Created customize: ${moduleName}-${agentName}.customize.yaml`));
           }
@@ -3054,25 +3039,6 @@ If AgentVibes party mode is enabled, immediately trigger TTS with agent's voice:
     }
 
     return nodes;
-  }
-
-  /**
-   * Copy IDE-specific documentation to BMAD docs
-   * @param {Array} ides - List of selected IDEs
-   * @param {string} bmadDir - BMAD installation directory
-   */
-  async copyIdeDocumentation(ides, bmadDir) {
-    const docsDir = path.join(bmadDir, 'docs');
-    await fs.ensureDir(docsDir);
-
-    for (const ide of ides) {
-      const sourceDocPath = path.join(getProjectRoot(), 'docs', 'ide-info', `${ide}.md`);
-      const targetDocPath = path.join(docsDir, `${ide}-instructions.md`);
-
-      if (await fs.pathExists(sourceDocPath)) {
-        await this.copyFileWithPlaceholderReplacement(sourceDocPath, targetDocPath, this.bmadFolderName || 'bmad');
-      }
-    }
   }
 
   /**

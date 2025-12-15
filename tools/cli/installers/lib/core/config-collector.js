@@ -127,10 +127,6 @@ class ConfigCollector {
       }
     }
 
-    if (foundAny) {
-      console.log(chalk.cyan('\n📋 Found existing BMAD module configurations'));
-    }
-
     return foundAny;
   }
 

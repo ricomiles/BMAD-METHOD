@@ -282,101 +282,133 @@ class UI {
         };
       }
 
-      // If actionType === 'update', continue with normal flow below
-    }
-
-    // For new installations, ask about content types first
-    if (!hasExistingInstall) {
-      // Ask about official modules first
-      const { wantsOfficialModules } = await inquirer.prompt([
-        {
-          type: 'confirm',
-          name: 'wantsOfficialModules',
-          message: 'Will you be installing any official modules (BMad Method, BMad Builder, Creative Innovation Suite)?',
-          default: true,
-        },
-      ]);
-
-      let selectedOfficialModules = [];
-      if (wantsOfficialModules) {
+      // If actionType === 'update', handle it with the new flow
+      // Return early with modify configuration
+      if (actionType === 'update') {
+        // Get existing installation info
         const { installedModuleIds } = await this.getExistingInstallation(confirmedDirectory);
-        const moduleChoices = await this.getModuleChoices(installedModuleIds, { hasCustomContent: false });
-        selectedOfficialModules = await this.selectModules(moduleChoices);
+
+        console.log(chalk.dim(`  Found existing modules: ${[...installedModuleIds].join(', ')}`));
+        const { changeModuleSelection } = await inquirer.prompt([
+          {
+            type: 'confirm',
+            name: 'changeModuleSelection',
+            message: 'Change which modules are installed?',
+            default: false,
+          },
+        ]);
+
+        let selectedModules = [];
+        if (changeModuleSelection) {
+          // Show module selection with existing modules pre-selected
+          const moduleChoices = await this.getModuleChoices(new Set(installedModuleIds), { hasCustomContent: false });
+          selectedModules = await this.selectModules(moduleChoices, [...installedModuleIds]);
+        } else {
+          selectedModules = [...installedModuleIds];
+        }
+
+        // Get tool selection
+        const toolSelection = await this.promptToolSelection(confirmedDirectory, selectedModules);
+
+        // TTS configuration - ask right after tool selection (matches new install flow)
+        const hasClaudeCode = toolSelection.ides && toolSelection.ides.includes('claude-code');
+        let enableTts = false;
+
+        if (hasClaudeCode) {
+          const { enableTts: enable } = await inquirer.prompt([
+            {
+              type: 'confirm',
+              name: 'enableTts',
+              message: 'Claude Code supports TTS (Text-to-Speech). Would you like to enable it?',
+              default: false,
+            },
+          ]);
+          enableTts = enable;
+        }
+
+        // Core config with existing defaults (ask after TTS)
+        const coreConfig = await this.collectCoreConfig(confirmedDirectory);
+
+        return {
+          actionType: 'update',
+          directory: confirmedDirectory,
+          installCore: true,
+          modules: selectedModules,
+          ides: toolSelection.ides,
+          skipIde: toolSelection.skipIde,
+          coreConfig: coreConfig,
+          customContent: { hasCustomContent: false },
+          enableAgentVibes: enableTts,
+          agentVibesInstalled: false,
+        };
       }
-
-      // Then ask about custom content
-      const { wantsCustomContent } = await inquirer.prompt([
-        {
-          type: 'confirm',
-          name: 'wantsCustomContent',
-          message: 'Will you be installing any locally stored custom content?',
-          default: false,
-        },
-      ]);
-
-      if (wantsCustomContent) {
-        customContentConfig = await this.promptCustomContentSource();
-      }
-
-      // Store the selected modules for later
-      customContentConfig._selectedOfficialModules = selectedOfficialModules;
     }
 
+    // This section is only for new installations (update returns early above)
     const { installedModuleIds } = await this.getExistingInstallation(confirmedDirectory);
 
-    // Collect core configuration first
+    // Ask about official modules for new installations
+    const { wantsOfficialModules } = await inquirer.prompt([
+      {
+        type: 'confirm',
+        name: 'wantsOfficialModules',
+        message: 'Will you be installing any official modules (BMad Method, BMad Builder, Creative Innovation Suite)?',
+        default: true,
+      },
+    ]);
+
+    let selectedOfficialModules = [];
+    if (wantsOfficialModules) {
+      const moduleChoices = await this.getModuleChoices(installedModuleIds, { hasCustomContent: false });
+      selectedOfficialModules = await this.selectModules(moduleChoices);
+    }
+
+    // Ask about custom content
+    const { wantsCustomContent } = await inquirer.prompt([
+      {
+        type: 'confirm',
+        name: 'wantsCustomContent',
+        message: 'Will you be installing any locally stored custom content?',
+        default: false,
+      },
+    ]);
+
+    if (wantsCustomContent) {
+      customContentConfig = await this.promptCustomContentSource();
+    }
+
+    // Store the selected modules for later
+    customContentConfig._selectedOfficialModules = selectedOfficialModules;
+
+    // Build the final list of selected modules
+    let selectedModules = customContentConfig._selectedOfficialModules || [];
+
+    // Add custom content modules if any were selected
+    if (customContentConfig && customContentConfig.selectedModuleIds) {
+      selectedModules = [...selectedModules, ...customContentConfig.selectedModuleIds];
+    }
+
+    // Remove core if it's in the list (it's always installed)
+    selectedModules = selectedModules.filter((m) => m !== 'core');
+
+    // Tool selection (already done for new installs at the beginning)
+    if (!toolSelection) {
+      toolSelection = await this.promptToolSelection(confirmedDirectory, selectedModules);
+    }
+
+    // Collect configurations for new installations
     const coreConfig = await this.collectCoreConfig(confirmedDirectory);
 
-    // Custom content will be handled during installation phase
-    // Store the custom content config for later use
-    if (customContentConfig._shouldAsk) {
-      delete customContentConfig._shouldAsk;
-    }
-
-    // Handle module selection
-    let selectedModules = [];
-    if (actionType === 'update' || actionType === 'reinstall') {
-      // Keep all existing installed modules during update/reinstall
-      selectedModules = [...installedModuleIds];
-      console.log(chalk.cyan('\n📦 Keeping existing modules: ') + selectedModules.join(', '));
-    } else if (!hasExistingInstall) {
-      // For new installs, we've already selected official modules
-      selectedModules = customContentConfig._selectedOfficialModules || [];
-
-      // Add custom content modules if any were selected
-      if (customContentConfig && customContentConfig.selectedModuleIds) {
-        selectedModules = [...selectedModules, ...customContentConfig.selectedModuleIds];
-      }
-
-      // Custom modules are already added via selectedModuleIds from customContentConfig
-      // No need for additional processing here
-    }
-
-    // AgentVibes TTS configuration already collected earlier for new installations
-    // For existing installations, keep the old behavior
-    if (hasExistingInstall && !agentVibesConfig.enabled) {
-      agentVibesConfig = await this.promptAgentVibes(confirmedDirectory);
-    }
-
-    // Tool selection already collected for new installations
-    // For existing installations, we need to collect it now
-    if (hasExistingInstall && !toolSelection) {
-      const modulesForToolSelection = selectedModules;
-      toolSelection = await this.promptToolSelection(confirmedDirectory, modulesForToolSelection);
-    }
-
-    // No more screen clearing - keep output flowing
+    // TTS already handled at the beginning for new installs
 
     return {
-      actionType: actionType || 'update', // Preserve reinstall or update action
+      actionType: 'install',
       directory: confirmedDirectory,
-      installCore: true, // Always install core
+      installCore: true,
       modules: selectedModules,
-      // IDE selection collected after config, will be configured later
       ides: toolSelection.ides,
       skipIde: toolSelection.skipIde,
-      coreConfig: coreConfig, // Pass collected core config to installer
-      // Custom content configuration
+      coreConfig: coreConfig,
       customContent: customContentConfig,
       enableAgentVibes: agentVibesConfig.enabled,
       agentVibesInstalled: agentVibesConfig.alreadyInstalled,
@@ -760,13 +792,14 @@ class UI {
    * @param {Array} moduleChoices - Available module choices
    * @returns {Array} Selected module IDs
    */
-  async selectModules(moduleChoices) {
+  async selectModules(moduleChoices, defaultSelections = []) {
     const moduleAnswer = await inquirer.prompt([
       {
         type: 'checkbox',
         name: 'modules',
         message: 'Select modules to install:',
         choices: moduleChoices,
+        default: defaultSelections,
       },
     ]);
 
@@ -1112,6 +1145,57 @@ class UI {
     const playTtsPath = path.join(projectDir, '.claude', 'hooks', 'play-tts.sh');
 
     return (await fs.pathExists(hookPath)) && (await fs.pathExists(playTtsPath));
+  }
+
+  /**
+   * Load existing configurations to use as defaults
+   * @param {string} directory - Installation directory
+   * @returns {Object} Existing configurations
+   */
+  async loadExistingConfigurations(directory) {
+    const configs = {
+      hasCustomContent: false,
+      coreConfig: {},
+      ideConfig: { ides: [], skipIde: false },
+      agentVibesConfig: { enabled: false, alreadyInstalled: false },
+    };
+
+    try {
+      // Load core config
+      configs.coreConfig = await this.collectCoreConfig(directory);
+
+      // Load IDE configuration
+      const configuredIdes = await this.getConfiguredIdes(directory);
+      if (configuredIdes.length > 0) {
+        configs.ideConfig.ides = configuredIdes;
+        configs.ideConfig.skipIde = false;
+      }
+
+      // Load AgentVibes configuration
+      const agentVibesInstalled = await this.checkAgentVibesInstalled(directory);
+      configs.agentVibesConfig = { enabled: agentVibesInstalled, alreadyInstalled: agentVibesInstalled };
+
+      return configs;
+    } catch {
+      // If loading fails, return empty configs
+      console.warn('Warning: Could not load existing configurations');
+      return configs;
+    }
+  }
+
+  /**
+   * Get configured IDEs from existing installation
+   * @param {string} directory - Installation directory
+   * @returns {Array} List of configured IDEs
+   */
+  async getConfiguredIdes(directory) {
+    const { Detector } = require('../installers/lib/core/detector');
+    const { Installer } = require('../installers/lib/core/installer');
+    const detector = new Detector();
+    const installer = new Installer();
+    const bmadResult = await installer.findBmadDir(directory);
+    const existingInstall = await detector.detect(bmadResult.bmadDir);
+    return existingInstall.ides || [];
   }
 
   /**
