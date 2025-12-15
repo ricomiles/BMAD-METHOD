@@ -39,11 +39,6 @@ module.exports = {
         return;
       }
 
-      // Handle reinstall by setting force flag
-      if (config.actionType === 'reinstall') {
-        config._requestedReinstall = true;
-      }
-
       // Regular install/update flow
       const result = await installer.install(config);
 

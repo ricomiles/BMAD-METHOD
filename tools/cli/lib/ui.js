@@ -177,20 +177,37 @@ class UI {
 
     // Only show action menu if there's an existing installation
     if (hasExistingInstall) {
+      // Get version information
+      const { existingInstall } = await this.getExistingInstallation(confirmedDirectory);
+      const packageJsonPath = path.join(__dirname, '../../../package.json');
+      const currentVersion = require(packageJsonPath).version;
+      const installedVersion = existingInstall.version || 'unknown';
+
+      // Build menu choices dynamically
+      const choices = [];
+
+      // Always show Quick Update first (allows refreshing installation even on same version)
+      if (installedVersion !== 'unknown') {
+        choices.push({
+          name: `Quick Update (v${installedVersion} → v${currentVersion})`,
+          value: 'quick-update',
+        });
+      }
+
+      // Common actions
+      choices.push(
+        { name: 'Modify BMAD Installation', value: 'update' },
+        { name: 'Add / Update Custom Content', value: 'add-custom' },
+        { name: 'Rebuild Agents', value: 'compile' },
+      );
+
       const promptResult = await inquirer.prompt([
         {
           type: 'list',
           name: 'actionType',
           message: 'What would you like to do?',
-          choices: [
-            { name: 'Quick Update (Settings Preserved)', value: 'quick-update' },
-            { name: 'Modify BMAD Installation (Confirm or change each setting)', value: 'update' },
-            { name: 'Add Custom Content', value: 'add-custom' },
-            { name: 'Remove BMad Folder and Reinstall (Full clean install - BMad Customization Will Be Lost)', value: 'reinstall' },
-            { name: 'Compile Agents (Quick rebuild of all agent .md files)', value: 'compile' },
-            { name: 'Cancel', value: 'cancel' },
-          ],
-          default: 'quick-update',
+          choices: choices,
+          default: choices[0].value, // Use the first option as default
         },
       ]);
 
@@ -265,19 +282,7 @@ class UI {
         };
       }
 
-      // Handle cancel
-      if (actionType === 'cancel') {
-        return {
-          actionType: 'cancel',
-          directory: confirmedDirectory,
-        };
-      }
-
-      // Handle reinstall - DON'T return early, let it flow through configuration collection
-      // The installer will handle deletion when it sees actionType === 'reinstall'
-      // For now, just note that we're in reinstall mode and continue below
-
-      // If actionType === 'update' or 'reinstall', continue with normal flow below
+      // If actionType === 'update', continue with normal flow below
     }
 
     // For new installations, ask about content types first
@@ -638,8 +643,8 @@ class UI {
     const { Installer } = require('../installers/lib/core/installer');
     const detector = new Detector();
     const installer = new Installer();
-    const bmadDir = await installer.findBmadDir(directory);
-    const existingInstall = await detector.detect(bmadDir);
+    const bmadDirResult = await installer.findBmadDir(directory);
+    const existingInstall = await detector.detect(bmadDirResult.bmadDir);
     const installedModuleIds = new Set(existingInstall.modules.map((mod) => mod.id));
 
     return { existingInstall, installedModuleIds };
@@ -808,12 +813,13 @@ class UI {
           // Check for any bmad installation (any folder with _config/manifest.yaml)
           const { Installer } = require('../installers/lib/core/installer');
           const installer = new Installer();
-          const bmadDir = await installer.findBmadDir(directory);
-          const hasBmadInstall = (await fs.pathExists(bmadDir)) && (await fs.pathExists(path.join(bmadDir, '_config', 'manifest.yaml')));
+          const bmadResult = await installer.findBmadDir(directory);
+          const hasBmadInstall =
+            (await fs.pathExists(bmadResult.bmadDir)) && (await fs.pathExists(path.join(bmadResult.bmadDir, '_config', 'manifest.yaml')));
 
           console.log(
             chalk.gray(`Directory exists and contains ${files.length} item(s)`) +
-              (hasBmadInstall ? chalk.yellow(` including existing BMAD installation (${path.basename(bmadDir)})`) : ''),
+              (hasBmadInstall ? chalk.yellow(` including existing BMAD installation (${path.basename(bmadResult.bmadDir)})`) : ''),
           );
         } else {
           console.log(chalk.gray('Directory exists and is empty'));

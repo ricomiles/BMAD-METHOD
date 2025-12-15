@@ -563,9 +563,7 @@ If AgentVibes party mode is enabled, immediately trigger TTS with agent's voice:
 
         // Check if user already decided what to do (from early menu in ui.js)
         let action = null;
-        if (config._requestedReinstall) {
-          action = 'reinstall';
-        } else if (config.actionType === 'update') {
+        if (config.actionType === 'update') {
           action = 'update';
         } else {
           // Fallback: Ask the user (backwards compatibility for other code paths)
@@ -577,41 +575,7 @@ If AgentVibes party mode is enabled, immediately trigger TTS with agent's voice:
           action = promptResult.action;
         }
 
-        if (action === 'cancel') {
-          console.log('Installation cancelled.');
-          return { success: false, cancelled: true };
-        }
-
-        if (action === 'reinstall') {
-          // Warn about destructive operation
-          console.log(chalk.red.bold('\n⚠️  WARNING: This is a destructive operation!'));
-          console.log(chalk.red('All custom files and modifications in the bmad directory will be lost.'));
-
-          const inquirer = require('inquirer');
-          const { confirmReinstall } = await inquirer.prompt([
-            {
-              type: 'confirm',
-              name: 'confirmReinstall',
-              message: chalk.yellow('Are you sure you want to delete and reinstall?'),
-              default: false,
-            },
-          ]);
-
-          if (!confirmReinstall) {
-            console.log('Installation cancelled.');
-            return { success: false, cancelled: true };
-          }
-
-          // Remember previously configured IDEs before deleting
-          config._previouslyConfiguredIdes = existingInstall.ides || [];
-
-          // Remove existing installation
-          await fs.remove(bmadDir);
-          console.log(chalk.green('✓ Removed existing installation\n'));
-
-          // Mark this as a full reinstall so we re-collect IDE configurations
-          config._isFullReinstall = true;
-        } else if (action === 'update') {
+        if (action === 'update') {
           // Store that we're updating for later processing
           config._isUpdate = true;
           config._existingInstall = existingInstall;
@@ -2645,11 +2609,7 @@ If AgentVibes party mode is enabled, immediately trigger TTS with agent's voice:
         type: 'list',
         name: 'action',
         message: 'What would you like to do?',
-        choices: [
-          { name: 'Update existing installation', value: 'update' },
-          { name: 'Remove and reinstall', value: 'reinstall' },
-          { name: 'Cancel', value: 'cancel' },
-        ],
+        choices: [{ name: 'Update existing installation', value: 'update' }],
       },
     ]);
   }
