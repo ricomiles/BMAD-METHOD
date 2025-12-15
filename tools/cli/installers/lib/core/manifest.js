@@ -62,8 +62,8 @@ class Manifest {
           version: manifestData.installation?.version,
           installDate: manifestData.installation?.installDate,
           lastUpdated: manifestData.installation?.lastUpdated,
-          modules: manifestData.modules || [],
-          customModules: manifestData.customModules || [],
+          modules: manifestData.modules || [], // All modules (standard and custom)
+          customModules: manifestData.customModules || [], // Keep for backward compatibility
           ides: manifestData.ides || [],
         };
       } catch (error) {
@@ -95,8 +95,7 @@ class Manifest {
         installDate: manifest.installDate,
         lastUpdated: manifest.lastUpdated,
       },
-      modules: manifest.modules || [],
-      customModules: manifest.customModules || [],
+      modules: manifest.modules || [], // All modules (standard and custom)
       ides: manifest.ides || [],
     };
 

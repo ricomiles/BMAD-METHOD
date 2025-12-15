@@ -343,71 +343,50 @@ class ModuleManager {
 
   /**
    * Find the source path for a module by searching all possible locations
-   * @param {string} moduleName - Name of the module to find
+   * @param {string} moduleCode - Code of the module to find (from module.yaml)
    * @returns {string|null} Path to the module source or null if not found
    */
-  async findModuleSource(moduleName) {
+  async findModuleSource(moduleCode) {
     const projectRoot = getProjectRoot();
 
     // First check custom module paths if they exist
-    if (this.customModulePaths && this.customModulePaths.has(moduleName)) {
-      return this.customModulePaths.get(moduleName);
+    if (this.customModulePaths && this.customModulePaths.has(moduleCode)) {
+      return this.customModulePaths.get(moduleCode);
     }
 
-    // First, check src/modules
-    const srcModulePath = path.join(this.modulesSourcePath, moduleName);
-    if (await fs.pathExists(srcModulePath)) {
-      // Check if this looks like a module (has module.yaml)
-      const moduleConfigPath = path.join(srcModulePath, 'module.yaml');
-      const installerConfigPath = path.join(srcModulePath, '_module-installer', 'module.yaml');
+    // Search in src/modules by READING module.yaml files to match by code
+    if (await fs.pathExists(this.modulesSourcePath)) {
+      const entries = await fs.readdir(this.modulesSourcePath, { withFileTypes: true });
+      for (const entry of entries) {
+        if (entry.isDirectory()) {
+          const modulePath = path.join(this.modulesSourcePath, entry.name);
 
-      if ((await fs.pathExists(moduleConfigPath)) || (await fs.pathExists(installerConfigPath))) {
-        return srcModulePath;
-      }
+          // Read module.yaml to get the code
+          const moduleConfigPath = path.join(modulePath, 'module.yaml');
+          const installerConfigPath = path.join(modulePath, '_module-installer', 'module.yaml');
+          const customConfigPath = path.join(modulePath, '_module-installer', 'custom.yaml');
 
-      // Also check for custom.yaml in src/modules/_module-installer
-      const customConfigPath = path.join(srcModulePath, '_module-installer', 'custom.yaml');
-      if (await fs.pathExists(customConfigPath)) {
-        return srcModulePath;
-      }
-    }
-
-    // If not found in src/modules, search the entire project
-    const allModulePaths = await this.findModulesInProject();
-    for (const modulePath of allModulePaths) {
-      if (path.basename(modulePath) === moduleName) {
-        return modulePath;
-      }
-    }
-
-    // Also check by module ID (not just folder name)
-    // Need to read configs to match by ID
-    for (const modulePath of allModulePaths) {
-      const moduleConfigPath = path.join(modulePath, 'module.yaml');
-      const installerConfigPath = path.join(modulePath, '_module-installer', 'module.yaml');
-      const customConfigPath = path.join(modulePath, '_module-installer', 'custom.yaml');
-      const rootCustomConfigPath = path.join(modulePath, 'custom.yaml');
-
-      let configPath = null;
-      if (await fs.pathExists(moduleConfigPath)) {
-        configPath = moduleConfigPath;
-      } else if (await fs.pathExists(installerConfigPath)) {
-        configPath = installerConfigPath;
-      } else if (await fs.pathExists(customConfigPath)) {
-        configPath = customConfigPath;
-      } else if (await fs.pathExists(rootCustomConfigPath)) {
-        configPath = rootCustomConfigPath;
-      }
-
-      if (configPath) {
-        try {
-          const configContent = await fs.readFile(configPath, 'utf8');
-          const config = yaml.parse(configContent);
-          if (config.code === moduleName) {
-            return modulePath;
+          let configPath = null;
+          if (await fs.pathExists(moduleConfigPath)) {
+            configPath = moduleConfigPath;
+          } else if (await fs.pathExists(installerConfigPath)) {
+            configPath = installerConfigPath;
+          } else if (await fs.pathExists(customConfigPath)) {
+            configPath = customConfigPath;
           }
-        } catch (error) {
-          throw new Error(`Failed to parse module.yaml at ${configPath}: ${error.message}`);
+
+          if (configPath) {
+            try {
+              const configContent = await fs.readFile(configPath, 'utf8');
+              const config = yaml.parse(configContent);
+              if (config.code === moduleCode) {
+                return modulePath;
+              }
+            } catch (error) {
+              // Continue to next module if parse fails
+              console.warn(`Warning: Failed to parse module config at ${configPath}: ${error.message}`);
+            }
+          }
         }
       }
     }
@@ -417,7 +396,7 @@ class ModuleManager {
 
   /**
    * Install a module
-   * @param {string} moduleName - Name of the module to install
+   * @param {string} moduleName - Code of the module to install (from module.yaml)
    * @param {string} bmadDir - Target bmad directory
    * @param {Function} fileTrackingCallback - Optional callback to track installed files
    * @param {Object} options - Additional installation options

@@ -900,102 +900,34 @@ If AgentVibes party mode is enabled, immediately trigger TTS with agent's voice:
           }
 
           if (isCustomModule && customInfo) {
-            // Install custom module using CustomHandler but as a proper module
-            const customHandler = new CustomHandler();
-
-            // Install to module directory instead of custom directory
-            const moduleTargetPath = path.join(bmadDir, moduleName);
-            await fs.ensureDir(moduleTargetPath);
+            // Custom modules are now installed via ModuleManager just like standard modules
+            // The custom module path should already be in customModulePaths from earlier setup
+            if (!customModulePaths.has(moduleName) && customInfo.path) {
+              customModulePaths.set(moduleName, customInfo.path);
+              this.moduleManager.setCustomModulePaths(customModulePaths);
+            }
 
             // Get collected config for this custom module (from module.yaml prompts)
             const collectedModuleConfig = moduleConfigs[moduleName] || {};
 
-            const result = await customHandler.install(
-              customInfo.path,
-              path.join(bmadDir, 'temp-custom'),
-              { ...config.coreConfig, ...customInfo.config, ...collectedModuleConfig, _bmadDir: bmadDir },
+            // Use ModuleManager to install the custom module
+            await this.moduleManager.install(
+              moduleName,
+              bmadDir,
               (filePath) => {
-                // Track installed files with correct path
-                const relativePath = path.relative(path.join(bmadDir, 'temp-custom'), filePath);
-                const finalPath = path.join(moduleTargetPath, relativePath);
-                this.installedFiles.push(finalPath);
+                this.installedFiles.push(filePath);
+              },
+              {
+                isCustom: true,
+                moduleConfig: collectedModuleConfig,
               },
             );
 
-            // Move from temp-custom to actual module directory
-            const tempCustomPath = path.join(bmadDir, 'temp-custom');
-            if (await fs.pathExists(tempCustomPath)) {
-              const customDir = path.join(tempCustomPath, 'custom');
-              if (await fs.pathExists(customDir)) {
-                // Move contents to module directory
-                const items = await fs.readdir(customDir);
-                const movedItems = [];
-                try {
-                  for (const item of items) {
-                    const srcPath = path.join(customDir, item);
-                    const destPath = path.join(moduleTargetPath, item);
-
-                    // If destination exists, remove it first (or we could merge)
-                    if (await fs.pathExists(destPath)) {
-                      await fs.remove(destPath);
-                    }
-
-                    await fs.move(srcPath, destPath);
-                    movedItems.push({ src: srcPath, dest: destPath });
-                  }
-                } catch (moveError) {
-                  // Rollback: restore any successfully moved items
-                  for (const moved of movedItems) {
-                    try {
-                      await fs.move(moved.dest, moved.src);
-                    } catch {
-                      // Best-effort rollback - log if it fails
-                      console.error(`Failed to rollback ${moved.dest} during cleanup`);
-                    }
-                  }
-                  throw new Error(`Failed to move custom module files: ${moveError.message}`);
-                }
-              }
-              try {
-                await fs.remove(tempCustomPath);
-              } catch (cleanupError) {
-                // Non-fatal: temp directory cleanup failed but files were moved successfully
-                console.warn(`Warning: Could not clean up temp directory: ${cleanupError.message}`);
-              }
-            }
+            // ModuleManager installs directly to the target directory, no need to move files
 
             // Create module config (include collected config from module.yaml prompts)
             await this.generateModuleConfigs(bmadDir, {
               [moduleName]: { ...config.coreConfig, ...customInfo.config, ...collectedModuleConfig },
-            });
-
-            // Store custom module info for later manifest update
-            if (!config._customModulesToTrack) {
-              config._customModulesToTrack = [];
-            }
-
-            // For cached modules, use appropriate path handling
-            let sourcePath;
-            if (useCache) {
-              // Check if we have cached modules info (from initial install)
-              if (finalCustomContent && finalCustomContent.cachedModules) {
-                sourcePath = finalCustomContent.cachedModules.find((m) => m.id === moduleName)?.relativePath;
-              } else {
-                // During update, the sourcePath is already cache-relative if it starts with _config
-                sourcePath =
-                  customInfo.sourcePath && customInfo.sourcePath.startsWith('_config')
-                    ? customInfo.sourcePath
-                    : path.relative(bmadDir, customInfo.path || customInfo.sourcePath);
-              }
-            } else {
-              sourcePath = path.resolve(customInfo.path || customInfo.sourcePath);
-            }
-
-            config._customModulesToTrack.push({
-              id: customInfo.id,
-              name: customInfo.name,
-              sourcePath: useCache ? `_config/custom/${customInfo.id}` : sourcePath,
-              installDate: new Date().toISOString(),
             });
           } else {
             // Regular module installation
@@ -1029,69 +961,7 @@ If AgentVibes party mode is enabled, immediately trigger TTS with agent's voice:
         }
       }
 
-      // Install custom content if provided AND selected
-      // Process custom content that wasn't installed as modules
-      // This is now handled in the module installation loop above
-      // This section is kept for backward compatibility with any custom content
-      // that doesn't have a module structure
-      const remainingCustomContent = [];
-      if (
-        config.customContent &&
-        config.customContent.hasCustomContent &&
-        config.customContent.customPath &&
-        config.customContent.selected &&
-        config.customContent.selectedFiles
-      ) {
-        // Filter out custom modules that were already installed
-        const customHandler = new CustomHandler();
-        for (const customFile of config.customContent.selectedFiles) {
-          const customInfo = await customHandler.getCustomInfo(customFile, projectDir);
-
-          // Skip if this was installed as a module
-          if (!customInfo || !customInfo.id || !allModules.includes(customInfo.id)) {
-            remainingCustomContent.push(customFile);
-          }
-        }
-      }
-
-      if (remainingCustomContent.length > 0) {
-        spinner.start('Installing remaining custom content...');
-        const customHandler = new CustomHandler();
-
-        // Use the remaining files
-        const customFiles = remainingCustomContent;
-
-        if (customFiles.length > 0) {
-          console.log(chalk.cyan(`\n  Found ${customFiles.length} custom content file(s):`));
-          for (const customFile of customFiles) {
-            const customInfo = await customHandler.getCustomInfo(customFile, projectDir);
-            if (customInfo) {
-              console.log(chalk.dim(`    • ${customInfo.name} (${customInfo.relativePath})`));
-
-              // Install the custom content
-              const result = await customHandler.install(
-                customInfo.path,
-                bmadDir,
-                { ...config.coreConfig, ...customInfo.config },
-                (filePath) => {
-                  // Track installed files
-                  this.installedFiles.push(filePath);
-                },
-              );
-
-              if (result.errors.length > 0) {
-                console.log(chalk.yellow(`    ⚠️  ${result.errors.length} error(s) occurred`));
-                for (const error of result.errors) {
-                  console.log(chalk.dim(`      - ${error}`));
-                }
-              } else {
-                console.log(chalk.green(`    ✓ Installed ${result.agentsInstalled} agents, ${result.workflowsInstalled} workflows`));
-              }
-            }
-          }
-        }
-        spinner.succeed('Custom content installed');
-      }
+      // All content is now installed as modules - no separate custom content handling needed
 
       // Generate clean config.yaml files for each installed module
       spinner.start('Generating module configurations...');
@@ -1136,16 +1006,9 @@ If AgentVibes party mode is enabled, immediately trigger TTS with agent's voice:
       const manifestStats = await manifestGen.generateManifests(bmadDir, allModulesForManifest, this.installedFiles, {
         ides: config.ides || [],
         preservedModules: modulesForCsvPreserve, // Scan these from installed bmad/ dir
-        customModules: config._customModulesToTrack || [], // Custom modules to exclude from regular modules list
       });
 
-      // Add custom modules to manifest (now that it exists)
-      if (config._customModulesToTrack && config._customModulesToTrack.length > 0) {
-        spinner.text = 'Storing custom module sources...';
-        for (const customModule of config._customModulesToTrack) {
-          await this.manifest.addCustomModule(bmadDir, customModule);
-        }
-      }
+      // Custom modules are now included in the main modules list - no separate tracking needed
 
       spinner.succeed(
         `Manifests generated: ${manifestStats.workflows} workflows, ${manifestStats.agents} agents, ${manifestStats.tasks} tasks, ${manifestStats.tools} tools, ${manifestStats.files} files`,

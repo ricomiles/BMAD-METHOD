@@ -34,24 +34,21 @@ class ManifestGenerator {
 
     // Store modules list (all modules including preserved ones)
     const preservedModules = options.preservedModules || [];
-    const customModules = options.customModules || [];
 
     // Scan the bmad directory to find all actually installed modules
     const installedModules = await this.scanInstalledModules(bmadDir);
 
-    // Filter out custom modules from the regular modules list
-    const customModuleIds = new Set(customModules.map((cm) => cm.id));
-    const regularModules = [...new Set(['core', ...selectedModules, ...preservedModules, ...installedModules])].filter(
-      (module) => !customModuleIds.has(module),
-    );
+    // Since custom modules are now installed the same way as regular modules,
+    // we don't need to exclude them from manifest generation
+    const allModules = [...new Set(['core', ...selectedModules, ...preservedModules, ...installedModules])];
 
-    this.modules = regularModules;
-    this.updatedModules = [...new Set(['core', ...selectedModules, ...installedModules])].filter((module) => !customModuleIds.has(module)); // Also exclude custom modules from rescanning
+    this.modules = allModules;
+    this.updatedModules = allModules; // Include ALL modules (including custom) for scanning
 
     // For CSV manifests, we need to include ALL modules that are installed
     // preservedModules controls which modules stay as-is in the CSV (don't get rescanned)
     // But all modules should be included in the final manifest
-    this.preservedModules = [...new Set([...preservedModules, ...selectedModules, ...installedModules])]; // Include all installed modules
+    this.preservedModules = allModules; // Include ALL modules (including custom)
     this.bmadDir = bmadDir;
     this.bmadFolderName = path.basename(bmadDir); // Get the actual folder name (e.g., '_bmad' or 'bmad')
     this.allInstalledFiles = installedFiles;
@@ -460,29 +457,13 @@ class ManifestGenerator {
   async writeMainManifest(cfgDir) {
     const manifestPath = path.join(cfgDir, 'manifest.yaml');
 
-    // Read existing manifest to preserve custom modules
-    let existingCustomModules = [];
-    if (await fs.pathExists(manifestPath)) {
-      try {
-        const existingContent = await fs.readFile(manifestPath, 'utf8');
-        const existingManifest = yaml.parse(existingContent);
-        if (existingManifest && existingManifest.customModules) {
-          existingCustomModules = existingManifest.customModules;
-        }
-      } catch {
-        // If we can't read the existing manifest, continue without preserving custom modules
-        console.warn('Warning: Could not read existing manifest to preserve custom modules');
-      }
-    }
-
     const manifest = {
       installation: {
         version: packageJson.version,
         installDate: new Date().toISOString(),
         lastUpdated: new Date().toISOString(),
       },
-      modules: this.modules,
-      customModules: existingCustomModules, // Preserve custom modules
+      modules: this.modules, // Include ALL modules (standard and custom)
       ides: this.selectedIdes,
     };
 
