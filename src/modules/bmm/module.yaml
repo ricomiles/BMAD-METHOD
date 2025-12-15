@@ -44,14 +44,13 @@ project_knowledge: # Artifacts from research, document-project output, other lon
   prompt: "Where should non-ephemeral project knowledge be stored (docs, research, references)?"
   default: "docs"
   result: "{project-root}/{value}"
+# tea_use_mcp_enhancements:
+#   prompt: "Enable Test Architect Playwright MCP capabilities (healing, exploratory, verification)?\nYou have to setup your MCPs yourself; refer to test-architecture.md for hints."
+#   default: false
+#   result: "{value}"
 
-tea_use_mcp_enhancements:
-  prompt: "Enable Test Architect Playwright MCP capabilities (healing, exploratory, verification)?\nYou have to setup your MCPs yourself; refer to test-architecture.md for hints."
-  default: false
-  result: "{value}"
-
-tea_use_playwright_utils:
-  prompt:
-    - "Are you using playwright-utils (@seontechnologies/playwright-utils) in your project?\nYou must install packages yourself, or use test architect's *framework command."
-  default: false
-  result: "{value}"
+# tea_use_playwright_utils:
+#   prompt:
+#     - "Are you using playwright-utils (@seontechnologies/playwright-utils) in your project?\nYou must install packages yourself, or use test architect's *framework command."
+#   default: false
+#   result: "{value}"

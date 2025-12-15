@@ -133,6 +133,36 @@ class UI {
     // Check if there's an existing BMAD installation (after any folder renames)
     const hasExistingInstall = await fs.pathExists(bmadDir);
 
+    // Collect IDE tool selection early - we need this to know if we should ask about TTS
+    let toolSelection;
+    let agentVibesConfig = { enabled: false, alreadyInstalled: false };
+    let claudeCodeSelected = false;
+
+    if (!hasExistingInstall) {
+      // For new installations, collect IDE selection first
+      // We don't have modules yet, so pass empty array
+      toolSelection = await this.promptToolSelection(confirmedDirectory, []);
+
+      // Check if Claude Code was selected
+      claudeCodeSelected = toolSelection.ides && toolSelection.ides.includes('claude-code');
+
+      // If Claude Code was selected, ask about TTS
+      if (claudeCodeSelected) {
+        const { enableTts } = await inquirer.prompt([
+          {
+            type: 'confirm',
+            name: 'enableTts',
+            message: 'Claude Code supports TTS (Text-to-Speech). Would you like to enable it?',
+            default: false,
+          },
+        ]);
+
+        if (enableTts) {
+          agentVibesConfig = { enabled: true, alreadyInstalled: false };
+        }
+      }
+    }
+
     // Always ask for custom content, but we'll handle it differently for new installs
     let customContentConfig = { hasCustomContent: false };
     if (hasExistingInstall) {
@@ -252,8 +282,9 @@ class UI {
       // If actionType === 'update' or 'reinstall', continue with normal flow below
     }
 
-    // Handle custom content for new installations
+    // For new installations, ask about content types first
     if (!hasExistingInstall) {
+      // Ask about custom content first
       const { wantsCustomContent } = await inquirer.prompt([
         {
           type: 'confirm',
@@ -265,12 +296,32 @@ class UI {
 
       if (wantsCustomContent) {
         customContentConfig = await this.promptCustomContentSource();
-      } else {
-        customContentConfig._shouldAsk = true; // Ask later after modules are selected
       }
+
+      // Then ask about official modules
+      const { wantsOfficialModules } = await inquirer.prompt([
+        {
+          type: 'confirm',
+          name: 'wantsOfficialModules',
+          message: 'Will you be installing any official modules?',
+          default: true,
+        },
+      ]);
+
+      let selectedOfficialModules = [];
+      if (wantsOfficialModules) {
+        const { installedModuleIds } = await this.getExistingInstallation(confirmedDirectory);
+        const moduleChoices = await this.getModuleChoices(installedModuleIds, { hasCustomContent: false });
+        selectedOfficialModules = await this.selectModules(moduleChoices);
+      }
+
+      // Store the selected modules for later
+      customContentConfig._selectedOfficialModules = selectedOfficialModules;
     }
 
     const { installedModuleIds } = await this.getExistingInstallation(confirmedDirectory);
+
+    // Collect core configuration first
     const coreConfig = await this.collectCoreConfig(confirmedDirectory);
 
     // Custom content will be handled during installation phase
@@ -279,52 +330,37 @@ class UI {
       delete customContentConfig._shouldAsk;
     }
 
-    // Skip module selection during update/reinstall - keep existing modules
-    let selectedModules;
+    // Handle module selection
+    let selectedModules = [];
     if (actionType === 'update' || actionType === 'reinstall') {
       // Keep all existing installed modules during update/reinstall
       selectedModules = [...installedModuleIds];
       console.log(chalk.cyan('\n📦 Keeping existing modules: ') + selectedModules.join(', '));
-    } else {
-      // Only show module selection for new installs
-      const moduleChoices = await this.getModuleChoices(installedModuleIds, customContentConfig);
-      selectedModules = await this.selectModules(moduleChoices);
+    } else if (!hasExistingInstall) {
+      // For new installs, we've already selected official modules
+      selectedModules = customContentConfig._selectedOfficialModules || [];
 
-      // Check which custom content items were selected
-      const selectedCustomContent = selectedModules.filter((mod) => mod.startsWith('__CUSTOM_CONTENT__'));
-
-      if (selectedCustomContent.length > 0) {
-        customContentConfig.selected = true;
-        customContentConfig.selectedFiles = selectedCustomContent.map((mod) => mod.replace('__CUSTOM_CONTENT__', ''));
-
-        // Convert custom content to module IDs for installation
-        const customContentModuleIds = [];
-        const customHandler = new CustomHandler();
-        for (const customFile of customContentConfig.selectedFiles) {
-          // Get the module info to extract the ID
-          const customInfo = await customHandler.getCustomInfo(customFile);
-          if (customInfo) {
-            customContentModuleIds.push(customInfo.id);
-          }
-        }
-        // Filter out custom content markers and add module IDs
-        selectedModules = [...selectedModules.filter((mod) => !mod.startsWith('__CUSTOM_CONTENT__')), ...customContentModuleIds];
-      } else if (customContentConfig.selectedModuleIds && customContentConfig.selectedModuleIds.length > 0) {
-        // Custom modules were selected from sources
+      // Add custom content modules if any were selected
+      if (customContentConfig && customContentConfig.selectedModuleIds) {
         selectedModules = [...selectedModules, ...customContentConfig.selectedModuleIds];
-      } else if (customContentConfig.hasCustomContent) {
-        // User provided custom content but didn't select any
-        customContentConfig.selected = false;
-        customContentConfig.selectedFiles = [];
       }
+
+      // Custom modules are already added via selectedModuleIds from customContentConfig
+      // No need for additional processing here
     }
 
-    // Prompt for AgentVibes TTS integration
-    const agentVibesConfig = await this.promptAgentVibes(confirmedDirectory);
+    // AgentVibes TTS configuration already collected earlier for new installations
+    // For existing installations, keep the old behavior
+    if (hasExistingInstall && !agentVibesConfig.enabled) {
+      agentVibesConfig = await this.promptAgentVibes(confirmedDirectory);
+    }
 
-    // Collect IDE tool selection AFTER configuration prompts (fixes Windows/PowerShell hang)
-    // This allows text-based prompts to complete before the checkbox prompt
-    const toolSelection = await this.promptToolSelection(confirmedDirectory, selectedModules);
+    // Tool selection already collected for new installations
+    // For existing installations, we need to collect it now
+    if (hasExistingInstall && !toolSelection) {
+      const modulesForToolSelection = selectedModules;
+      toolSelection = await this.promptToolSelection(confirmedDirectory, modulesForToolSelection);
+    }
 
     // No more screen clearing - keep output flowing
 

@@ -464,17 +464,33 @@ If AgentVibes party mode is enabled, immediately trigger TTS with agent's voice:
       }
 
       // Get list of all modules including custom modules
-      const allModulesForConfig = [...(config.modules || [])];
+      // Order: core first, then official modules, then custom modules
+      const allModulesForConfig = ['core'];
+
+      // Add official modules (excluding core and any custom modules)
+      const officialModules = (config.modules || []).filter((m) => m !== 'core' && !customModulePaths.has(m));
+      allModulesForConfig.push(...officialModules);
+
+      // Add custom modules at the end
       for (const [moduleId] of customModulePaths) {
         if (!allModulesForConfig.includes(moduleId)) {
           allModulesForConfig.push(moduleId);
         }
       }
 
-      // Regular install - collect configurations (core was already collected in UI.promptInstall if interactive)
-      moduleConfigs = await this.configCollector.collectAllConfigurations(allModulesForConfig, path.resolve(config.directory), {
-        customModulePaths,
-      });
+      // Check if core was already collected in UI
+      if (config.coreConfig && Object.keys(config.coreConfig).length > 0) {
+        // Core already collected, skip it in config collection
+        const modulesWithoutCore = allModulesForConfig.filter((m) => m !== 'core');
+        moduleConfigs = await this.configCollector.collectAllConfigurations(modulesWithoutCore, path.resolve(config.directory), {
+          customModulePaths,
+        });
+      } else {
+        // Core not collected yet, include it
+        moduleConfigs = await this.configCollector.collectAllConfigurations(allModulesForConfig, path.resolve(config.directory), {
+          customModulePaths,
+        });
+      }
     }
 
     // Always use _bmad as the folder name
