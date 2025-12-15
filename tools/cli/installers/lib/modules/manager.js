@@ -28,7 +28,6 @@ class ModuleManager {
     this.modulesSourcePath = getSourcePath('modules');
     this.xmlHandler = new XmlHandler();
     this.bmadFolderName = 'bmad'; // Default, can be overridden
-    this.scanProjectForModules = options.scanProjectForModules !== false; // Default to true for backward compatibility
     this.customModulePaths = new Map(); // Initialize custom module paths
   }
 
@@ -117,76 +116,6 @@ class ModuleManager {
   }
 
   /**
-   * Find all modules in the project by searching for module.yaml files
-   * @returns {Array} List of module paths
-   */
-  async findModulesInProject() {
-    const projectRoot = getProjectRoot();
-    const modulePaths = new Set();
-
-    // Helper function to recursively scan directories
-    async function scanDirectory(dir, excludePaths = []) {
-      try {
-        const entries = await fs.readdir(dir, { withFileTypes: true });
-
-        for (const entry of entries) {
-          const fullPath = path.join(dir, entry.name);
-
-          // Skip hidden directories, node_modules, and literal placeholder directories
-          if (
-            entry.name.startsWith('.') ||
-            entry.name === 'node_modules' ||
-            entry.name === 'dist' ||
-            entry.name === 'build' ||
-            entry.name === '{project-root}'
-          ) {
-            continue;
-          }
-
-          // Skip excluded paths
-          if (excludePaths.some((exclude) => fullPath.startsWith(exclude))) {
-            continue;
-          }
-
-          if (entry.isDirectory()) {
-            // Skip core module - it's always installed first and not selectable
-            if (entry.name === 'core') {
-              continue;
-            }
-
-            // Check if this directory contains a module (module.yaml OR custom.yaml)
-            const moduleConfigPath = path.join(fullPath, 'module.yaml');
-            const installerConfigPath = path.join(fullPath, '_module-installer', 'module.yaml');
-            const customConfigPath = path.join(fullPath, '_module-installer', 'custom.yaml');
-            const rootCustomConfigPath = path.join(fullPath, 'custom.yaml');
-
-            if (
-              (await fs.pathExists(moduleConfigPath)) ||
-              (await fs.pathExists(installerConfigPath)) ||
-              (await fs.pathExists(customConfigPath)) ||
-              (await fs.pathExists(rootCustomConfigPath))
-            ) {
-              modulePaths.add(fullPath);
-              // Don't scan inside modules - they might have their own nested structures
-              continue;
-            }
-
-            // Recursively scan subdirectories
-            await scanDirectory(fullPath, excludePaths);
-          }
-        }
-      } catch {
-        // Ignore errors (e.g., permission denied)
-      }
-    }
-
-    // Scan the entire project, but exclude src/modules since we handle it separately
-    await scanDirectory(projectRoot, [this.modulesSourcePath]);
-
-    return [...modulePaths];
-  }
-
-  /**
    * List all available modules (excluding core which is always installed)
    * @returns {Object} Object with modules array and customModules array
    */
@@ -228,43 +157,19 @@ class ModuleManager {
       }
     }
 
-    // Then, find all other modules in the project (only if scanning is enabled)
-    if (this.scanProjectForModules) {
-      const otherModulePaths = await this.findModulesInProject();
-      for (const modulePath of otherModulePaths) {
-        const moduleName = path.basename(modulePath);
-        const relativePath = path.relative(getProjectRoot(), modulePath);
-
-        // Skip core module - it's always installed first and not selectable
-        if (moduleName === 'core') {
-          continue;
-        }
-
-        const moduleInfo = await this.getModuleInfo(modulePath, moduleName, relativePath);
-        if (moduleInfo && !modules.some((m) => m.id === moduleInfo.id) && !customModules.some((m) => m.id === moduleInfo.id)) {
-          // Avoid duplicates - skip if we already have this module ID
-          if (moduleInfo.isCustom) {
-            customModules.push(moduleInfo);
-          } else {
-            modules.push(moduleInfo);
-          }
-        }
-      }
-
-      // Also check for cached custom modules in _config/custom/
-      if (this.bmadDir) {
-        const customCacheDir = path.join(this.bmadDir, '_config', 'custom');
-        if (await fs.pathExists(customCacheDir)) {
-          const cacheEntries = await fs.readdir(customCacheDir, { withFileTypes: true });
-          for (const entry of cacheEntries) {
-            if (entry.isDirectory()) {
-              const cachePath = path.join(customCacheDir, entry.name);
-              const moduleInfo = await this.getModuleInfo(cachePath, entry.name, '_config/custom');
-              if (moduleInfo && !modules.some((m) => m.id === moduleInfo.id) && !customModules.some((m) => m.id === moduleInfo.id)) {
-                moduleInfo.isCustom = true;
-                moduleInfo.fromCache = true;
-                customModules.push(moduleInfo);
-              }
+    // Check for cached custom modules in _config/custom/
+    if (this.bmadDir) {
+      const customCacheDir = path.join(this.bmadDir, '_config', 'custom');
+      if (await fs.pathExists(customCacheDir)) {
+        const cacheEntries = await fs.readdir(customCacheDir, { withFileTypes: true });
+        for (const entry of cacheEntries) {
+          if (entry.isDirectory()) {
+            const cachePath = path.join(customCacheDir, entry.name);
+            const moduleInfo = await this.getModuleInfo(cachePath, entry.name, '_config/custom');
+            if (moduleInfo && !modules.some((m) => m.id === moduleInfo.id) && !customModules.some((m) => m.id === moduleInfo.id)) {
+              moduleInfo.isCustom = true;
+              moduleInfo.fromCache = true;
+              customModules.push(moduleInfo);
             }
           }
         }
