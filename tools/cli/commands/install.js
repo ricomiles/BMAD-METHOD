@@ -21,15 +21,6 @@ module.exports = {
         return;
       }
 
-      // Handle agent compilation separately
-      if (config.actionType === 'compile') {
-        const result = await installer.compileAgents(config);
-        console.log(chalk.green('\n✨ Agent compilation complete!'));
-        console.log(chalk.cyan(`Rebuilt ${result.agentCount} agents and ${result.taskCount} tasks`));
-        process.exit(0);
-        return;
-      }
-
       // Handle quick update separately
       if (config.actionType === 'quick-update') {
         const result = await installer.quickUpdate(config);

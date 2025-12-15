@@ -195,11 +195,7 @@ class UI {
       }
 
       // Common actions
-      choices.push(
-        { name: 'Modify BMAD Installation', value: 'update' },
-        { name: 'Add / Update Custom Content', value: 'add-custom' },
-        { name: 'Rebuild Agents', value: 'compile' },
-      );
+      choices.push({ name: 'Modify BMAD Installation', value: 'update' });
 
       const promptResult = await inquirer.prompt([
         {
@@ -224,64 +220,6 @@ class UI {
         };
       }
 
-      // Handle add custom content separately
-      if (actionType === 'add-custom') {
-        customContentConfig = await this.promptCustomContentSource();
-        // After adding custom content, continue to select additional modules
-        const { installedModuleIds } = await this.getExistingInstallation(confirmedDirectory);
-
-        // Ask if user wants to add additional modules
-        const { wantsMoreModules } = await inquirer.prompt([
-          {
-            type: 'confirm',
-            name: 'wantsMoreModules',
-            message: 'Do you want to add any additional modules?',
-            default: false,
-          },
-        ]);
-
-        let selectedModules = [];
-        if (wantsMoreModules) {
-          const moduleChoices = await this.getModuleChoices(installedModuleIds, customContentConfig);
-          selectedModules = await this.selectModules(moduleChoices);
-
-          // Process custom content selection
-          const selectedCustomContent = selectedModules.filter((mod) => mod.startsWith('__CUSTOM_CONTENT__'));
-
-          if (selectedCustomContent.length > 0) {
-            customContentConfig.selected = true;
-            customContentConfig.selectedFiles = selectedCustomContent.map((mod) => mod.replace('__CUSTOM_CONTENT__', ''));
-
-            // Convert to module IDs
-            const customContentModuleIds = [];
-            const customHandler = new CustomHandler();
-            for (const customFile of customContentConfig.selectedFiles) {
-              const customInfo = await customHandler.getCustomInfo(customFile);
-              if (customInfo) {
-                customContentModuleIds.push(customInfo.id);
-              }
-            }
-            selectedModules = [...selectedModules.filter((mod) => !mod.startsWith('__CUSTOM_CONTENT__')), ...customContentModuleIds];
-          }
-        }
-
-        return {
-          actionType: 'update',
-          directory: confirmedDirectory,
-          installCore: false, // Don't reinstall core
-          modules: selectedModules,
-          customContent: customContentConfig,
-        };
-      }
-
-      // Handle agent compilation separately
-      if (actionType === 'compile') {
-        return {
-          actionType: 'compile',
-          directory: confirmedDirectory,
-        };
-      }
-
       // If actionType === 'update', handle it with the new flow
       // Return early with modify configuration
       if (actionType === 'update') {
@@ -293,7 +231,7 @@ class UI {
           {
             type: 'confirm',
             name: 'changeModuleSelection',
-            message: 'Change which modules are installed?',
+            message: 'Modify official module selection (BMad Method, BMad Builder, Creative Innovation Suite)?',
             default: false,
           },
         ]);
@@ -360,7 +298,7 @@ class UI {
       {
         type: 'confirm',
         name: 'wantsOfficialModules',
-        message: 'Will you be installing any official modules (BMad Method, BMad Builder, Creative Innovation Suite)?',
+        message: 'Will you be installing any official BMad modules (BMad Method, BMad Builder, Creative Innovation Suite)?',
         default: true,
       },
     ]);
@@ -376,7 +314,7 @@ class UI {
       {
         type: 'confirm',
         name: 'wantsCustomContent',
-        message: 'Will you be installing any locally stored custom content?',
+        message: 'Would you like to install a local custom module (this includes custom agents and workflows also)?',
         default: false,
       },
     ]);
