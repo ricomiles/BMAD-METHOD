@@ -284,26 +284,12 @@ class UI {
 
     // For new installations, ask about content types first
     if (!hasExistingInstall) {
-      // Ask about custom content first
-      const { wantsCustomContent } = await inquirer.prompt([
-        {
-          type: 'confirm',
-          name: 'wantsCustomContent',
-          message: 'Will you be installing any custom content?',
-          default: false,
-        },
-      ]);
-
-      if (wantsCustomContent) {
-        customContentConfig = await this.promptCustomContentSource();
-      }
-
-      // Then ask about official modules
+      // Ask about official modules first
       const { wantsOfficialModules } = await inquirer.prompt([
         {
           type: 'confirm',
           name: 'wantsOfficialModules',
-          message: 'Will you be installing any official modules?',
+          message: 'Will you be installing any official modules (BMad Method, BMad Builder, Creative Innovation Suite)?',
           default: true,
         },
       ]);
@@ -313,6 +299,20 @@ class UI {
         const { installedModuleIds } = await this.getExistingInstallation(confirmedDirectory);
         const moduleChoices = await this.getModuleChoices(installedModuleIds, { hasCustomContent: false });
         selectedOfficialModules = await this.selectModules(moduleChoices);
+      }
+
+      // Then ask about custom content
+      const { wantsCustomContent } = await inquirer.prompt([
+        {
+          type: 'confirm',
+          name: 'wantsCustomContent',
+          message: 'Will you be installing any locally stored custom content?',
+          default: false,
+        },
+      ]);
+
+      if (wantsCustomContent) {
+        customContentConfig = await this.promptCustomContentSource();
       }
 
       // Store the selected modules for later
@@ -474,7 +474,7 @@ class UI {
           name: 'ides',
           message: 'Select tools to configure:',
           choices: ideChoices,
-          pageSize: 15,
+          pageSize: 30,
         },
       ]);
 
@@ -799,8 +799,6 @@ class UI {
    * @returns {Array} Selected module IDs
    */
   async selectModules(moduleChoices) {
-    CLIUtils.displaySection('Module Selection', 'Choose the BMAD modules to install');
-
     const moduleAnswer = await inquirer.prompt([
       {
         type: 'checkbox',
@@ -1302,7 +1300,25 @@ class UI {
 
     // Keep asking for more sources until user is done
     while (true) {
-      console.log(chalk.cyan('\n📦 Adding Custom Content'));
+      // First ask if user wants to add another module or continue
+      if (customContentConfig.sources.length > 0) {
+        const { action } = await inquirer.prompt([
+          {
+            type: 'list',
+            name: 'action',
+            message: 'Would you like to:',
+            choices: [
+              { name: 'Add another custom module', value: 'add' },
+              { name: 'Continue with installation', value: 'continue' },
+            ],
+            default: 'continue',
+          },
+        ]);
+
+        if (action === 'continue') {
+          break;
+        }
+      }
 
       let sourcePath;
       let isValid = false;
@@ -1312,10 +1328,11 @@ class UI {
           {
             type: 'input',
             name: 'path',
-            message: 'Enter the path to your custom content folder:',
+            message: 'Enter the path to your custom content folder (or press Enter to cancel):',
             validate: async (input) => {
+              // Allow empty input to cancel
               if (!input || input.trim() === '') {
-                return 'Path is required';
+                return true; // Allow empty to exit
               }
 
               try {
@@ -1359,6 +1376,15 @@ class UI {
           },
         ]);
 
+        // If user pressed Enter without typing anything, exit the loop
+        if (!inputPath || inputPath.trim() === '') {
+          // If we have no modules yet, return false for no custom content
+          if (customContentConfig.sources.length === 0) {
+            return { hasCustomContent: false };
+          }
+          return customContentConfig;
+        }
+
         sourcePath = this.expandUserPath(inputPath);
         isValid = true;
       }
@@ -1376,21 +1402,7 @@ class UI {
         name: moduleData.name || moduleData.code,
       });
 
-      console.log(chalk.green(`✓ Added custom module: ${moduleData.name || moduleData.code}`));
-
-      // Ask if user wants to add more
-      const { addMore } = await inquirer.prompt([
-        {
-          type: 'confirm',
-          name: 'addMore',
-          message: 'Add another custom module?',
-          default: false,
-        },
-      ]);
-
-      if (!addMore) {
-        break;
-      }
+      console.log(chalk.green(`✓ Confirmed local custom module: ${moduleData.name || moduleData.code}`));
     }
 
     // Ask if user wants to add these to the installation
