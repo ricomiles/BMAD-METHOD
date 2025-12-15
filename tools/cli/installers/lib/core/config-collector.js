@@ -254,6 +254,26 @@ class ConfigCollector {
     const configKeys = Object.keys(moduleConfig).filter((key) => key !== 'prompt');
     const existingKeys = this.existingConfig && this.existingConfig[moduleName] ? Object.keys(this.existingConfig[moduleName]) : [];
 
+    // Check if this module has no configuration keys at all (like CIS)
+    // Filter out metadata fields and only count actual config objects
+    const metadataFields = new Set(['code', 'name', 'header', 'subheader', 'default_selected']);
+    const actualConfigKeys = configKeys.filter((key) => !metadataFields.has(key));
+    const hasNoConfig = actualConfigKeys.length === 0;
+
+    // If module has no config keys at all, handle it specially
+    if (hasNoConfig && moduleConfig.subheader) {
+      // Add blank line for better readability (matches other modules)
+      console.log();
+      const moduleDisplayName = moduleConfig.header || `${moduleName.toUpperCase()} Module`;
+
+      // Display the module name in color first (matches other modules)
+      console.log(chalk.cyan('?') + ' ' + chalk.magenta(moduleDisplayName));
+
+      // Show the subheader since there's no configuration to ask about
+      console.log(chalk.dim(`  ✓ ${moduleConfig.subheader}`));
+      return false; // No new fields
+    }
+
     // Find new interactive fields (with prompt)
     const newKeys = configKeys.filter((key) => {
       const item = moduleConfig[key];
@@ -302,10 +322,11 @@ class ConfigCollector {
           this.allAnswers[`${moduleName}_user_name`] = this.getDefaultUsername();
         }
       }
-      // Show "no config" message for modules with no new questions
-      console.log(chalk.dim(`  ✓ ${moduleName.toUpperCase()} module already up to date`));
-      return false; // No new fields
     }
+
+    // Show "no config" message for modules with no new questions (that have config keys)
+    console.log(chalk.dim(`  ✓ ${moduleName.toUpperCase()} module already up to date`));
+    return false; // No new fields
 
     // If we have new fields (interactive or static), process them
     if (newKeys.length > 0 || newStaticKeys.length > 0) {
@@ -710,8 +731,43 @@ class ConfigCollector {
 
       // No longer display completion boxes - keep output clean
     } else {
-      // No questions for this module - show completion message
-      console.log(chalk.dim(`  ✓ ${moduleName.toUpperCase()} module configured`));
+      // No questions for this module - show completion message with header if available
+      const moduleDisplayName = moduleConfig.header || `${moduleName.toUpperCase()} Module`;
+
+      // Check if this module has NO configuration keys at all (like CIS)
+      // Filter out metadata fields and only count actual config objects
+      const metadataFields = new Set(['code', 'name', 'header', 'subheader', 'default_selected']);
+      const actualConfigKeys = configKeys.filter((key) => !metadataFields.has(key));
+      const hasNoConfig = actualConfigKeys.length === 0;
+
+      if (hasNoConfig && (moduleConfig.subheader || moduleConfig.header)) {
+        // Module explicitly has no configuration - show with special styling
+        // Add blank line for better readability (matches other modules)
+        console.log();
+
+        // Display the module name in color first (matches other modules)
+        console.log(chalk.cyan('?') + ' ' + chalk.magenta(moduleDisplayName));
+
+        // Ask user if they want to accept defaults or customize on the next line
+        const { customize } = await inquirer.prompt([
+          {
+            type: 'confirm',
+            name: 'customize',
+            message: 'Accept Defaults (no to customize)?',
+            default: true,
+          },
+        ]);
+
+        // Show the subheader if available, otherwise show a default message
+        if (moduleConfig.subheader) {
+          console.log(chalk.dim(`  ✓ ${moduleConfig.subheader}`));
+        } else {
+          console.log(chalk.dim(`  ✓ No custom configuration required`));
+        }
+      } else {
+        // Module has config but just no questions to ask
+        console.log(chalk.dim(`  ✓ ${moduleName.toUpperCase()} module configured`));
+      }
     }
 
     // If we have no collected config for this module, but we have a module schema,

@@ -1248,9 +1248,9 @@ If AgentVibes party mode is enabled, immediately trigger TTS with agent's voice:
           console.log = originalLog;
 
           if (spinner.isSpinning) {
-            spinner.succeed(`Configured ${validIdes.length} IDE${validIdes.length > 1 ? 's' : ''}`);
+            spinner.succeed(`Configured: ${validIdes.join(', ')}`);
           } else {
-            console.log(chalk.green(`✓ Configured ${validIdes.length} IDE${validIdes.length > 1 ? 's' : ''}`));
+            console.log(chalk.green(`✓ Configured: ${validIdes.join(', ')}`));
           }
         }
 
@@ -1266,6 +1266,14 @@ If AgentVibes party mode is enabled, immediately trigger TTS with agent's voice:
       // Run module-specific installers after IDE setup
       spinner.start('Running module-specific installers...');
 
+      // Create a conditional logger based on verbose mode
+      const verboseMode = process.env.BMAD_VERBOSE_INSTALL === 'true' || config.verbose;
+      const moduleLogger = {
+        log: (msg) => (verboseMode ? console.log(msg) : {}), // Only log in verbose mode
+        error: (msg) => console.error(msg), // Always show errors
+        warn: (msg) => console.warn(msg), // Always show warnings
+      };
+
       // Run core module installer if core was installed
       if (config.installCore || resolution.byModule.core) {
         spinner.text = 'Running core module installer...';
@@ -1274,11 +1282,7 @@ If AgentVibes party mode is enabled, immediately trigger TTS with agent's voice:
           installedIDEs: config.ides || [],
           moduleConfig: moduleConfigs.core || {},
           coreConfig: moduleConfigs.core || {},
-          logger: {
-            log: (msg) => console.log(msg),
-            error: (msg) => console.error(msg),
-            warn: (msg) => console.warn(msg),
-          },
+          logger: moduleLogger,
         });
       }
 
@@ -1292,11 +1296,7 @@ If AgentVibes party mode is enabled, immediately trigger TTS with agent's voice:
             installedIDEs: config.ides || [],
             moduleConfig: moduleConfigs[moduleName] || {},
             coreConfig: moduleConfigs.core || {},
-            logger: {
-              log: (msg) => console.log(msg),
-              error: (msg) => console.error(msg),
-              warn: (msg) => console.warn(msg),
-            },
+            logger: moduleLogger,
           });
         }
       }
@@ -1942,7 +1942,10 @@ If AgentVibes party mode is enabled, immediately trigger TTS with agent's voice:
         const genericTemplatePath = getSourcePath('utility', 'agent-components', 'agent.customize.template.yaml');
         if (await fs.pathExists(genericTemplatePath)) {
           await this.copyFileWithPlaceholderReplacement(genericTemplatePath, customizePath, this.bmadFolderName || 'bmad');
-          console.log(chalk.dim(`  Created customize: ${moduleName}-${agentName}.customize.yaml`));
+          // Only show customize creation in verbose mode
+          if (process.env.BMAD_VERBOSE_INSTALL === 'true') {
+            console.log(chalk.dim(`  Created customize: ${moduleName}-${agentName}.customize.yaml`));
+          }
         }
       }
     }
