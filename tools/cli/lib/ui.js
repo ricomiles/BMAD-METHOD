@@ -17,6 +17,9 @@ class UI {
   async promptInstall() {
     CLIUtils.displayLogo();
 
+    // Display changelog link
+    console.log(chalk.cyan('\n📋 Read the latest updates: https://github.com/bmad-code-org/BMAD-METHOD/blob/main/CHANGELOG.md\n'));
+
     const confirmedDirectory = await this.getConfirmedDirectory();
 
     // Preflight: Check for legacy BMAD v4 footprints immediately after getting directory
@@ -584,6 +587,13 @@ class UI {
 
     console.log(chalk.yellow('\nThank you for helping test the early release version of the new BMad Core and BMad Method!'));
     console.log(chalk.cyan('Stable Beta coming soon - please read the full README.md and linked documentation to get started!'));
+
+    // Add changelog link at the end
+    console.log(
+      chalk.magenta(
+        "\n📋 Want to see what's new? Check out the changelog: https://github.com/bmad-code-org/BMAD-METHOD/blob/main/CHANGELOG.md",
+      ),
+    );
   }
 
   /**

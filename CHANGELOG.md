@@ -1,5 +1,101 @@
 # Changelog
 
+## [6.0.0-alpha.17]
+
+**Release: December 16, 2025**
+
+### 🚀 Revolutionary Installer Overhaul
+
+**Unified Installation Experience:**
+
+- **Streamlined Module Installation**: Completely redesigned installer with unified flow for both core and custom content
+- **Single Install Panel**: Eliminated disjointed clearing between modules for smoother, more intuitive installation
+- **Quick Default Selection**: New quick install feature with default selections for faster setup of selected modules
+- **Enhanced UI/UX**: Improved question order, reduced verbose output, and cleaner installation interface
+- **Logical Question Flow**: Reorganized installer questions to follow natural progression and user expectations
+
+**Custom Content Installation Revolution:**
+
+- **Full Custom Content Support**: Re-enabled complete custom content generation and sharing through the installer
+- **Custom Module Tracking**: Manifest now tracks custom modules separately to ensure they're always installed from the custom cache
+- **Custom Installation Order**: Custom modules now install after core modules for better dependency management
+- **Quick Update with Custom Content**: Quick update now properly retains and updates custom content
+- **Agent Customization Integration**: Customizations are now applied during quick updates and agent compilation
+
+### 🧠 Revolutionary Agent Memory & Visibility System
+
+**Breaking Through Dot-Folder Limitations:**
+
+- **Dot-Folder to Underscore Migration**: Critical change from `.bmad` to `_bmad` ensures LLMs (Codex, Claude, and others) can no longer ignore or skip BMAD content - dot folders are commonly filtered out by AI systems
+- **Universal Content Visibility**: Underscore folders are treated as regular content, ensuring full AI agent access to all BMAD resources and configurations
+- **Agent Memory Architecture**: Rolled out comprehensive agent memory support for installed agents with `-sidecar` folders
+- **Persistent Agent Learning**: Sidecar content installs to `_bmad/_memory`, giving each agent the ability to learn and remember important information specific to its role
+
+**Content Location Strategy:**
+
+- **Standardized Memory Location**: All sidecar content now uses `_bmad/_memory` as the unified location for agent memories
+- **Segregated Output System**: New architecture supports differentiating between ephemeral Phase 4 artifacts and long-term documentation
+- **Forward Compatibility**: Existing installations continue working with content in docs folder, with optimization coming in next release
+- **Configuration Cleanup**: Renamed `_cfg` to `_config` for clearer naming conventions
+- **YAML Library Consolidation**: Reduced dependency to use only one YAML library for better stability
+
+### 🎯 Future-Ready Architecture
+
+**Content Organization Preview:**
+
+- **Phase 4 Artifact Segregation**: Infrastructure ready for separating ephemeral workflow artifacts from permanent documentation
+- **Planning vs Implementation Docs**: New system will differentiate between planning artifacts and long-term project documentation
+- **Backward Compatibility**: Current installs maintain full functionality while preparing for optimized content organization
+- **Quick Update Path**: Tomorrow's quick update will fully optimize all BMM workflows to use new segregated output locations
+
+### 🎯 Sample Modules & Documentation
+
+**Comprehensive Examples:**
+
+- **Sample Unitary Module**: Complete example with commit-poet agent and quiz-master workflow
+- **Sample Wellness Module**: Meditation guide and wellness companion agents demonstrating advanced patterns
+- **Enhanced Documentation**: Updated README files and comprehensive installation guides
+- **Custom Content Creation Guides**: Step-by-step documentation for creating and sharing custom modules
+
+### 🔧 Bug Fixes & Optimizations
+
+**Installer Improvements:**
+
+- **Fixed Duplicate Entry Issue**: Resolved duplicate entries in files manifest
+- **Reduced Log Noise**: Less verbose logging during installation for cleaner user experience
+- **Menu Wording Updates**: Improved menu text for better clarity and understanding
+- **Fixed Quick Install**: Resolved issues with quick installation functionality
+
+**Code Quality:**
+
+- **Minor Code Cleanup**: General cleanup and refactoring throughout the codebase
+- **Removed Unused Code**: Cleaned up deprecated and unused functionality
+- **Release Workflow Restoration**: Fixed automated release workflow for v6
+
+**BMM Phase 4 Workflow Improvements:**
+
+- **Sprint Status Enhancement**: Improved sprint-status validation with interactive correction for unknown values and better epic status handling
+- **Story Status Standardization**: Normalized all story status references to lowercase kebab-case (ready-for-dev, in-progress, review, done)
+- **Removed Stale Story State**: Eliminated deprecated 'drafted' story state - stories now go directly from creation to ready-for-dev
+- **Code Review Clarity**: Improved code review completion message from "Story is ready for next work!" to "Code review complete!" for better clarity
+- **Risk Detection Rules**: Rewrote risk detection rules for better LLM clarity and fixed warnings vs risks naming inconsistency
+
+### 📊 Statistics
+
+- **40+ commits** since alpha.16
+- **Major installer refactoring** with complete UX overhaul
+- **2 new sample modules** with comprehensive examples
+- **Full custom content support** re-enabled and improved
+
+### 🌟 Key Highlights
+
+1. **Installer Revolution**: The installation system has been completely overhauled for better user experience, reliability, and speed
+2. **Custom Content Freedom**: Users can now easily create, share, and install custom content through the streamlined installer
+3. **AI Visibility Breakthrough**: Migration from `.bmad` to `_bmad` ensures LLMs can access all BMAD content (dot folders are commonly ignored by AI systems)
+4. **Agent Memory System**: Rolled out persistent agent memory support - agents with `-sidecar` folders can now learn and remember important information in `_bmad/_memory`
+5. **Quick Default Selection**: Installation is now faster with smart default selections for popular configurations
+6. **Future-Ready Architecture**: Infrastructure in place for segregating ephemeral artifacts from permanent documentation (full optimization coming in next release)
+
 ## [6.0.0-alpha.16]
 
 **Release: December 10, 2025**

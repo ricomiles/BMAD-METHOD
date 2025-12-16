@@ -26,6 +26,11 @@ module.exports = {
         const result = await installer.quickUpdate(config);
         console.log(chalk.green('\n✨ Quick update complete!'));
         console.log(chalk.cyan(`Updated ${result.moduleCount} modules with preserved settings`));
+        console.log(
+          chalk.magenta(
+            "\n📋 Want to see what's new? Check out the changelog: https://github.com/bmad-code-org/BMAD-METHOD/blob/main/CHANGELOG.md",
+          ),
+        );
         process.exit(0);
         return;
       }
