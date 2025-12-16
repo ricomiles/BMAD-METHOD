@@ -241,7 +241,35 @@ class UI {
         }
 
         // After module selection, ask about custom modules
-        const customModuleResult = await this.handleCustomModulesInModifyFlow(confirmedDirectory, selectedModules);
+        console.log('');
+        const { changeCustomModules } = await inquirer.prompt([
+          {
+            type: 'confirm',
+            name: 'changeCustomModules',
+            message: 'Modify custom module selection (add, update, or remove custom modules/agents/workflows)?',
+            default: false,
+          },
+        ]);
+
+        let customModuleResult = { selectedCustomModules: [], customContentConfig: { hasCustomContent: false } };
+        if (changeCustomModules) {
+          customModuleResult = await this.handleCustomModulesInModifyFlow(confirmedDirectory, selectedModules);
+        } else {
+          // Preserve existing custom modules if user doesn't want to modify them
+          const { Installer } = require('../installers/lib/core/installer');
+          const installer = new Installer();
+          const { bmadDir } = await installer.findBmadDir(confirmedDirectory);
+
+          const cacheDir = path.join(bmadDir, '_config', 'custom');
+          if (await fs.pathExists(cacheDir)) {
+            const entries = await fs.readdir(cacheDir, { withFileTypes: true });
+            for (const entry of entries) {
+              if (entry.isDirectory()) {
+                customModuleResult.selectedCustomModules.push(entry.name);
+              }
+            }
+          }
+        }
 
         // Merge any selected custom modules
         if (customModuleResult.selectedCustomModules.length > 0) {
@@ -1322,26 +1350,35 @@ class UI {
       customContentConfig: { hasCustomContent: false },
     };
 
-    if (cachedCustomModules.length === 0) {
-      return result;
-    }
-
     // Ask user about custom modules
     console.log(chalk.cyan('\n⚙️  Custom Modules'));
-    console.log(chalk.dim('Found custom modules in your installation:'));
+    if (cachedCustomModules.length > 0) {
+      console.log(chalk.dim('Found custom modules in your installation:'));
+    } else {
+      console.log(chalk.dim('No custom modules currently installed.'));
+    }
+
+    // Build choices dynamically based on whether we have existing modules
+    const choices = [];
+    if (cachedCustomModules.length > 0) {
+      choices.push(
+        { name: 'Keep all existing custom modules', value: 'keep' },
+        { name: 'Select which custom modules to keep', value: 'select' },
+        { name: 'Add new custom modules', value: 'add' },
+        { name: 'Remove all custom modules', value: 'remove' },
+      );
+    } else {
+      choices.push({ name: 'Add new custom modules', value: 'add' }, { name: 'Cancel (no custom modules)', value: 'cancel' });
+    }
 
     const { customAction } = await inquirer.prompt([
       {
         type: 'list',
         name: 'customAction',
-        message: 'What would you like to do with custom modules?',
-        choices: [
-          { name: 'Keep all existing custom modules', value: 'keep' },
-          { name: 'Select which custom modules to keep', value: 'select' },
-          { name: 'Add new custom modules', value: 'add' },
-          { name: 'Remove all custom modules', value: 'remove' },
-        ],
-        default: 'keep',
+        message:
+          cachedCustomModules.length > 0 ? 'What would you like to do with custom modules?' : 'Would you like to add custom modules?',
+        choices: choices,
+        default: cachedCustomModules.length > 0 ? 'keep' : 'add',
       },
     ]);
 
@@ -1374,19 +1411,9 @@ class UI {
       }
 
       case 'add': {
-        // First ask to keep existing ones
-        const { keepExisting } = await inquirer.prompt([
-          {
-            type: 'confirm',
-            name: 'keepExisting',
-            message: 'Keep existing custom modules?',
-            default: true,
-          },
-        ]);
-
-        if (keepExisting) {
-          result.selectedCustomModules = cachedCustomModules.map((m) => m.id);
-        }
+        // By default, keep existing modules when adding new ones
+        // User chose "Add new" not "Replace", so we assume they want to keep existing
+        result.selectedCustomModules = cachedCustomModules.map((m) => m.id);
 
         // Then prompt for new ones (reuse existing method)
         const newCustomContent = await this.promptCustomContentSource();
@@ -1400,6 +1427,12 @@ class UI {
       case 'remove': {
         // Remove all custom modules
         console.log(chalk.yellow('All custom modules will be removed from the installation'));
+        break;
+      }
+
+      case 'cancel': {
+        // User cancelled - no custom modules
+        console.log(chalk.dim('No custom modules will be added'));
         break;
       }
     }
