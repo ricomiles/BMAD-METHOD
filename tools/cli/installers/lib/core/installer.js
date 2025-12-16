@@ -992,6 +992,7 @@ If AgentVibes party mode is enabled, immediately trigger TTS with agent's voice:
                 isCustom: true,
                 moduleConfig: collectedModuleConfig,
                 isQuickUpdate: config._quickUpdate || false,
+                installer: this,
               },
             );
 
@@ -1573,6 +1574,7 @@ If AgentVibes party mode is enabled, immediately trigger TTS with agent's voice:
       {
         skipModuleInstaller: true, // We'll run it later after IDE setup
         moduleConfig: moduleConfig, // Pass module config for conditional filtering
+        installer: this,
       },
     );
 
@@ -1695,7 +1697,7 @@ If AgentVibes party mode is enabled, immediately trigger TTS with agent's voice:
     // Compile agents using the same compiler as modules
     const { ModuleManager } = require('../modules/manager');
     const moduleManager = new ModuleManager();
-    await moduleManager.compileModuleAgents(sourcePath, targetPath, 'core', bmadDir);
+    await moduleManager.compileModuleAgents(sourcePath, targetPath, 'core', bmadDir, this);
 
     // Process agent files to inject activation block
     await this.processAgentFiles(targetPath, 'core');
@@ -2044,8 +2046,7 @@ If AgentVibes party mode is enabled, immediately trigger TTS with agent's voice:
           answers.memories = customizeData.memories;
         }
 
-        // Get core config for bmad_memory
-        const coreConfigPath = path.join(bmadDir, 'bmb', 'config.yaml');
+        const coreConfigPath = path.join(bmadDir, 'core', 'config.yaml');
         let coreConfig = {};
         if (await fs.pathExists(coreConfigPath)) {
           const yaml = require('yaml');
@@ -2200,7 +2201,7 @@ If AgentVibes party mode is enabled, immediately trigger TTS with agent's voice:
       // Recompile agents (#1133)
       const { ModuleManager } = require('../modules/manager');
       const moduleManager = new ModuleManager();
-      await moduleManager.compileModuleAgents(sourcePath, targetPath, 'core', bmadDir);
+      await moduleManager.compileModuleAgents(sourcePath, targetPath, 'core', bmadDir, this);
       await this.processAgentFiles(targetPath, 'core');
     }
   }
@@ -2571,6 +2572,9 @@ If AgentVibes party mode is enabled, immediately trigger TTS with agent's voice:
     const customFiles = [];
     const modifiedFiles = [];
 
+    // Memory is always in _bmad/_memory
+    const bmadMemoryPath = '_memory';
+
     // Check if the manifest has hashes - if not, we can't detect modifications
     let manifestHasHashes = false;
     if (existingFilesManifest && existingFilesManifest.length > 0) {
@@ -2632,6 +2636,10 @@ If AgentVibes party mode is enabled, immediately trigger TTS with agent's voice:
                   }
                 }
               }
+              continue;
+            }
+
+            if (relativePath.startsWith(bmadMemoryPath + '/') && path.dirname(relativePath).includes('-sidecar')) {
               continue;
             }
 
