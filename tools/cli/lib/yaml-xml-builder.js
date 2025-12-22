@@ -336,7 +336,7 @@ class YamlXmlBuilder {
     let xml = '  <menu>\n';
 
     // Always inject menu display option first
-    xml += `    <item cmd="*menu">[M] Redisplay Menu Options</item>\n`;
+    xml += `    <item cmd="HM or fuzzy match on help">[HM] Redisplay Help Menu Options</item>\n`;
 
     // Add user-defined menu items with * prefix
     if (menuItems && menuItems.length > 0) {
@@ -358,11 +358,7 @@ class YamlXmlBuilder {
         }
         // Handle legacy format menu items
         else if (item.trigger) {
-          // For legacy items, keep using cmd with *<trigger> format
           let trigger = item.trigger || '';
-          if (!trigger.startsWith('*')) {
-            trigger = '*' + trigger;
-          }
 
           const attrs = [`cmd="${trigger}"`];
 
@@ -388,7 +384,7 @@ class YamlXmlBuilder {
     }
 
     // Always inject dismiss last
-    xml += `    <item cmd="*dismiss">[D] Dismiss Agent</item>\n`;
+    xml += `    <item cmd="DA or fuzzy match on dismiss">[DA] Dismiss Agent</item>\n`;
 
     xml += '  </menu>\n';
 
@@ -405,9 +401,6 @@ class YamlXmlBuilder {
 
     for (const triggerGroup of triggers) {
       for (const [triggerName, execArray] of Object.entries(triggerGroup)) {
-        // Build trigger with * prefix
-        let trigger = triggerName.startsWith('*') ? triggerName : '*' + triggerName;
-
         // Extract the relevant execution data
         const execData = this.processExecArray(execArray);
 
