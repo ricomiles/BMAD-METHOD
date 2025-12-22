@@ -952,7 +952,7 @@ class ModuleManager {
     //   // Check if content has agent XML and no activation block
     //   if (content.includes('<agent') && !content.includes('<activation')) {
     //     // Inject the activation block using XML handler
-    //     content = this.xmlHandler.injectActivationSimple(content);
+    //     // TODO: Reimplement activation injection if needed
     //     await fs.writeFile(agentFile, content, 'utf8');
     //   }
     // }

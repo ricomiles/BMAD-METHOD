@@ -297,49 +297,41 @@ class Installer {
         console.log('\n'); // Add spacing before IDE questions
 
         for (const ide of newlySelectedIdes) {
-          // List of IDEs that have interactive prompts
-          //TODO: Why is this here, hardcoding this list here is bad, fix me!
-          const needsPrompts = ['claude-code', 'github-copilot', 'roo', 'cline', 'auggie', 'codex', 'qwen', 'gemini', 'rovo-dev'].includes(
-            ide,
-          );
+          // Get IDE handler and check if it needs interactive configuration
+          try {
+            // Dynamically load the IDE setup module
+            const ideModule = require(`../ide/${ide}`);
 
-          if (needsPrompts) {
-            // Get IDE handler and collect configuration
-            try {
-              // Dynamically load the IDE setup module
-              const ideModule = require(`../ide/${ide}`);
+            // Get the setup class (handle different export formats)
+            let SetupClass;
+            const className =
+              ide
+                .split('-')
+                .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+                .join('') + 'Setup';
 
-              // Get the setup class (handle different export formats)
-              let SetupClass;
-              const className =
-                ide
-                  .split('-')
-                  .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
-                  .join('') + 'Setup';
-
-              if (ideModule[className]) {
-                SetupClass = ideModule[className];
-              } else if (ideModule.default) {
-                SetupClass = ideModule.default;
-              } else {
-                continue;
-              }
-
-              const ideSetup = new SetupClass();
-
-              // Check if this IDE has a collectConfiguration method
-              if (typeof ideSetup.collectConfiguration === 'function') {
-                console.log(chalk.cyan(`\nConfiguring ${ide}...`));
-                ideConfigurations[ide] = await ideSetup.collectConfiguration({
-                  selectedModules: selectedModules || [],
-                  projectDir,
-                  bmadDir,
-                });
-              }
-            } catch {
-              // IDE doesn't have a setup file or collectConfiguration method
-              console.warn(chalk.yellow(`Warning: Could not load configuration for ${ide}`));
+            if (ideModule[className]) {
+              SetupClass = ideModule[className];
+            } else if (ideModule.default) {
+              SetupClass = ideModule.default;
+            } else {
+              continue;
             }
+
+            const ideSetup = new SetupClass();
+
+            // Check if this IDE has a collectConfiguration method (no hardcoding needed!)
+            if (typeof ideSetup.collectConfiguration === 'function') {
+              console.log(chalk.cyan(`\nConfiguring ${ide}...`));
+              ideConfigurations[ide] = await ideSetup.collectConfiguration({
+                selectedModules: selectedModules || [],
+                projectDir,
+                bmadDir,
+              });
+            }
+          } catch {
+            // IDE doesn't have a setup file or collectConfiguration method
+            console.warn(chalk.yellow(`Warning: Could not load configuration for ${ide}`));
           }
         }
       }

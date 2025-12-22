@@ -493,11 +493,6 @@ class BaseIdeSetup {
     // Replace placeholders
     let processed = content;
 
-    // Inject activation block for agent files FIRST (before replacements)
-    if (metadata.name && content.includes('<agent')) {
-      processed = this.xmlHandler.injectActivationSimple(processed, metadata);
-    }
-
     // Only replace {project-root} if a specific projectDir is provided
     // Otherwise leave the placeholder intact
     // Note: Don't add trailing slash - paths in source include leading slash

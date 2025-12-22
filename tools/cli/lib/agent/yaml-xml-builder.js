@@ -4,7 +4,7 @@ const path = require('node:path');
 const crypto = require('node:crypto');
 const { AgentAnalyzer } = require('./agent-analyzer');
 const { ActivationBuilder } = require('./activation-builder');
-const { escapeXml } = require('../../../lib/xml-utils');
+const { escapeXml } = require('../xml-utils');
 const {
   processAgentYaml,
   extractInstallConfig,
