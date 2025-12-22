@@ -835,8 +835,6 @@ class Installer {
         allModules = allModules.filter((m) => m !== 'core');
       }
 
-      const modulesToInstall = allModules;
-
       // For dependency resolution, we only need regular modules (not custom modules)
       // Custom modules are already installed in _bmad and don't need dependency resolution from source
       const regularModulesForResolution = allModules.filter((module) => {
@@ -882,7 +880,6 @@ class Installer {
           // Check if this is a custom module
           let isCustomModule = false;
           let customInfo = null;
-          let useCache = false;
 
           // First check if we have a cached version
           if (finalCustomContent && finalCustomContent.cachedModules) {
@@ -1215,17 +1212,19 @@ class Installer {
         console.log(chalk.dim('Remove these .bak files it no longer needed\n'));
       }
 
-      // Display completion message
-      const { UI } = require('../../../lib/ui');
-      const ui = new UI();
-      ui.showInstallSummary({
-        path: bmadDir,
-        modules: config.modules,
-        ides: config.ides,
-        customFiles: customFiles.length > 0 ? customFiles : undefined,
-        ttsInjectedFiles: this.enableAgentVibes && this.ttsInjectedFiles.length > 0 ? this.ttsInjectedFiles : undefined,
-        agentVibesEnabled: this.enableAgentVibes || false,
-      });
+      // Display completion message (skip if requested, e.g., for quick updates)
+      if (!config._skipCompletion) {
+        const { UI } = require('../../../lib/ui');
+        const ui = new UI();
+        ui.showInstallSummary({
+          path: bmadDir,
+          modules: config.modules,
+          ides: config.ides,
+          customFiles: customFiles.length > 0 ? customFiles : undefined,
+          ttsInjectedFiles: this.enableAgentVibes && this.ttsInjectedFiles.length > 0 ? this.ttsInjectedFiles : undefined,
+          agentVibesEnabled: this.enableAgentVibes || false,
+        });
+      }
 
       return {
         success: true,
@@ -1505,9 +1504,7 @@ class Installer {
    * @param {string} bmadDir - BMAD installation directory
    * @param {Object} coreFiles - Core files to install
    */
-  async installCoreWithDependencies(bmadDir, coreFiles) {
-    const sourcePath = getModulePath('core');
-    const targetPath = path.join(bmadDir, 'core');
+  async installCoreWithDependencies(bmadDir) {
     await this.installCore(bmadDir);
   }
 
@@ -1517,7 +1514,7 @@ class Installer {
    * @param {string} bmadDir - BMAD installation directory
    * @param {Object} moduleFiles - Module files to install
    */
-  async installModuleWithDependencies(moduleName, bmadDir, moduleFiles) {
+  async installModuleWithDependencies(moduleName, bmadDir) {
     // Get module configuration for conditional installation
     const moduleConfig = this.configCollector.collectedConfig[moduleName] || {};
 
@@ -1789,7 +1786,6 @@ class Installer {
       }
 
       const agentName = agentFile.replace('.md', '');
-      const mdPath = path.join(agentsPath, agentFile);
       const customizePath = path.join(cfgAgentsDir, `${moduleName}-${agentName}.customize.yaml`);
 
       // For .md files that are already compiled, we don't need to do much
@@ -2003,8 +1999,9 @@ class Installer {
         _existingModules: installedModules, // Pass all installed modules for manifest generation
       };
 
-      // Call the standard install method
-      const result = await this.install(installConfig);
+      // Call the standard install method, but skip UI completion for quick updates
+      installConfig._skipCompletion = true;
+      await this.install(installConfig);
 
       // Only succeed the spinner if it's still spinning
       // (install method might have stopped it if folder name changed)
