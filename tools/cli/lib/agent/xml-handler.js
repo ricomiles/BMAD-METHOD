@@ -1,7 +1,7 @@
 const xml2js = require('xml2js');
 const fs = require('fs-extra');
 const path = require('node:path');
-const { getProjectRoot, getSourcePath } = require('./project-root');
+const { getProjectRoot, getSourcePath } = require('../project-root');
 const { YamlXmlBuilder } = require('./yaml-xml-builder');
 
 /**

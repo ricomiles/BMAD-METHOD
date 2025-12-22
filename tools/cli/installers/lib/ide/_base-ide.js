@@ -1,7 +1,7 @@
 const path = require('node:path');
 const fs = require('fs-extra');
 const chalk = require('chalk');
-const { XmlHandler } = require('../../../lib/xml-handler');
+const { XmlHandler } = require('../../../lib/agent/xml-handler');
 const { getSourcePath } = require('../../../lib/project-root');
 
 /**

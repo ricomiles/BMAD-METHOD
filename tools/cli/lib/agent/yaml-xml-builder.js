@@ -4,7 +4,14 @@ const path = require('node:path');
 const crypto = require('node:crypto');
 const { AgentAnalyzer } = require('./agent-analyzer');
 const { ActivationBuilder } = require('./activation-builder');
-const { escapeXml } = require('../../lib/xml-utils');
+const { escapeXml } = require('../../../lib/xml-utils');
+const {
+  processAgentYaml,
+  extractInstallConfig,
+  stripInstallConfig,
+  getDefaultValues,
+  filterCustomizationData,
+} = require('./template-engine');
 
 /**
  * Converts agent YAML files to XML format with smart activation injection
@@ -225,7 +232,7 @@ class YamlXmlBuilder {
 
     // Menu section (support both 'menu' and legacy 'commands')
     const menuItems = agent.menu || agent.commands || [];
-    xml += this.buildCommandsXml(menuItems, buildMetadata.forWebBundle);
+    xml += this.buildMenuXml(menuItems, buildMetadata.forWebBundle);
 
     xml += '</agent>\n';
     xml += '```\n';
@@ -315,7 +322,7 @@ class YamlXmlBuilder {
     for (const prompt of promptsArray) {
       xml += `    <prompt id="${prompt.id || ''}">\n`;
       xml += `      <content>\n`;
-      xml += `${escapeXml(prompt.content || '')}\n`;
+      xml += `${prompt.content || ''}\n`; // Don't escape prompt content - it's meant to be read as-is
       xml += `      </content>\n`;
       xml += `    </prompt>\n`;
     }
@@ -332,7 +339,7 @@ class YamlXmlBuilder {
    * @param {Array} menuItems - Menu items from YAML
    * @param {boolean} forWebBundle - Whether building for web bundle
    */
-  buildCommandsXml(menuItems, forWebBundle = false) {
+  buildMenuXml(menuItems, forWebBundle = false) {
     let xml = '  <menu>\n';
 
     // Always inject menu display option first
@@ -415,7 +422,6 @@ class YamlXmlBuilder {
         if (execData.action) attrs.push(`action="${execData.action}"`);
         if (execData.data) attrs.push(`data="${execData.data}"`);
         if (execData.tmpl) attrs.push(`tmpl="${execData.tmpl}"`);
-        // Only add type if it's not 'exec' (exec is already implied by the exec attribute)
         if (execData.type && execData.type !== 'exec') attrs.push(`type="${execData.type}"`);
 
         xml += `      <handler ${attrs.join(' ')}></handler>\n`;
@@ -567,6 +573,143 @@ class YamlXmlBuilder {
       customizeHash,
     };
   }
+
+  /**
+   * Process TTS injection points in XML content
+   * @param {string} content - XML content with TTS markers
+   * @param {boolean} enableAgentVibes - Whether to process AgentVibes markers
+   * @returns {string} Processed content
+   */
+  processTTSInjectionPoints(content, enableAgentVibes = false) {
+    let result = content;
+
+    if (enableAgentVibes) {
+      // Process AgentVibes markers
+      result = result.replaceAll(/<AgentVibes\s+id="([^"]+)"\s*>/g, (match, id) => {
+        // Look for AgentVibes function in agent-analyzer data
+        if (this.analyzer.agentData && this.analyzer.agentData[id]) {
+          const functionText = this.analyzer.agentData[id];
+          return `<AgentVibes id="${id}">\n${functionText}\n</AgentVibes>`;
+        }
+        return match; // Keep original if not found
+      });
+    }
+
+    return result;
+  }
+
+  /**
+   * Legacy compatibility: compileAgent function for backward compatibility
+   * @param {string} yamlContent - YAML content
+   * @param {Object} answers - Template answers
+   * @param {string} agentName - Agent name
+   * @param {string} targetPath - Target path
+   * @param {Object} options - Additional options
+   * @returns {Object} Compilation result
+   */
+  async compileAgent(yamlContent, answers = {}, agentName = '', targetPath = '', options = {}) {
+    // Parse YAML
+    let agentYaml = yaml.parse(yamlContent);
+
+    // Apply customization merges before template processing
+    // Handle metadata overrides (like name)
+    if (answers.metadata) {
+      // Filter out empty values from metadata
+      const filteredMetadata = filterCustomizationData(answers.metadata);
+      if (Object.keys(filteredMetadata).length > 0) {
+        agentYaml.agent.metadata = { ...agentYaml.agent.metadata, ...filteredMetadata };
+      }
+      // Remove from answers so it doesn't get processed as template variables
+      const { metadata, ...templateAnswers } = answers;
+      answers = templateAnswers;
+    }
+
+    // Handle other customization properties
+    // These should be merged into the agent structure, not processed as template variables
+    if (
+      answers.critical_actions && // Handle critical_actions merging
+      Array.isArray(answers.critical_actions)
+    ) {
+      agentYaml.agent.critical_actions = [...(agentYaml.agent.critical_actions || []), ...answers.critical_actions];
+    }
+
+    // Extract install_config and process templates
+    const installConfig = extractInstallConfig(agentYaml);
+    const defaults = installConfig ? getDefaultValues(installConfig) : {};
+
+    // Process template variables
+    const processedYaml = processAgentYaml(agentYaml, { ...defaults, ...answers });
+
+    // Remove install_config after processing
+    const cleanYaml = stripInstallConfig(processedYaml);
+
+    // Convert to XML using our enhanced builder
+    const buildMetadata = {
+      sourceFile: targetPath,
+      module: cleanYaml.agent?.metadata?.module || 'core',
+      forWebBundle: options.forWebBundle || false,
+      skipActivation: options.skipActivation || false,
+    };
+
+    const xml = await this.convertToXml(cleanYaml, buildMetadata);
+
+    return {
+      xml,
+      metadata: cleanYaml.agent.metadata,
+      processedYaml: cleanYaml,
+    };
+  }
+
+  /**
+   * Legacy compatibility: compileAgentFile function
+   * @param {string} yamlPath - Path to YAML file
+   * @param {Object} options - Options
+   * @returns {Object} Compilation result
+   */
+  async compileAgentFile(yamlPath, options = {}) {
+    const yamlContent = fs.readFileSync(yamlPath, 'utf8');
+    const result = await this.compileAgent(yamlContent, options.answers || {});
+
+    // Determine output path
+    let outputPath = options.outputPath;
+    if (!outputPath) {
+      // Default: same directory, same name, .md extension
+      const parsedPath = path.parse(yamlPath);
+      outputPath = path.join(parsedPath.dir, `${parsedPath.name}.md`);
+    }
+
+    // Process TTS injection if enabled
+    let finalXml = result.xml;
+    if (options.enableTTS) {
+      finalXml = this.processTTSInjectionPoints(finalXml, true);
+    }
+
+    // Write output file
+    fs.writeFileSync(outputPath, finalXml, 'utf8');
+
+    return {
+      outputPath,
+      xml: finalXml,
+      metadata: result.metadata,
+    };
+  }
 }
 
-module.exports = { YamlXmlBuilder };
+// Export both the class and legacy functions for backward compatibility
+module.exports = {
+  YamlXmlBuilder,
+  // Legacy exports for backward compatibility
+  compileAgent: (yamlContent, answers, agentName, targetPath, options) => {
+    const builder = new YamlXmlBuilder();
+    return builder.compileAgent(yamlContent, answers, agentName, targetPath, options);
+  },
+  compileAgentFile: (yamlPath, options) => {
+    const builder = new YamlXmlBuilder();
+    return builder.compileAgentFile(yamlPath, options);
+  },
+  filterCustomizationData,
+  processAgentYaml,
+  extractInstallConfig,
+  stripInstallConfig,
+  getDefaultValues,
+};
