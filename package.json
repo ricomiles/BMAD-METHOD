@@ -58,8 +58,7 @@
       "npm run format:fix"
     ],
     "*.md": [
-      "markdownlint-cli2",
-      "npm run format:fix"
+      "markdownlint-cli2"
     ]
   },
   "dependencies": {

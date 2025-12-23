@@ -74,7 +74,7 @@ For Level {{project_level}}, we'll keep the architecture appropriately scoped.
 
 Decision Architecture works from your Product Requirements Document (PRD).
 
-Looking for: _prd_.md, or prd/index.md + files in {output_folder}
+Looking for: `*prd*.md`, or `prd/index.md` + files in {output_folder}
 
 Please run the PRD workflow first to define your requirements.
 
