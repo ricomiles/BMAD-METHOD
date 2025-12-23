@@ -318,11 +318,11 @@ class ConfigCollector {
           this.allAnswers[`${moduleName}_user_name`] = this.getDefaultUsername();
         }
       }
-    }
 
-    // Show "no config" message for modules with no new questions (that have config keys)
-    console.log(chalk.dim(`  ✓ ${moduleName.toUpperCase()} module already up to date`));
-    return false; // No new fields
+      // Show "no config" message for modules with no new questions (that have config keys)
+      console.log(chalk.dim(`  ✓ ${moduleName.toUpperCase()} module already up to date`));
+      return false; // No new fields
+    }
 
     // If we have new fields (interactive or static), process them
     if (newKeys.length > 0 || newStaticKeys.length > 0) {
@@ -363,6 +363,13 @@ class ConfigCollector {
       Object.assign(this.allAnswers, allAnswers);
 
       // Process all answers (both static and prompted)
+      // First, copy existing config to preserve values that aren't being updated
+      if (this.existingConfig && this.existingConfig[moduleName]) {
+        this.collectedConfig[moduleName] = { ...this.existingConfig[moduleName] };
+      } else {
+        this.collectedConfig[moduleName] = {};
+      }
+
       for (const key of Object.keys(allAnswers)) {
         const originalKey = key.replace(`${moduleName}_`, '');
         const item = moduleConfig[originalKey];
@@ -377,9 +384,7 @@ class ConfigCollector {
           result = value;
         }
 
-        if (!this.collectedConfig[moduleName]) {
-          this.collectedConfig[moduleName] = {};
-        }
+        // Update the collected config with new/updated values
         this.collectedConfig[moduleName][originalKey] = result;
       }
     }
