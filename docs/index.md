@@ -60,7 +60,7 @@ Build your own agents, workflows, and modules.
 
 AI-powered creative thinking and brainstorming.
 
-- **[CIS Module README](../src/modules/cis/README.md)** - Module overview and workflows
+- **[CIS Module README](../src/modules/cis/docs/README.md)** - Module overview and workflows
 
 ---
 

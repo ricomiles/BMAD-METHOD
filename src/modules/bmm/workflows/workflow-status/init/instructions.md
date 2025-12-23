@@ -15,7 +15,7 @@
 - BMM artifacts: PRD, epics, architecture, UX, brief, research, brainstorm
 - Implementation: stories, sprint-status, workflow-status
 - Codebase: source directories, package files, git repo
-- Check both {output_folder} and {sprint_artifacts} locations
+- Check both {output_folder} and {implementation_artifacts} locations
   </action>
 
 <action>Categorize into one of these states:

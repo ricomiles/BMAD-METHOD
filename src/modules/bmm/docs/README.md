@@ -8,7 +8,7 @@ Complete guides for the BMad Method Module (BMM) - AI-powered agile development 
 
 **New to BMM?** Start here:
 
-- **[Quick Start Guide](./quick-start.md)** - Step-by-step guide to building your first project (15 min read)
+- **[Quick Start Guide](./quick-start.md)** - Step-by-step guide to building your first project
   - Installation and setup
   - Understanding the four phases
   - Running your first workflows
@@ -20,44 +20,40 @@ Complete guides for the BMad Method Module (BMM) - AI-powered agile development 
 
 **[Complete Workflow Diagram](./images/workflow-method-greenfield.svg)** - Visual flowchart showing all phases, agents (color-coded), and decision points for the BMad Method standard greenfield track.
 
----
-
 ## 📖 Core Concepts
 
 Understanding how BMM adapts to your needs:
 
-- **[Scale Adaptive System](./scale-adaptive-system.md)** - How BMM adapts to project size and complexity (42 min read)
+- **[Scale Adaptive System](./scale-adaptive-system.md)** - How BMM adapts to project size and complexity
   - Three planning tracks (Quick Flow, BMad Method, Enterprise Method)
   - Automatic track recommendation
   - Documentation requirements per track
   - Planning workflow routing
 
-- **[BMAD Quick Flow](./bmad-quick-flow.md)** - Fast-track development workflow (32 min read)
+- **[BMAD Quick Flow](./bmad-quick-flow.md)** - Fast-track development workflow
   - 3-step process: spec → dev → optional review
   - Perfect for bug fixes and small features
   - Rapid prototyping with production quality
   - Hours to implementation, not days
   - Barry (Quick Flow Solo Dev) agent owned
 
-- **[Quick Flow Solo Dev Agent](./quick-flow-solo-dev.md)** - Elite solo developer for rapid development (18 min read)
+- **[Quick Flow Solo Dev Agent](./quick-flow-solo-dev.md)** - Elite solo developer for rapid development
   - Barry is an elite developer who thrives on autonomous execution
   - Lives and breathes the BMAD Quick Flow workflow
   - Takes projects from concept to deployment with ruthless efficiency
   - No handoffs, no delays - just pure focused development
 
----
-
 ## 🤖 Agents and Collaboration
 
 Complete guide to BMM's AI agent team:
 
-- **[Agents Guide](./agents-guide.md)** - Comprehensive agent reference (45 min read)
+- **[Agents Guide](./agents-guide.md)** - Comprehensive agent reference
   - 12 specialized BMM agents + BMad Master
   - Agent roles, workflows, and when to use them
   - Agent customization system
   - Best practices and common patterns
 
-- **[Party Mode Guide](./party-mode.md)** - Multi-agent collaboration (20 min read)
+- **[Party Mode Guide](./party-mode.md)** - Multi-agent collaboration
   - How party mode works (19+ agents collaborate in real-time)
   - When to use it (strategic, creative, cross-functional, complex)
   - Example party compositions
@@ -65,20 +61,16 @@ Complete guide to BMM's AI agent team:
   - Agent customization in party mode
   - Best practices
 
----
-
 ## 🔧 Working with Existing Code
 
 Comprehensive guide for brownfield development:
 
-- **[Brownfield Development Guide](./brownfield-guide.md)** - Complete guide for existing codebases (53 min read)
+- **[Brownfield Development Guide](./brownfield-guide.md)** - Complete guide for existing codebases
   - Documentation phase strategies
   - Track selection for brownfield
   - Integration with existing patterns
   - Phase-by-phase workflow guidance
   - Common scenarios
-
----
 
 ## 📚 Quick References
 
@@ -87,8 +79,6 @@ Essential reference materials:
 - **[Glossary](./glossary.md)** - Key terminology and concepts
 - **[FAQ](./faq.md)** - Frequently asked questions across all topics
 - **[Enterprise Agentic Development](./enterprise-agentic-development.md)** - Team collaboration strategies
-
----
 
 ## 🎯 Choose Your Path
 
@@ -108,11 +98,6 @@ Essential reference materials:
 
 **Understand planning tracks and methodology**
 → See [Scale Adaptive System](./scale-adaptive-system.md)
-
-**Find specific commands or answers**
-→ Check [FAQ](./faq.md)
-
----
 
 ## 📋 Workflow Guides
 
@@ -162,18 +147,6 @@ For detailed technical documentation on specific complex workflows:
   - Implementation patterns for agent consistency
   - Adaptive facilitation approach
 
----
-
-## 🧪 Testing and Quality
-
-Quality assurance guidance:
-
-<!-- Test Architect documentation to be added -->
-
-- Test design workflows
-- Quality gates
-- Risk assessment
-
 ## 🏗️ Module Structure
 
 Understanding BMM components:
@@ -184,8 +157,6 @@ Understanding BMM components:
   - Teams and collaboration
   - Best practices
 
----
-
 ## 🌐 External Resources
 
 ### Community and Support
@@ -193,57 +164,5 @@ Understanding BMM components:
 - **[Discord Community](https://discord.gg/gk8jAdXWmj)** - Get help from the community (#general-dev, #bugs-issues)
 - **[GitHub Issues](https://github.com/bmad-code-org/BMAD-METHOD/issues)** - Report bugs or request features
 - **[YouTube Channel](https://www.youtube.com/@BMadCode)** - Video tutorials and walkthroughs
-
-### Additional Documentation
-
-- **[IDE Setup Guides](../../../docs/ide-info/)** - Configure your development environment
-  - Claude Code
-  - Cursor
-  - Windsurf
-  - VS Code
-  - Other IDEs
-
----
-
-## 📊 Documentation Map
-
-```mermaid
-flowchart TD
-    START[New to BMM?]
-    START --> QS[Quick Start Guide]
-
-    QS --> DECIDE{What are you building?}
-
-    DECIDE -->|Bug fix or<br/>small feature| QF[BMAD Quick Flow]
-    DECIDE -->|Need rapid<br/>development| PE[Principal Engineer]
-    DECIDE -->|New project| SAS[Scale Adaptive System]
-    DECIDE -->|Existing codebase| BF[Brownfield Guide]
-
-    QF --> IMPL[Implementation]
-    PE --> IMPL
-    SAS --> IMPL
-    BF --> IMPL
-
-    IMPL --> REF[Quick References<br/>Glossary, FAQ]
-
-    style START fill:#bfb,stroke:#333,stroke-width:2px,color:#000
-    style QS fill:#bbf,stroke:#333,stroke-width:2px,color:#000
-    style DECIDE fill:#ffb,stroke:#333,stroke-width:2px,color:#000
-    style QF fill:#e1f5fe,stroke:#333,stroke-width:2px,color:#000
-    style PE fill:#fff3e0,stroke:#333,stroke-width:2px,color:#000
-    style IMPL fill:#f9f,stroke:#333,stroke-width:2px,color:#000
-```
-
----
-
-## 💡 Tips for Using This Documentation
-
-1. **Start with Quick Start** if you're new - it provides the essential foundation
-2. **Use the FAQ** to find quick answers without reading entire guides
-3. **Bookmark Glossary** for terminology references while reading other docs
-4. **Follow the suggested paths** above based on your specific situation
-5. **Join Discord** for interactive help and community insights
-
----
 
 **Ready to begin?** → [Start with the Quick Start Guide](./quick-start.md)

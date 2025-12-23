@@ -15,7 +15,7 @@
 - BMGD artifacts: GDD, game brief, architecture, narrative design
 - Implementation: stories, sprint-status, workflow-status
 - Game project: engine files (Unity, Unreal, Godot), source directories
-- Check both {output_folder} and {sprint_artifacts} locations
+- Check both {output_folder} and {implementation_artifacts} locations
   </action>
 
 <action>Categorize into one of these states:

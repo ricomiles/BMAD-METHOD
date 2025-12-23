@@ -18,8 +18,6 @@ Specialized tools and workflows for creating, customizing, and extending BMad co
 
 There is a dedicated Agent expert, a Workflow Expert, and a Module Expert agent available!
 
-### 📋 Workflows
-
 ### 📚 Documentation
 
 - Comprehensive guides for agents, workflows, and modules

@@ -47,7 +47,7 @@ web_bundle: false
 
 Load and read full config from {project-root}/\_bmad/bmm/config.yaml and resolve:
 
-- `project_name`, `output_folder`, `user_name`, `communication_language`, `document_output_language`
+- `project_name`, `output_folder`, `planning_artifacts`, `user_name`, `communication_language`, `document_output_language`
 
 ### 2. First Step EXECUTION
 

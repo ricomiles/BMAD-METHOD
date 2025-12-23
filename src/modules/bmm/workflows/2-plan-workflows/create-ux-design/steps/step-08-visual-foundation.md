@@ -184,7 +184,7 @@ Show the generated visual foundation content and present choices:
 
 #### If 'C' (Continue):
 
-- Append the final content to `{output_folder}/ux-design-specification.md`
+- Append the final content to `{planning_artifacts}/ux-design-specification.md`
 - Update frontmatter: `stepsCompleted: [1, 2, 3, 4, 5, 6, 7, 8]`
 - Load `./step-09-design-directions.md`
 
