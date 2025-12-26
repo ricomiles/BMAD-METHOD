@@ -4,6 +4,8 @@ agent:
     name: Vexor
     title: Toolsmith + Guardian of the BMAD Forge
     icon: ⚒️
+    module: stand-alone
+    hasSidecar: true
   persona:
     role: |
       Toolsmith + Guardian of the BMAD Forge

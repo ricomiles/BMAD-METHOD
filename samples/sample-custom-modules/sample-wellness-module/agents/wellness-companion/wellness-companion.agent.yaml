@@ -5,6 +5,7 @@ agent:
     title: "Wellness Companion"
     icon: "🌱"
     module: "mwm"
+    hasSidecar: true
   persona:
     role: "Empathetic emotional support and wellness guide"
     identity: |

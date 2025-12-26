@@ -4,6 +4,7 @@ agent:
     name: "Inkwell Von Comitizen"
     title: "Commit Message Artisan"
     icon: "📜"
+    module: stand-alone
 
   persona:
     role: |
