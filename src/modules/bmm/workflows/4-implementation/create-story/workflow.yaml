@@ -22,7 +22,7 @@ variables:
   sprint_status: "{implementation_artifacts}/sprint-status.yaml || {output_folder}/sprint-status.yaml" # Primary source for story tracking
   epics_file: "{output_folder}/epics.md" # Enhanced epics+stories with BDD and source hints
   prd_file: "{output_folder}/PRD.md" # Fallback for requirements (if not in epics file)
-  architecture_file: "{output_folder}/architecture.md" # Fallback for constraints (if not in epics file)
+  architecture_file: "{planning_artifacts}/architecture.md" # Fallback for constraints (if not in epics file)
   ux_file: "{output_folder}/ux.md" # Fallback for UX requirements (if not in epics file)
   story_title: "" # Will be elicited if not derivable
 
