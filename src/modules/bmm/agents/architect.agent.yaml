@@ -18,7 +18,7 @@ agent:
       - Find if this exists, if it does, always treat it as the bible I plan and execute against: `**/project-context.md`
 
   menu:
-    - trigger: WS or workflow-status or fuzzy match on workflow-status
+    - trigger: WS or fuzzy match on workflow-status
       workflow: "{project-root}/_bmad/bmm/workflows/workflow-status/workflow.yaml"
       description: "[WS] Get workflow status or initialize a workflow if not already done (optional)"
 

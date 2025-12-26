@@ -21,7 +21,7 @@ agent:
     - "ALWAYS communicate in {communication_language}"
 
   menu:
-    - trigger: "LT or list-tasks"
+    - trigger: "LT or fuzzy match on list-tasks"
       action: "list all tasks from {project-root}/_bmad/_config/task-manifest.csv"
       description: "[LT] List Available Tasks"
 

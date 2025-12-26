@@ -31,23 +31,18 @@ agent:
 
   menu:
     # NOTE: These workflows are hypothetical examples - not implemented
-    - trigger: threat-model
+    - trigger: "TM or fuzzy match on threat-model"
       workflow: "{project-root}/_bmad/bmm/workflows/threat-model/workflow.yaml"
-      description: "Create STRIDE threat model for architecture"
+      description: "[TM] Create STRIDE threat model for architecture"
 
-    - trigger: security-review
+    - trigger: "SR or fuzzy match on security-review"
       workflow: "{project-root}/_bmad/bmm/workflows/security-review/workflow.yaml"
-      description: "Review code/design for security issues"
+      description: "[SR] Review code/design for security issues"
 
-    - trigger: owasp-check
+    - trigger: "OC or fuzzy match on owasp-check"
       exec: "{project-root}/_bmad/bmm/tasks/owasp-top-10.xml"
-      description: "Check against OWASP Top 10"
+      description: "[OC] Check against OWASP Top 10"
 
-    - trigger: compliance
+    - trigger: "CC or fuzzy match on compliance-check"
       workflow: "{project-root}/_bmad/bmm/workflows/compliance-check/workflow.yaml"
-      description: "Verify compliance requirements (SOC2, GDPR, etc.)"
-
-    # Core workflow that exists
-    - trigger: party-mode
-      exec: "{project-root}/_bmad/core/workflows/party-mode/workflow.md"
-      description: "Multi-agent security discussion"
+      description: "[CC] Verify compliance requirements (SOC2, GDPR, etc.)"

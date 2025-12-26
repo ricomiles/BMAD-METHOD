@@ -4,7 +4,7 @@ const { z } = require('zod');
 
 const COMMAND_TARGET_KEYS = ['workflow', 'validate-workflow', 'exec', 'action', 'tmpl', 'data'];
 const TRIGGER_PATTERN = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
-const COMPOUND_TRIGGER_PATTERN = /^([A-Z]{1,3}) or ([a-z0-9]+(?:-[a-z0-9]+)*) or fuzzy match on ([a-z0-9]+(?:-[a-z0-9]+)*)$/;
+const COMPOUND_TRIGGER_PATTERN = /^([A-Z]{1,3}) or fuzzy match on ([a-z0-9]+(?:-[a-z0-9]+)*)$/;
 
 /**
  * Derive the expected shortcut from a kebab-case trigger.
@@ -23,9 +23,9 @@ function deriveShortcutFromKebab(kebabTrigger) {
 
 /**
  * Parse and validate a compound trigger string.
- * Format: "<SHORTCUT> or <kebab-case> or fuzzy match on <kebab-case>"
+ * Format: "<SHORTCUT> or fuzzy match on <kebab-case>"
  * @param {string} triggerValue The trigger string to parse.
- * @returns {{ valid: boolean, kebabTrigger?: string, error?: string }}
+ * @returns {{ valid: boolean, shortcut?: string, kebabTrigger?: string, error?: string }}
  */
 function parseCompoundTrigger(triggerValue) {
   const match = COMPOUND_TRIGGER_PATTERN.exec(triggerValue);
@@ -33,21 +33,9 @@ function parseCompoundTrigger(triggerValue) {
     return { valid: false, error: 'invalid compound trigger format' };
   }
 
-  const [, shortcut, kebabTrigger, fuzzyKebab] = match;
+  const [, shortcut, kebabTrigger] = match;
 
-  // Validate both kebab instances are identical
-  if (kebabTrigger !== fuzzyKebab) {
-    return {
-      valid: false,
-      error: `kebab-case trigger mismatch: "${kebabTrigger}" vs "${fuzzyKebab}"`,
-    };
-  }
-
-  // Note: We intentionally don't validate that shortcut matches derived value
-  // because shortcuts are often semantic (e.g., PS="party start", UX="user experience")
-  // rather than derived from kebab-case (PM, UD)
-
-  return { valid: true, kebabTrigger };
+  return { valid: true, shortcut, kebabTrigger };
 }
 
 // Public API ---------------------------------------------------------------
@@ -110,6 +98,28 @@ function agentSchema(options = {}) {
                 });
                 return;
               }
+
+              // Validate that shortcut matches description brackets
+              const descriptionMatch = item.description?.match(/^\[([A-Z]{1,3})\]/);
+              if (!descriptionMatch) {
+                ctx.addIssue({
+                  code: 'custom',
+                  path: ['agent', 'menu', index, 'description'],
+                  message: `agent.menu[].description must start with [SHORTCUT] where SHORTCUT matches the trigger shortcut "${result.shortcut}"`,
+                });
+                return;
+              }
+
+              const descriptionShortcut = descriptionMatch[1];
+              if (descriptionShortcut !== result.shortcut) {
+                ctx.addIssue({
+                  code: 'custom',
+                  path: ['agent', 'menu', index, 'description'],
+                  message: `agent.menu[].description shortcut "[${descriptionShortcut}]" must match trigger shortcut "${result.shortcut}"`,
+                });
+                return;
+              }
+
               canonicalTrigger = result.kebabTrigger;
             } else if (!TRIGGER_PATTERN.test(triggerValue)) {
               ctx.addIssue({
@@ -208,8 +218,9 @@ function buildAgentSchema(expectedModule) {
 }
 
 /**
- * Validate metadata shape and cross-check module expectation against caller input.
+ * Validate metadata shape.
  * @param {string|null} expectedModule Trimmed module slug or null when core agent metadata is expected.
+ * Note: Module field is optional and can be any value - no validation against path.
  */
 function buildMetadataSchema(expectedModule) {
   const schemaShape = {
@@ -220,35 +231,7 @@ function buildMetadataSchema(expectedModule) {
     module: createNonEmptyString('agent.metadata.module').optional(),
   };
 
-  return (
-    z
-      .object(schemaShape)
-      .strict()
-      // Refinement: guard presence and correctness of metadata.module.
-      .superRefine((value, ctx) => {
-        const moduleValue = typeof value.module === 'string' ? value.module.trim() : null;
-
-        if (expectedModule && !moduleValue) {
-          ctx.addIssue({
-            code: 'custom',
-            path: ['module'],
-            message: 'module-scoped agents must declare agent.metadata.module',
-          });
-        } else if (!expectedModule && moduleValue) {
-          ctx.addIssue({
-            code: 'custom',
-            path: ['module'],
-            message: 'core agents must not include agent.metadata.module',
-          });
-        } else if (expectedModule && moduleValue !== expectedModule) {
-          ctx.addIssue({
-            code: 'custom',
-            path: ['module'],
-            message: `agent.metadata.module must equal "${expectedModule}"`,
-          });
-        }
-      })
-  );
+  return z.object(schemaShape).strict();
 }
 
 function buildPersonaSchema() {

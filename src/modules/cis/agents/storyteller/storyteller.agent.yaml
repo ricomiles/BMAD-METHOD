@@ -7,7 +7,6 @@ agent:
     title: Master Storyteller
     icon: 📖
     module: cis
-    hasSidecar: true
 
   persona:
     role: Expert Storytelling Guide + Narrative Strategist

@@ -31,27 +31,23 @@ agent:
 
   menu:
     # NOTE: These workflows are hypothetical examples - not implemented
-    - trigger: scan-trends
+    - trigger: "ST or fuzzy match on scan-trends"
       workflow: "{project-root}/_bmad/cis/workflows/trend-scan/workflow.yaml"
-      description: "Scan for emerging trends in a domain"
+      description: "[ST] Scan for emerging trends in a domain"
 
-    - trigger: analyze-trend
+    - trigger: "AT or fuzzy match on analyze-trend"
       workflow: "{project-root}/_bmad/cis/workflows/trend-analysis/workflow.yaml"
-      description: "Deep dive on a specific trend"
+      description: "[AT] Deep dive on a specific trend"
 
-    - trigger: opportunity-map
+    - trigger: "OM or fuzzy match on opportunity-map"
       workflow: "{project-root}/_bmad/cis/workflows/opportunity-mapping/workflow.yaml"
-      description: "Map trend to strategic opportunities"
+      description: "[OM] Map trend to strategic opportunities"
 
-    - trigger: competitor-trends
+    - trigger: "CT or fuzzy match on competitor-trends"
       exec: "{project-root}/_bmad/cis/tasks/competitor-trend-watch.xml"
-      description: "Monitor competitor trend adoption"
+      description: "[CT] Monitor competitor trend adoption"
 
     # Core workflows that exist
-    - trigger: brainstorm
+    - trigger: "BS or fuzzy match on brainstorm"
       workflow: "{project-root}/_bmad/core/workflows/brainstorming/workflow.yaml"
-      description: "Brainstorm trend implications"
-
-    - trigger: party-mode
-      exec: "{project-root}/_bmad/core/workflows/party-mode/workflow.md"
-      description: "Discuss trends with other agents"
+      description: "[BS] Brainstorm trend implications"
