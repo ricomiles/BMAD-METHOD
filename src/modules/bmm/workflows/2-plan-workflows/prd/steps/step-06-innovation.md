@@ -9,7 +9,7 @@ workflow_path: '{project-root}/_bmad/bmm/workflows/2-plan-workflows/prd'
 thisStepFile: '{workflow_path}/steps/step-06-innovation.md'
 nextStepFile: '{workflow_path}/steps/step-07-project-type.md'
 workflowFile: '{workflow_path}/workflow.md'
-outputFile: '{output_folder}/prd.md'
+outputFile: '{planning_artifacts}/prd.md'
 
 # Data Files
 projectTypesCSV: '{workflow_path}/project-types.csv'
@@ -202,8 +202,8 @@ Show the generated innovation content and present choices:
 
 #### If 'C' (Continue):
 
-- Append the final content to `{output_folder}/prd.md`
-- Update frontmatter: `stepsCompleted: [1, 2, 3, 4, 5, 6]`
+- Append the final content to `{outputFile}`
+- Update frontmatter: add this step name to the end of the steps completed array
 - Load `{project-root}/_bmad/bmm/workflows/2-plan-workflows/prd/steps/step-07-project-type.md`
 
 ## NO INNOVATION DETECTED:
