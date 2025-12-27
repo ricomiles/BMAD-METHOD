@@ -210,26 +210,6 @@ class Detector {
    * @returns {{ hasLegacyV4: boolean, offenders: string[] }}
    */
   async detectLegacyV4(projectDir) {
-    // Helper: check existence of a nested path with case-sensitive segment matching
-    const existsCaseSensitive = async (baseDir, segments) => {
-      let dir = baseDir;
-      for (let i = 0; i < segments.length; i++) {
-        const seg = segments[i];
-        let entries;
-        try {
-          entries = await fs.readdir(dir, { withFileTypes: true });
-        } catch {
-          return false;
-        }
-        const hit = entries.find((e) => e.name === seg);
-        if (!hit) return false;
-        // Parents must be directories; the last segment may be a file or directory
-        if (i < segments.length - 1 && !hit.isDirectory()) return false;
-        dir = path.join(dir, hit.name);
-      }
-      return true;
-    };
-
     // Helper: check if a directory is a V6+ installation
     const isV6Installation = async (dirPath) => {
       const manifestPath = path.join(dirPath, '_config', 'manifest.yaml');
