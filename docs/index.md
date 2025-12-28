@@ -34,14 +34,12 @@
 
 The flagship module for agile AI-driven development.
 
-- **[BMM Module README](./modules/bmm/)** - Module overview, agents, and complete documentation index
-- **[BMM Documentation](./modules/bmm/)** - All BMM-specific guides and references:
-  - [Quick Start Guide](./modules/bmm/quick-start) - Step-by-step guide to building your first project
-  - [Quick Spec Flow](./modules/bmm/quick-spec-flow) - Rapid Level 0-1 development
-  - [Scale Adaptive System](./modules/bmm/scale-adaptive-system) - Understanding the 5-level system
-  - [Brownfield Guide](./modules/bmm/brownfield-guide) - Working with existing codebases
-- **[BMM Workflows Guide](./modules/bmm/index#-workflow-guides)** - **ESSENTIAL READING**
-- **[Test Architect Guide](./modules/bmm/test-architecture)** - Testing strategy and quality assurance
+- **[BMM Module Index](./modules/bmm-bmad-method/index)** - Module overview, agents, and complete documentation index
+  - [Quick Start Guide](./modules/bmm-bmad-method/quick-start) - Step-by-step guide to building your first project
+  - [Quick Spec Flow](./modules/bmm-bmad-method/quick-spec-flow) - Rapid Level 0-1 development
+  - [Brownfield Guide](./modules/bmm-bmad-method/brownfield-guide) - Working with existing codebases
+- **[BMM Workflows Guide](./modules/bmm-bmad-method/index#-workflow-guides)** - **ESSENTIAL READING**
+- **[Test Architect Guide](./modules/bmm-bmad-method/test-architecture)** - Testing strategy and quality assurance
 
 ### BMad Builder (BMB) - Create Custom Solutions
 
@@ -52,6 +50,12 @@ Build your own agents, workflows, and modules.
 - **[How to Install Custom Agents, Workflows and Modules](./modules/bmb-bmad-builder/custom-content-installation.md)** - Share and Install Custom Creations
 
 ### Creative Intelligence Suite (CIS) - Innovation & Creativity
+
+- **[CIS Docs](./modules/cis-creative-intelligence-suite/index.md)**
+
+#### Bmad Game Dev (BMGD)
+
+- [Main Game Dev Module Docs Index](./modules/bmgd-bmad-game-dev/index.md)
 
 AI-powered creative thinking and brainstorming.
 
@@ -69,28 +73,28 @@ AI-powered creative thinking and brainstorming.
 ### Path 1: Brand New to BMad (Software Project)
 
 1. [README.md](https://github.com/bmad-code-org/BMAD-METHOD/blob/main/README.md) - Understand the vision
-2. [Quick Start Guide](./modules/bmm/quick-start) - Get hands-on
-3. [BMM Module README](./modules/bmm/) - Understand agents
-4. [BMM Workflows Guide](./modules/bmm/index#-workflow-guides) - Master the methodology
+2. [Quick Start Guide](./modules/bmm-bmad-method/quick-start) - Get hands-on
+3. [BMM Module README](./modules/bmm-bmad-method/) - Understand agents
+4. [BMM Workflows Guide](./modules/bmm-bmad-method/index#-workflow-guides) - Master the methodology
 
 ### Path 2: Game Development Project
 
 1. [README.md](https://github.com/bmad-code-org/BMAD-METHOD/blob/main/README.md) - Understand the vision
-2. [Quick Start Guide](./modules/bmm/quick-start) - Get hands-on
-3. [BMM Module README](./modules/bmm/) - Game agents are included
+2. [Quick Start Guide](./modules/bmm-bmad-method/quick-start) - Get hands-on
+3. [BMM Module README](./modules/bmm-bmad-method/) - Game agents are included
 4. [BMGD Workflows Guide](./modules/bmgd/workflows-guide) - Game-specific workflows
 
 ### Path 3: Upgrading from v4
 
 1. [v4 to v6 Upgrade Guide](./v4-to-v6-upgrade.md) - Understand what changed
-2. [Quick Start Guide](./modules/bmm/quick-start) - Reorient yourself
-3. [BMM Workflows Guide](./modules/bmm/index#-workflow-guides) - Learn new v6 workflows
+2. [Quick Start Guide](./modules/bmm-bmad-method/quick-start) - Reorient yourself
+3. [BMM Workflows Guide](./modules/bmm-bmad-method/index#-workflow-guides) - Learn new v6 workflows
 
 ### Path 4: Working with Existing Codebase (Brownfield)
 
-1. [Brownfield Guide](./modules/bmm/brownfield-guide) - Approach for legacy code
-2. [Quick Start Guide](./modules/bmm/quick-start) - Follow the process
-3. [BMM Workflows Guide](./modules/bmm/index#-workflow-guides) - Master the methodology
+1. [Brownfield Guide](./modules/bmm-bmad-method/brownfield-guide) - Approach for legacy code
+2. [Quick Start Guide](./modules/bmm-bmad-method/quick-start) - Follow the process
+3. [BMM Workflows Guide](./modules/bmm-bmad-method/index#-workflow-guides) - Master the methodology
 
 ### Path 5: Building Custom Solutions
 
