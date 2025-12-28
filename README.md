@@ -24,8 +24,8 @@ The completely revamped **BMAD V6 installer** now includes built-in support for 
 
 **📚 Learn More:**
 
-- [**Custom Content Overview**](./docs/custom-content.md) - Discover all supported content types
-- [**Installation Guide**](./docs/custom-content-installation.md) - Learn to create and install custom content
+- [**Custom Content Overview**](docs/modules/bmb-bmad-builder/custom-content.md) - Discover all supported content types
+- [**Installation Guide**](docs/modules/bmb-bmad-builder/custom-content-installation.md) - Learn to create and install custom content
 - [**Detail Content Docs**](./src/modules/bmb/docs/index.md) - Reference details for agents, modules, workflows and the bmad builder
 - [**2 Very simple Custom Modules of questionable quality**](./samples/sample-custom-modules/README.md) - if you want to download and try to install a custom shared module, get an idea of how to bundle and share your own, or create your own personal agents, workflows and modules.
 
@@ -101,8 +101,8 @@ This analyzes your project and recommends the right workflow track.
 
 BMad Method adapts to your needs with three intelligent tracks:
 
-| Track              | Use For                   | Planning                | Time to Start |
-| ------------------ | ------------------------- | ----------------------- | ------------- |
+| Track             | Use For                   | Planning                | Time to Start |
+| ----------------- | ------------------------- | ----------------------- | ------------- |
 | **⚡ Quick Flow**  | Bug fixes, small features | Tech spec only          | < 5 minutes   |
 | **📋 BMad Method** | Products, platforms       | PRD + Architecture + UX | < 15 minutes  |
 | **🏢 Enterprise**  | Compliance, scale         | Full governance suite   | < 30 minutes  |
@@ -152,7 +152,7 @@ Each agent brings deep expertise and can be customized to match your team's styl
 - **Creative Intelligence Suite (CIS)** - Innovation & problem-solving
   - Brainstorming, design thinking, storytelling
   - 5 creative facilitation workflows
-  - [→ Creative Workflows](./src/modules/cis/docs/index.md)
+  - [→ Creative Workflows](docs/modules/cis-creative-intelligence-suite/index.md)
 
 ### Key Features
 
@@ -168,7 +168,7 @@ Each agent brings deep expertise and can be customized to match your team's styl
 
 - **[Quick Start Guide](./src/modules/bmm/docs/quick-start.md)** - 15-minute introduction
 - **[Complete BMM Documentation](./src/modules/bmm/docs/index.md)** - All guides and references
-- **[Agent Customization](./docs/agent-customization-guide.md)** - Personalize your agents
+- **[Agent Customization](docs/bmad-customization/agent-customization-guide.md)** - Personalize your agents
 - **[All Documentation](./docs/index.md)** - Complete documentation index
 
 ### For v4 Users

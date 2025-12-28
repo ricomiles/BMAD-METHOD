@@ -1,18 +1,6 @@
 # BMad Documentation Index
 
-## 🎯 Getting Started (Start Here!)
-
-**New users:** Start with one of these based on your situation:
-
-| Your Situation         | Start Here                                         | Then Read                                                   |
-| ---------------------- | -------------------------------------------------- | ----------------------------------------------------------- |
-| **Brand new to BMad**  | [Quick Start Guide](bmm/quick-start)               | [BMM Workflows Guide](./modules/bmm/index#-workflow-guides) |
-| **Upgrading from v4**  | [v4 to v6 Upgrade Guide](./v4-to-v6-upgrade.md)    | [Quick Start Guide](./modules/bmm/quick-start)              |
-| **Brownfield project** | [Brownfield Guide](./modules/bmm/brownfield-guide) | [Quick Start Guide](./modules/bmm/quick-start)              |
-
----
-
-## 📋 Core Documentation
+## Core Documentation
 
 ### Project-Level Docs (Root)
 
@@ -22,13 +10,25 @@
 
 ### Installation & Setup
 
+- **[Quick Installation](./installing-bmad.md)** - Add BMad official and custom modules to a project folder.
 - **[v4 to v6 Upgrade Guide](./v4-to-v6-upgrade.md)** - Migration path for v4 users
-- **[Document Sharding Guide](./document-sharding-guide.md)** - Split large documents for 90%+ token savings
+- **[Document Sharding Guide](./document-sharding-guide.md)** - Split large documents
 - **[Bundle Distribution Setup](./BUNDLE_DISTRIBUTION_SETUP.md)** - (temporarily non-functional) Maintainer guide for bundle auto-publishing
 
----
+## Module Documentation
 
-## 🏗️ Module Documentation
+### Core Module Global Entities
+
+- **[Core Module Index](./modules/core/index)** — Shared functionality available to all modules
+  - [Global Core Config](./modules/core/global-core-config.md) — Inheritable configuration impacting all modules and custom content
+  - [Core Workflows](./modules/core/core-workflows.md) — Domain-agnostic workflows usable by any module
+    - [Party Mode](./modules/core/party-mode.md) — Multi-agent conversation orchestration
+    - [Brainstorming](./modules/core/brainstorming.md) — Structured creative sessions with 60+ techniques
+    - [Advanced Elicitation](./modules/core/advanced-elicitation.md) — LLM rethinking with 50+ reasoning methods
+  - [Core Tasks](./modules/core/core-tasks.md) — Common tasks available across modules
+    - [Index Docs](./modules/core/core-tasks.md#index-docs) — Generate directory index files
+    - [Adversarial Review](./modules/core/core-tasks.md#adversarial-review-general) — Critical content review
+    - [Shard Document](./modules/core/core-tasks.md#shard-document) — Split large documents into sections
 
 ### BMad Method (BMM) - Software & Game Development
 
@@ -47,25 +47,24 @@ The flagship module for agile AI-driven development.
 
 Build your own agents, workflows, and modules.
 
-- **[BMB Module Overview](./modules/bmb/index)** - Module overview and capabilities
-- **[Agent Creation Guide](./modules/bmb/agents/index)** - Design custom agents
+- **[BMB Module Overview](./modules/bmb-bmad-builder/index)** - Module overview and capabilities
+- **[Custom Content Guide](./modules/bmb-bmad-builder/custom-content)** - Design custom agents, workflows, and modules
+- **[How to Install Custom Agents, Workflows and Modules](./modules/bmb-bmad-builder/custom-content-installation.md)** - Share and Install Custom Creations
 
 ### Creative Intelligence Suite (CIS) - Innovation & Creativity
 
 AI-powered creative thinking and brainstorming.
 
-- **[CIS Module README](./modules/cis/)** - Module overview and workflows
+- **[CIS Module README](./modules/cis-creative-intelligence-suite/index)** - Module overview and workflows
 
-## 🔧 Advanced Topics
+## Advanced Topics
 
 ### Custom Agents, Workflow and Modules
+- **[Custom Content Installation](modules/bmb-bmad-builder/custom-content-installation.md)** - Install and personalize agents, workflows and modules with the default bmad-method installer!
+- [Agent Customization Guide](./bmad-customization/agent-customization-guide.md) - Customize agent behavior and responses
+- [Workflow Customization Guide](./bmad-customization/workflow-customization-guide.md) - Customize and Optimize workflows with step replacement and hooks (Capability Coming Soon)
 
-- **[Custom Content Installation](./custom-content-installation.md)** - Install and personalize agents, workflows and modules with the default bmad-method installer!
-- [Agent Customization Guide](./agent-customization-guide.md) - Customize agent behavior and responses
-
----
-
-## 🎓 Recommended Reading Paths
+## Recommended Reading Paths
 
 ### Path 1: Brand New to BMad (Software Project)
 
