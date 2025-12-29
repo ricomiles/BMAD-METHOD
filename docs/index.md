@@ -12,8 +12,8 @@
 
 - **[Quick Installation](./installing-bmad.md)** - Add BMad official and custom modules to a project folder.
 - **[v4 to v6 Upgrade Guide](./v4-to-v6-upgrade.md)** - Migration path for v4 users
-- **[Document Sharding Guide](./document-sharding-guide.md)** - Split large documents
-- **[Bundle Distribution Setup](./BUNDLE_DISTRIBUTION_SETUP.md)** - (temporarily non-functional) Maintainer guide for bundle auto-publishing
+- **[Document Sharding Guide](modules/core/document-sharding-guide.md)** - Split large documents
+- **[Bundle Distribution Setup](../tools/docs/BUNDLE_DISTRIBUTION_SETUP.md)** - (temporarily non-functional) Maintainer guide for bundle auto-publishing
 
 ## Module Documentation
 
@@ -81,8 +81,7 @@ AI-powered creative thinking and brainstorming.
 
 1. [README.md](https://github.com/bmad-code-org/BMAD-METHOD/blob/main/README.md) - Understand the vision
 2. [Quick Start Guide](./modules/bmm-bmad-method/quick-start) - Get hands-on
-3. [BMM Module README](./modules/bmm-bmad-method/) - Game agents are included
-4. [BMGD Workflows Guide](./modules/bmgd/workflows-guide) - Game-specific workflows
+3. [BMGD Workflows Guide](./modules/bmgd-bmad-game-dev/workflows-guide) - Game-specific workflows
 
 ### Path 3: Upgrading from v4
 
@@ -98,9 +97,10 @@ AI-powered creative thinking and brainstorming.
 
 ### Path 5: Building Custom Solutions
 
-1. [BMB Module Overview](./modules/bmb/index) - Understand capabilities
-2. [Agent Creation Guide](./modules/bmb/agents/index) - Create agents
-3. [BMB Workflows Guide](./modules/bmb/workflows/) - Understand workflow structure
+1. [BMB Module Overview](./modules/bmb-bmad-builder/index) - Understand capabilities
+2. [BMB Custom Content Types](./modules/bmb-bmad-builder/custom-content.md) - Understand the different types and whats possible
+3. [BMB Content Installation](./modules/bmb-bmad-builder/custom-content-installation.md) - How to bundle install use and share
+4. More Docs coming soon....
 
 ### Path 6: Contributing to BMad
 
