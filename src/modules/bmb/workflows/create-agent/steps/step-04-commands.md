@@ -2,21 +2,13 @@
 name: 'step-04-commands'
 description: 'Build capabilities through natural progression and refine commands'
 
-# Path Definitions
-workflow_path: '{project-root}/bmb/workflows/create-agent/create-agent'
-
 # File References
-thisStepFile: '{workflow_path}/steps/step-04-commands.md'
-nextStepFile: '{workflow_path}/steps/step-05-name.md'
-workflowFile: '{workflow_path}/workflow.md'
+nextStepFile: './step-05-name.md'
 agentPlan: '{bmb_creations_output_folder}/agent-plan-{agent_name}.md'
-agentMenuPatterns: '{project-root}/_bmad/bmb/docs/agents/agent-menu-patterns.md'
-simpleArchitecture: '{project-root}/_bmad/bmb/docs/agents/simple-agent-architecture.md'
-expertArchitecture: '{project-root}/_bmad/bmb/docs/agents/expert-agent-architecture.md'
-moduleArchitecture: '{project-root}/_bmad/bmb/docs/agents/module-agent-architecture.md'
 
-# Template References
-commandsTemplate: '{workflow_path}/templates/agent-commands.md'
+# Architecture References
+simpleAgentArch: '../data/simple-agent-architecture.md'
+expertAgentArch: '../data/expert-agent-architecture.md'
 
 # Task References
 advancedElicitationTask: '{project-root}/_bmad/core/workflows/advanced-elicitation/workflow.xml'
@@ -91,21 +83,21 @@ Load appropriate architecture documentation based on agent type:
 
 **Simple Agent:**
 
-- Load `{simpleArchitecture}`
+- Load `{simpleAgentArch}`
 - Focus on single-execution capabilities
 - All logic must fit within YAML structure
 - No persistent memory between runs
 
 **Expert Agent:**
 
-- Load `{expertArchitecture}`
+- Load `{expertAgentArch}`
 - Plan for sidecar file integration
 - Persistent memory capabilities
 - Domain-restricted knowledge base
 
 **Module Agent:**
 
-- Load `{moduleArchitecture}`
+- Module architecture documentation not available - use expert architecture as baseline
 - Workflow orchestration capabilities
 - Team integration features
 - Cross-agent coordination

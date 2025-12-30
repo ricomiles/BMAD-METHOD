@@ -2,19 +2,18 @@
 name: 'step-07-validate'
 description: 'Quality check with personality and technical validation'
 
-# Path Definitions
-workflow_path: '{project-root}/bmb/workflows/create-agent/create-agent'
-
 # File References
-thisStepFile: '{workflow_path}/steps/step-07-validate.md'
-nextStepFile: '{workflow_path}/steps/step-08-celebrate.md'
-workflowFile: '{workflow_path}/workflow.md'
+nextStepFile: './step-08-celebrate.md'
 outputFile: '{bmb_creations_output_folder}/agent-validation-{project_name}.md'
-agentValidationChecklist: '{project-root}/_bmad/bmb/workflows/create-agent/agent-validation-checklist.md'
-agentFile: '{{output_file_path}}'
 
-# Template References
-validationTemplate: '{workflow_path}/templates/validation-results.md'
+# Validation Checklists (load based on agent type)
+simpleValidation: '../data/simple-agent-validation.md'
+expertValidation: '../data/expert-agent-validation.md'
+moduleValidation: '../data/module-agent-validation.md'
+
+# Supporting References
+agentMenuPatterns: '../data/agent-menu-patterns.md'
+agentCompilation: '../data/agent-compilation.md'
 
 # Task References
 advancedElicitationTask: '{project-root}/_bmad/core/workflows/advanced-elicitation/workflow.xml'
@@ -132,11 +131,17 @@ If technical issues are discovered during background validation:
 - Check for auto-injection conflicts
 - Validate variable substitution
 
-**Type-Specific Requirements:**
+**Type-Specific Validation Checklists:**
 
-- Simple Agents: Self-contained validation
-- Expert Agents: Sidecar file structure validation
-- Module Agents: Integration points validation
+Load the appropriate checklist based on agent type:
+
+- **Simple Agents**: Load `{simpleValidation}` - validates self-contained structure, no sidecar
+- **Expert Agents**: Load `{expertValidation}` - validates sidecar paths, critical_actions, memory structure
+- **Module Agents**: Load `{moduleValidation}` - validates workflow integration paths, module membership
+
+Additionally load supporting references:
+- `{agentMenuPatterns}` - menu trigger/description format validation
+- `{agentCompilation}` - compiler-added elements (don't validate presence)
 
 ### 5. Validation Results Presentation
 

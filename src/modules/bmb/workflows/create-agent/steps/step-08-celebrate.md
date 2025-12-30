@@ -1,22 +1,18 @@
 ---
-name: 'step-11-celebrate'
+name: 'step-08-celebrate'
 description: 'Celebrate completion and guide next steps for using the agent'
 
-# Path Definitions
-workflow_path: '{project-root}/bmb/workflows/create-agent/create-agent'
-
 # File References
-thisStepFile: '{workflow_path}/steps/step-11-celebrate.md'
-workflowFile: '{workflow_path}/workflow.md'
-outputFile: '{output_folder}/agent-completion-{project_name}.md'
-agentFile: '{{output_file_path}}'
+thisStepFile: ./step-08-celebrate.md
+workflowFile: ../workflow.md
+outputFile: {bmb_creations_output_folder}/agent-completion-{agent_name}.md
 
 # Task References
 advancedElicitationTask: '{project-root}/_bmad/core/workflows/advanced-elicitation/workflow.xml'
 partyModeWorkflow: '{project-root}/_bmad/core/workflows/party-mode/workflow.md'
 ---
 
-# Step 11: Celebration and Next Steps
+# Step 8: Celebration and Next Steps
 
 ## STEP GOAL:
 
@@ -28,7 +24,6 @@ Celebrate the successful agent creation, provide activation guidance, and explor
 
 - 🛑 NEVER generate content without user input
 - 📖 CRITICAL: Read the complete step file before taking any action
-- 🔄 CRITICAL: Read the complete step file before taking any action
 - 📋 YOU ARE A FACILITATOR, not a content generator
 - ✅ YOU MUST ALWAYS SPEAK OUTPUT In your Agent communication style with the config `{communication_language}`
 
@@ -67,7 +62,7 @@ Celebrate the successful agent creation, provide activation guidance, and explor
 
 Present enthusiastic celebration:
 
-"🎉 Congratulations! We did it! {{agent_name}} is complete and ready to help users with {{agent_purpose}}!"
+"🎉 Congratulations! We did it! {agent_name} is complete and ready to help users with {agent_purpose}!"
 
 **Journey Celebration:**
 "Let's celebrate what we accomplished together:
@@ -82,55 +77,55 @@ Present enthusiastic celebration:
 ### 2. Agent Capabilities Showcase
 
 **Agent Introduction:**
-"Meet {{agent_name}} - your {{agent_type}} agent ready to {{agent_purpose}}!"
+"Meet {agent_name} - your {agent_type} agent ready to {agent_purpose}!"
 
 **Key Features:**
-"✨ **What makes {{agent_name}} special:**
+"✨ **What makes {agent_name} special:**
 
-- {{unique_personality_trait}} personality that {{communication_style_benefit}}
-- Expert in {{domain_expertise}} with {{specialized_knowledge}}
-- {{number_commands}} powerful commands including {{featured_command}}
-- Ready to help with {{specific_use_cases}}"
+- {unique_personality_trait} personality that {communication_style_benefit}
+- Expert in {domain_expertise} with {specialized_knowledge}
+- {number_commands} powerful commands including {featured_command}
+- Ready to help with {specific_use_cases}"
 
 ### 3. Activation Guidance
 
 **Getting Started:**
-"Here's how to start using {{agent_name}}:"
+"Here's how to start using {agent_name}:"
 
 **Activation Steps:**
 
-1. **Locate your agent files:** `{{agent_file_location}}`
-2. **If compiled:** Use the compiled version at `{{compiled_location}}`
-3. **For customization:** Edit the customization file at `{{customization_location}}`
+1. **Locate your agent files:** `{agent_file_location}`
+2. **If compiled:** Use the compiled version at `{compiled_location}`
+3. **For customization:** Edit the customization file at `{customization_location}`
 4. **First interaction:** Start by asking for help to see available commands
 
 **First Conversation Suggestions:**
 "Try starting with:
 
-- 'Hi {{agent_name}}, what can you help me with?'
+- 'Hi {agent_name}, what can you help me with?'
 - 'Tell me about your capabilities'
 - 'Help me with [specific task related to agent purpose]'"
 
 ### 4. Next Steps Exploration
 
 **Immediate Next Steps:**
-"Now that {{agent_name}} is ready, what would you like to do first?"
+"Now that {agent_name} is ready, what would you like to do first?"
 
 **Options to Explore:**
 
 - **Test drive:** Try out different commands and capabilities
 - **Customize:** Fine-tune personality or add new commands
-- **Integrate:** Set up {{agent_name}} in your workflow
+- **Integrate:** Set up {agent_name} in your workflow
 - **Share:** Tell others about your new agent
 - **Expand:** Plan additional agents or capabilities
 
 **Future Possibilities:**
-"As you use {{agent_name}}, you might discover:
+"As you use {agent_name}, you might discover:
 
 - New capabilities you'd like to add
 - Other agents that would complement this one
-- Ways to integrate {{agent_name}} into larger workflows
-- Opportunities to share {{agent_name}} with your team"
+- Ways to integrate {agent_name} into larger workflows
+- Opportunities to share {agent_name} with your team"
 
 ### 5. Final Documentation
 
@@ -141,16 +136,16 @@ Present enthusiastic celebration:
 
 ### Agent Summary
 
-- **Name:** {{agent_name}}
-- **Type:** {{agent_type}}
-- **Purpose:** {{agent_purpose}}
+- **Name:** {agent_name}
+- **Type:** {agent_type}
+- **Purpose:** {agent_purpose}
 - **Status:** Ready for activation
 
 ### File Locations
 
-- **Agent Config:** {{agent_file_path}}
-- **Compiled Version:** {{compiled_agent_path}}
-- **Customization:** {{customization_file_path}}
+- **Agent Config:** {agent_file_path}
+- **Compiled Version:** {compiled_agent_path}
+- **Customization:** {customization_file_path}
 
 ### Activation Guidance
 
@@ -166,7 +161,7 @@ Save this content to `{outputFile}` for reference.
 ### 6. Workflow Completion
 
 **Mark Complete:**
-"Agent creation workflow completed successfully! {{agent_name}} is ready to help users and make a real difference."
+"Agent creation workflow completed successfully! {agent_name} is ready to help users and make a real difference."
 
 **Final Achievement:**
 "You've successfully created a custom BMAD agent from concept to deployment-ready configuration. Amazing work!"

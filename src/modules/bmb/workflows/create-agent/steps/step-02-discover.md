@@ -2,21 +2,10 @@
 name: 'step-02-discover'
 description: 'Discover the agent purpose and type through natural conversation'
 
-# Path Definitions
-workflow_path: '{project-root}/bmb/workflows/create-agent/create-agent'
-
 # File References
-thisStepFile: './step-02-discover.md'
 nextStepFile: './step-03-persona.md'
-workflowFile: '../workflow.md'
 agentPlan: '{bmb_creations_output_folder}/agent-plan-{agent_name}.md'
 agentTypesGuide: '../data/understanding-agent-types.md'
-simpleExamples: '{workflow_path}/data/reference/agents/simple-examples/'
-expertExamples: '{workflow_path}/data/reference/agents/expert-examples/'
-moduleExamples: '{workflow_path}/data/reference/agents/module-examples/'
-
-# Template References
-agentPurposeTemplate: '{workflow_path}/templates/agent-purpose-and-type.md'
 
 # Task References
 advancedElicitationTask: '{project-root}/_bmad/core/workflows/advanced-elicitation/workflow.xml'
@@ -167,9 +156,9 @@ Display: "**Select an Option:** [A] Advanced Elicitation [P] Party Mode [C] Cont
 
 #### Menu Handling Logic:
 
-- IF A: Execute {advancedElicitationTask}
-- IF P: Execute {partyModeWorkflow}
-- IF C: Save content to {agentPlan}, update frontmatter, then only then load, read entire file, then execute {nextStepFile}
+- IF A: Execute `{advancedElicitationTask}`
+- IF P: Execute `{partyModeWorkflow}`
+- IF C: Save content to {agentPlan}, update frontmatter, then only then load, read entire file, then execute `{nextStepFile}`
 - IF Any other comments or queries: help user respond then [Redisplay Menu Options](#6-present-menu-options)
 
 #### EXECUTION RULES:

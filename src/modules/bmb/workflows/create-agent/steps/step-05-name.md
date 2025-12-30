@@ -2,18 +2,9 @@
 name: 'step-05-name'
 description: 'Name the agent based on discovered characteristics'
 
-# Path Definitions
-workflow_path: '{project-root}/bmb/workflows/create-agent/create-agent'
-
 # File References
-thisStepFile: '{workflow_path}/steps/step-05-name.md'
-nextStepFile: '{workflow_path}/steps/step-06-build.md'
-workflowFile: '{workflow_path}/workflow.md'
-
+nextStepFile: ./step-06-build.md
 agentPlan: '{bmb_creations_output_folder}/agent-plan-{agent_name}.md'
-
-# Template References
-identityTemplate: '{workflow_path}/templates/agent-identity.md'
 
 # Task References
 advancedElicitationTask: '{project-root}/_bmad/core/workflows/advanced-elicitation/workflow.xml'

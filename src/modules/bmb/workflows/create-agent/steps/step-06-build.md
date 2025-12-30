@@ -2,19 +2,22 @@
 name: 'step-06-build'
 description: 'Generate complete YAML incorporating all discovered elements'
 
-# Path Definitions
-workflow_path: '{project-root}/bmb/workflows/create-agent/create-agent'
-
 # File References
-thisStepFile: '{workflow_path}/steps/step-06-build.md'
-nextStepFile: '{workflow_path}/steps/step-07-validate.md'
-workflowFile: '{workflow_path}/workflow.md'
+nextStepFile: ./step-07-validate.md
 agentPlan: '{bmb_creations_output_folder}/agent-plan-{agent_name}.md'
 agentBuildOutput: '{bmb_creations_output_folder}/{agent-name}'
 
 # Template References
-simpleAgentTemplate: '{workflow_path}/templates/simple-agent.template.md'
-expertAgentTemplate: '{workflow_path}/templates/expert-agent.template.md'
+simpleAgentTemplate: ../templates/simple-agent.template.md
+expertAgentTemplate: ../templates/expert-agent-template/expert-agent.template.md
+
+# Architecture References
+simpleAgentArch: ../data/simple-agent-architecture.md
+expertAgentArch: ../data/expert-agent-architecture.md
+agentCompilation: ../data/agent-compilation.md
+
+# Menu Patterns Reference
+agentMenuPatterns: ../data/agent-menu-patterns.md
 
 # Task References
 advancedElicitationTask: '{project-root}/_bmad/core/workflows/advanced-elicitation/workflow.xml'
@@ -72,7 +75,7 @@ Generate the complete YAML agent folder, yaml file and sidecar content to the sp
 
 Present this to the user:
 
-"Let's take a moment to appreciate what we've created together! Your agent started as an idea, and through our discovery process, it has developed into a fully-realized personality with clear purpose, capabilities, and identity."
+"Let's take a moment to appreciate what we've created together! Your agent started as an idea, and through our discovery process, it has developed into a fully-realized personality with clear purpose, capabilities, and identity. Now we will make it BMad Compliant, ready to install use and share with the world!"
 
 **Journey Summary:**
 
@@ -82,15 +85,21 @@ Present this to the user:
 - Established name and identity (Step 5)
 - Ready to bring it all together in complete YAML
 
-### 2. Load Agent Type Template
+### 2. Load Agent Type Template and Architecture References
 
-Based on determined agent type, load appropriate template:
+Based on determined agent type, load appropriate template and architecture files:
 
 - If (agent will have memories and optionally its own knowledge, separate prompt files, or data in separate files)
+  - Load {expertAgentArch} for architecture guidance
+  - Load {agentCompilation} for compilation best practices
+  - Load {agentMenuPatterns} for menu implementation patterns
   - Utilize {expertAgentTemplate} to generate the agent output file {agentBuildOutput}/{agent-name}.agent.yaml
-  - Create the Side-cre folder to hold the optional sidecar files if needed from plan in following steps at {agentBuildOutput}/{agent-name}/{agent-name}-sidecar
+  - Create the Sidecar folder to hold the optional sidecar files if needed from plan in following steps at {agentBuildOutput}/{agent-name}/{agent-name}-sidecar
 - ELSE:
-  - utilize {simpleAgentTemplate} to generate the agent output file {agentBuildOutput}/{agent-name}.agent.yaml
+  - Load {simpleAgentArch} for architecture guidance
+  - Load {agentCompilation} for compilation best practices
+  - Load {agentMenuPatterns} for menu implementation patterns
+  - Utilize {simpleAgentTemplate} to generate the agent output file {agentBuildOutput}/{agent-name}.agent.yaml
 
 ### 4. Generate Complete YAML and sidecar content if applicable
 
@@ -136,6 +145,8 @@ Ensure proper implementation based on agent type:
 - Sidecar file references for knowledge base
 - Memory integration points
 - Personal workflow capabilities
+
+Note: In the next step (Step 7: Validate), we will use the validation checklists ({simpleValidation}, {expertValidation}, {moduleValidation}) to ensure the generated YAML meets all standards.
 
 Ensure all files generated are complete, and nothing from the plan has not been skipped, and then give a creational summary of what was done to the user in chat.
 
