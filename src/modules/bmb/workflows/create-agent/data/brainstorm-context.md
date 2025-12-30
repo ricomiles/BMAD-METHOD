@@ -1,7 +1,4 @@
 # Agent Creation Brainstorming Context
-
-_Dream the soul. Discover the purpose. The build follows._
-
 ## Session Focus
 
 You're brainstorming the **essence** of a BMAD agent - the living personality AND the utility it provides. Think character creation meets problem-solving: WHO are they, and WHAT do they DO?
@@ -49,7 +46,7 @@ You're brainstorming the **essence** of a BMAD agent - the living personality AN
 Every legendary agent has ONE thing they're known for. What's theirs?
 
 **The Command Menu**
-User types `*` and sees their options. Brainstorm 5-10 actions:
+User types `*` and sees their options. Brainstorm 3-10 actions:
 
 - What makes users sigh with relief?
 - What capabilities complement each other?
@@ -80,9 +77,9 @@ User types `*` and sees their options. Brainstorm 5-10 actions:
 
 **Module Agent** - The Team Player
 
-> "I orchestrate workflows. I coordinate the mission."
+> "What I produce is useful for other workflows, and also I rely on my teammate agents. I coordinate the mission."
 
-- Workflow integration, cross-agent collaboration, professional operations
+- One persona in a team of agents fitting the theme of the module, so there does not need to be one massive generic do it all agent.
 
 ## Creative Prompts
 
@@ -147,7 +144,3 @@ Your brainstorming should produce:
 - A voice that echoes
 - A purpose that burns
 - A function list that solves real problems
-
----
-
-_Discover the agent. Define what they do. The build follows._

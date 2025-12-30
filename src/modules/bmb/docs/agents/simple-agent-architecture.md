@@ -1,13 +1,6 @@
-# Simple Agent Architecture
+# Agent Architecture
 
-Self-contained agents with prompts, menus, and optional install-time customization.
-
-## When to Use
-
-- Single-purpose utilities (commit message generator, code formatter)
-- Self-contained logic with no external dependencies
-- Agents that benefit from user customization (style, tone, preferences)
-- Quick-to-build standalone helpers
+All agents follow these basic guidelines to define their YAML.
 
 ## YAML Structure
 
@@ -18,7 +11,7 @@ agent:
     name: 'Persona Name'
     title: 'Agent Title'
     icon: 'emoji'
-    type: simple
+    module: stand-alone || module-code (like bmm)
 
   persona:
     role: |
@@ -26,17 +19,8 @@ agent:
 
     identity: |
       Background, experience, specializations in first-person (2-5 sentences)
-      {{#if custom_variable}}
-      Conditional identity text based on install_config
-      {{/if}}
 
-    communication_style: |
-      {{#if style_choice == "professional"}}
-      Professional and systematic approach...
-      {{/if}}
-      {{#if style_choice == "casual"}}
-      Friendly and approachable tone...
-      {{/if}}
+    communication_style: 
 
     principles:
       - Core belief or methodology

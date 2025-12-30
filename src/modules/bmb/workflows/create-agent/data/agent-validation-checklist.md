@@ -5,11 +5,11 @@ Use this checklist to validate agents meet BMAD quality standards, whether creat
 ## YAML Structure Validation (Source Files)
 
 - [ ] YAML parses without errors
-- [ ] `agent.metadata` includes: `id`, `name`, `title`, `icon`
-- [ ] `agent.metadata.module` present if Module agent (e.g., `bmm`, `bmgd`, `cis`)
+- [ ] `agent.metadata` includes: `id`, `name`, `title`, `icon`, `module`
+- [ ] `agent.metadata.module` can me a module code (e.g., `bmm`, `bmgd`, `cis`) or listed as stand-alone
 - [ ] `agent.persona` exists with role, identity, communication_style, principles
 - [ ] `agent.menu` exists with at least one item
-- [ ] Filename is kebab-case and ends with `.agent.yaml`
+- [ ] Filename is kebab-case and is named like `<role>.agent.yaml`
 
 ## Agent Structure Validation
 
@@ -34,7 +34,7 @@ Use this checklist to validate agents meet BMAD quality standards, whether creat
 - [ ] Communication style does NOT contain identity words: "experienced", "expert who", "senior", "seasoned"
 - [ ] Communication style does NOT contain philosophy words: "believes in", "focused on", "committed to"
 - [ ] Communication style does NOT contain behavioral descriptions: "who does X", "that does Y"
-- [ ] Communication style is 1-2 sentences describing HOW they talk (word choice, quirks, verbal patterns)
+- [ ] Communication style is 1-2 sentences describing HOW they talk and emote (word choice, quirks, verbal patterns)
 
 **Quality Benchmarking:**
 
@@ -45,11 +45,10 @@ Use this checklist to validate agents meet BMAD quality standards, whether creat
 ## Menu Validation
 
 - [ ] All menu items have `trigger` field
-- [ ] Triggers do NOT start with `*` in YAML (auto-prefixed during compilation)
 - [ ] Each item has `description` field
-- [ ] Each menu item has at least one handler attribute: `workflow`, `exec`, `tmpl`, `data`, or `action`
+- [ ] Each menu item has at least one handler attribute: `exec` or `action`
 - [ ] Workflow paths are correct (if workflow attribute present)
-- [ ] Workflow paths use `{project-root}` variable for portability
+- [ ] Workflow paths start with `{project-root}/_bmad/<module-name>/...` variable for portability
 - [ ] **Sidecar file paths are correct (if tmpl or data attributes present - Expert agents)**
 - [ ] No duplicate triggers within same agent
 - [ ] Menu items are in logical order
@@ -66,6 +65,13 @@ Use this checklist to validate agents meet BMAD quality standards, whether creat
 - [ ] Critical actions array contains non-empty strings
 - [ ] Critical actions describe steps that MUST happen during activation
 - [ ] No placeholder text in critical actions
+- [ ] Does not have any of the following that are injected at build time:
+  - Load persona from this current agent file
+  - Load config to get {user_name}, {communication_language}
+  - Remember: user's name is {user_name}
+  - ALWAYS communicate in {communication_language}
+  - Show greeting + numbered menu
+  - STOP and WAIT for user input
 
 ## Type-Specific Validation
 
@@ -99,22 +105,10 @@ Use this checklist to validate agents meet BMAD quality standards, whether creat
 - [ ] Can be Simple OR Expert structurally (Module is about intent, not structure)
 - [ ] Compare against references: security-engineer, dev, analyst (Module examples)
 
-## Compilation Validation (Post-Build)
-
-- [ ] Agent compiles without errors to .md format
-- [ ] Compiled file has proper frontmatter (name, description)
-- [ ] Compiled XML structure is valid
-- [ ] `<agent>` tag has id, name, title, icon attributes
-- [ ] `<activation>` section is present with proper steps
-- [ ] `<persona>` section compiled correctly
-- [ ] `<menu>` section includes both user items AND auto-injected *help/*exit
-- [ ] Menu handlers section included (if menu items use workflow/exec/tmpl/data/action)
-
 ## Quality Checks
 
-- [ ] No placeholder text remains ({{AGENT_NAME}}, {ROLE}, TODO, etc.)
 - [ ] No broken references or missing files
-- [ ] Syntax is valid (YAML source, XML compiled)
+- [ ] Syntax is valid yaml
 - [ ] Indentation is consistent
 - [ ] Agent purpose is clear from reading persona alone
 - [ ] Agent name/title are descriptive and clear
@@ -141,34 +135,10 @@ Your agent should meet these quality standards:
 **Fix:** Extract to proper fields:
 
 - identity: "Senior analyst with 8+ years..."
-- communication_style: "Treats analysis like a treasure hunt"
+- communication_style: "Speaks like a treasure hunter"
 - principles: "Ensure all stakeholder voices heard"
 
 ### Issue: Broken Sidecar References (Expert agents)
 
 **Problem:** Menu item references `tmpl="templates/daily.md"` but file doesn't exist
 **Fix:** Either create the file or fix the path to point to actual file
-
-### Issue: Using Legacy Type Names
-
-**Problem:** Comments refer to "full agent" or "hybrid agent"
-**Fix:** Update to Simple/Expert/Module terminology
-
-### Issue: Menu Triggers Start With Asterisk
-
-**Problem:** `trigger: "*create"` in YAML
-**Fix:** Remove asterisk - compiler auto-adds it: `trigger: "create"`
-
-## Issues Found (Use for tracking)
-
-### Critical Issues
-
-<!-- List any issues that MUST be fixed before agent can function -->
-
-### Warnings
-
-<!-- List any issues that should be addressed but won't break functionality -->
-
-### Improvements
-
-<!-- List any optional enhancements that could improve the agent -->

@@ -41,13 +41,6 @@ Optional creative exploration to generate agent ideas through structured brainst
 - ✅ You bring creative brainstorming expertise, user brings their goals and domain knowledge, together we explore innovative agent concepts
 - ✅ Maintain collaborative inspiring tone throughout
 
-### Step-Specific Rules:
-
-- 🎯 Focus only on offering optional brainstorming and executing if chosen
-- 🚫 FORBIDDEN to make brainstorming mandatory or pressure the user
-- 💬 Approach: Present brainstorming as valuable optional exploration
-- 📋 Brainstorming is completely optional - respect user's choice to skip
-
 ## EXECUTION PROTOCOLS:
 
 - 🎯 Present brainstorming as optional first step with clear benefits
@@ -89,8 +82,7 @@ Wait for clear user response (yes/no or y/n).
 
 **If user answers yes:**
 
-- Load brainstorming workflow: `{brainstormWorkflow}`
-- Pass context data: `{brainstormContext}`
+- Load brainstorming workflow: `{brainstormWorkflow}` passing to the workflow the `{brainstormContext}` guidance
 - Execute brainstorming session scoped specifically utilizing the brainstormContext to guide the scope and outcome
 - Capture all brainstorming output for next step
 - Return to this step after brainstorming completes
@@ -102,14 +94,11 @@ Wait for clear user response (yes/no or y/n).
 
 ### 3. Present MENU OPTIONS
 
-Display: "**Select an Option:** [A] Advanced Elicitation [P] Party Mode [C] Continue"
+Display: "Are you ready to [C] Continue to Discovery?"
 
 #### Menu Handling Logic:
 
-- IF A: Execute {advancedElicitationTask}
-- IF P: Execute {partyModeWorkflow}
 - IF C: Load, read entire file, then execute {nextStepFile}
-- IF Any other comments or queries: help user respond then [Redisplay Menu Options](#3-present-menu-options)
 
 #### EXECUTION RULES:
 

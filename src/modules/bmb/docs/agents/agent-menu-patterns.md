@@ -4,23 +4,31 @@ Design patterns for agent menus in YAML source files.
 
 ## Menu Structure
 
-Agents define menus in YAML, with triggers auto-prefixed with `*` during compilation:
+Agents define menus in YAML, with triggers to know when to fire, a handler that knows the path or instruction of what the menu item does, and a description which is a display field for the agent. exec
+
+### Menu Item Rules
+
+- At a minimum, every menu item will have in the yaml the keys `trigger`, [handler], and `description`. A menu can also have an optional `data` key.
+  - the handler key will be either `action` or `exec`.
+- The Description value always starts with a unique (for this agent) 2 letter code in brackets along with the display text for the menu item.
+  - The 2 letter code CANNOT be the following reserved codes: [MH], [CH], [PM], [DA]
+- the trigger is always in the format `XY or fuzzy match on action-name` - XY being the items 2 letter code and action-name being what user will generally request by reading the description
 
 ```yaml
 menu:
-  - trigger: action-name
+  - trigger: AN or fuzzy match on action-name
     [handler]: [value]
-    description: 'What this command does'
+    data: optional field reference to a file to pass to the handlers workflow, some workflows take data inputs
+    description: '[AN] Menu display for Action Name'
 ```
-
-**Note:** `*help` and `*exit` are auto-injected by the compiler - DO NOT include them.
 
 ## Handler Types
 
 ### 1. Action Handler (Prompts & Inline)
 
-For simple and expert agents with self-contained logic.
+For agents that are not part of a module or its a very simple operation that can be defined within the agent file, action is used.
 
+<example>
 **Reference to Prompt ID:**
 
 ```yaml
@@ -42,13 +50,23 @@ menu:
     action: '#analyze-code'
     description: 'Analyze code patterns'
 ```
+</example>
 
 **Inline Instruction:**
 
 ```yaml
 menu:
   - trigger: quick-check
-    action: 'Perform a quick syntax validation on the current file'
+    action: |
+      <instructions>
+      Analyze the provided code for patterns and issues.
+      </instructions>
+
+      <process>
+      1. Identify code structure
+      2. Check for anti-patterns
+      3. Suggest improvements
+      </process>
     description: 'Quick syntax check'
 ```
 
@@ -60,22 +78,22 @@ menu:
 
 ### 2. Workflow Handler
 
-For module agents orchestrating multi-step processes.
+For module agents referencing module workflows (muti-step complex workflows loaded on demand).
 
 ```yaml
 menu:
-  - trigger: create-prd
-    workflow: '{project-root}/_bmad/bmm/workflows/prd/workflow.yaml'
-    description: 'Create Product Requirements Document'
+  - trigger: CP or fuzzy match on create-prd
+    exec: '{project-root}/_bmad/bmm/workflows/prd/workflow.md'
+    description: '[CP] Create Product Requirements Document (PRD)'
 
-  - trigger: brainstorm
-    workflow: '{project-root}/_bmad/core/workflows/brainstorming/workflow.yaml'
-    description: 'Guided brainstorming session'
+  - trigger: GB or fuzzy match on guided-brainstorming
+    exec: '{project-root}/_bmad/core/workflows/brainstorming/workflow.yaml'
+    description: '[GB] Guided brainstorming session'
 
   # Placeholder for unimplemented workflows
-  - trigger: future-feature
-    workflow: 'todo'
-    description: 'Coming soon'
+  - trigger: FF or fuzzy match on future-feature
+    exec: 'todo'
+    description: '[FF] Coming soon Future Feature'
 ```
 
 **When to Use:**
@@ -106,39 +124,21 @@ menu:
 - Core system operations
 - Utility functions
 
-### 4. Template Handler
-
-For document generation with templates.
-
-```yaml
-menu:
-  - trigger: create-brief
-    exec: '{project-root}/_bmad/core/tasks/create-doc.xml'
-    tmpl: '{project-root}/_bmad/bmm/templates/brief.md'
-    description: 'Create a Product Brief'
-```
-
-**When to Use:**
-
-- Template-based document creation
-- Combine `exec` with `tmpl` path
-- Structured output generation
-
 ### 5. Data Handler
 
 Universal attribute for supplementary information.
 
 ```yaml
 menu:
-  - trigger: team-standup
-    exec: '{project-root}/_bmad/bmm/tasks/standup.xml'
+  - trigger: TS or fuzzy match team-standup or daily standup
+    exec: '{project-root}/_bmad/bmm/tasks/team-standup.md'
     data: '{project-root}/_bmad/_config/agent-manifest.csv'
-    description: 'Run team standup'
+    description: '[TS] Run team standup'
 
-  - trigger: analyze-metrics
+  - trigger: AM or fuzzy match on analyze-metrics
     action: 'Analyze these metrics and identify trends'
     data: '{project-root}/_data/metrics.json'
-    description: 'Analyze performance metrics'
+    description: '[AM] Analyze performance metrics'
 ```
 
 **When to Use:**
@@ -164,145 +164,7 @@ menu:
     web-only: true # Only in web bundles
 ```
 
-## Trigger Naming Conventions
-
-### Action-Based (Recommended)
-
-```yaml
-# Creation
-- trigger: create-prd
-- trigger: build-module
-- trigger: generate-report
-
-# Analysis
-- trigger: analyze-requirements
-- trigger: review-code
-- trigger: validate-architecture
-
-# Operations
-- trigger: update-status
-- trigger: sync-data
-- trigger: deploy-changes
-```
-
-### Domain-Based
-
-```yaml
-# Development
-- trigger: brainstorm
-- trigger: architect
-- trigger: refactor
-
-# Project Management
-- trigger: sprint-plan
-- trigger: retrospective
-- trigger: standup
-```
-
-### Bad Patterns
-
-```yaml
-# TOO VAGUE
-- trigger: do
-- trigger: run
-- trigger: process
-
-# TOO LONG
-- trigger: create-comprehensive-product-requirements-document
-
-# NO VERB
-- trigger: prd
-- trigger: config
-```
-
-## Menu Organization
-
-### Recommended Order
-
-```yaml
-menu:
-  # Note: *help auto-injected first by compiler
-
-  # 1. Primary workflows (main value)
-  - trigger: workflow-init
-    workflow: '...'
-    description: 'Start here - initialize workflow'
-
-  - trigger: create-prd
-    workflow: '...'
-    description: 'Create PRD'
-
-  # 2. Secondary operations
-  - trigger: validate
-    exec: '...'
-    description: 'Validate document'
-
-  # 3. Utilities
-  - trigger: party-mode
-    workflow: '...'
-    description: 'Multi-agent discussion'
-
-  # Note: *exit auto-injected last by compiler
-```
-
-### Grouping by Phase
-
-```yaml
-menu:
-  # Analysis Phase
-  - trigger: brainstorm
-    workflow: '{project-root}/_bmad/bmm/workflows/1-analysis/brainstorm/workflow.yaml'
-    description: 'Brainstorm ideas'
-
-  - trigger: research
-    workflow: '{project-root}/_bmad/bmm/workflows/1-analysis/research/workflow.yaml'
-    description: 'Conduct research'
-
-  # Planning Phase
-  - trigger: prd
-    workflow: '{project-root}/_bmad/bmm/workflows/2-planning/prd/workflow.yaml'
-    description: 'Create PRD'
-
-  - trigger: architecture
-    workflow: '{project-root}/_bmad/bmm/workflows/2-planning/architecture/workflow.yaml'
-    description: 'Design architecture'
-```
-
-## Description Best Practices
-
-### Good Descriptions
-
-```yaml
-# Clear action + object
-- description: 'Create Product Requirements Document'
-
-# Specific outcome
-- description: 'Analyze security vulnerabilities'
-
-# User benefit
-- description: 'Optimize code for performance'
-
-# Context when needed
-- description: 'Start here - initialize workflow path'
-```
-
-### Poor Descriptions
-
-```yaml
-# Too vague
-- description: 'Process'
-
-# Technical jargon
-- description: 'Execute WF123'
-
-# Missing context
-- description: 'Run'
-
-# Redundant with trigger
-- description: 'Create PRD' # trigger: create-prd (too similar)
-```
-
-## Prompts Section (Simple/Expert Agents)
+## Prompts Section (generally for agents that are not using external workflows)
 
 ### Prompt Structure
 
@@ -310,51 +172,24 @@ menu:
 prompts:
   - id: unique-identifier
     content: |
+      <goal> What the prompt achieves </goal>
       <instructions>
-      What this prompt accomplishes
+        Step 1: Foo
+        Step 2: Bar
+        ...
       </instructions>
-
-      <process>
-      1. First step
-      {{#if custom_option}}
-      2. Conditional step
-      {{/if}}
-      3. Final step
-      </process>
-
-      <output_format>
-      Expected structure of results
-      </output_format>
+      <example> </example>
+      etc...
 ```
 
 ### Semantic XML Tags in Prompts
 
-Use XML tags to structure prompt content:
+Use XML tags to structure prompt content such as:
 
-- `<instructions>` - What to do
-- `<process>` - Step-by-step approach
+- `<goal>` - What to do
+- `<instructions>` - Step-by-step approach
 - `<output_format>` - Expected results
-- `<examples>` - Sample outputs
-- `<constraints>` - Limitations
-- `<context>` - Background information
-
-### Handlebars in Prompts
-
-Customize based on install_config:
-
-```yaml
-prompts:
-  - id: analyze
-    content: |
-      {{#if detailed_mode}}
-      Perform comprehensive analysis with full explanations.
-      {{/if}}
-      {{#unless detailed_mode}}
-      Quick analysis focusing on key points.
-      {{/unless}}
-
-      Address {{user_name}} in {{communication_style}} tone.
-```
+- `<example>` - Sample outputs
 
 ## Path Variables
 
@@ -362,19 +197,16 @@ prompts:
 
 ```yaml
 # GOOD - Portable paths
-workflow: "{project-root}/_bmad/bmm/workflows/prd/workflow.yaml"
 exec: "{project-root}/_bmad/core/tasks/validate.xml"
 data: "{project-root}/_data/metrics.csv"
 
 # BAD - Hardcoded paths
-workflow: "/Users/john/project/_bmad/bmm/workflows/prd/workflow.yaml"
 exec: "../../../core/tasks/validate.xml"
 ```
 
 ### Available Variables
 
 - `{project-root}` - Project root directory
-- `_bmad` - BMAD installation folder
 - `{output_folder}` - Document output location
 - `{user_name}` - User's name from config
 - `{communication_language}` - Language preference
@@ -405,8 +237,11 @@ menu:
     action: 'Check code for common issues and anti-patterns'
     description: 'Lint code for issues'
 
-  - trigger: suggest
-    action: 'Suggest improvements for code readability'
+  - trigger: suggest-improvements
+    action: >
+      Suggest improvements for code that is not yet comitted:
+        - style improvements
+        - deviations from **/project-context.md
     description: 'Suggest improvements'
 ```
 
@@ -443,81 +278,18 @@ menu:
 ```yaml
 menu:
   - trigger: workflow-init
-    workflow: '{project-root}/_bmad/bmm/workflows/workflow-status/init/workflow.yaml'
+    exec: '{project-root}/_bmad/bmm/workflows/workflow-status/init/workflow.md'
     description: 'Initialize workflow path (START HERE)'
 
   - trigger: brainstorm
-    workflow: '{project-root}/_bmad/bmm/workflows/1-analysis/brainstorm/workflow.yaml'
+    exec: '{project-root}/_bmad/bmm/workflows/1-analysis/brainstorm/workflow.md'
     description: 'Guided brainstorming'
 
   - trigger: prd
-    workflow: '{project-root}/_bmad/bmm/workflows/2-planning/prd/workflow.yaml'
+    exec: '{project-root}/_bmad/bmm/workflows/2-planning/prd/workflow.md'
     description: 'Create PRD'
 
   - trigger: architecture
-    workflow: '{project-root}/_bmad/bmm/workflows/2-planning/architecture/workflow.yaml'
+    exec: '{project-root}/_bmad/bmm/workflows/2-planning/architecture/workflow.md'
     description: 'Design architecture'
-
-  - trigger: party-mode
-    workflow: '{project-root}/_bmad/core/workflows/party-mode/workflow.yaml'
-    description: 'Multi-agent discussion'
-```
-
-## Validation Checklist
-
-- [ ] No duplicate triggers
-- [ ] Triggers don't start with `*` (auto-added)
-- [ ] Every item has a description
-- [ ] Paths use variables, not hardcoded
-- [ ] `#id` references exist in prompts section
-- [ ] Workflow paths resolve or are "todo"
-- [ ] No `*help` or `*exit` (auto-injected)
-- [ ] Descriptions are clear and action-oriented
-- [ ] Platform-specific flags used correctly (ide-only, web-only)
-
-## Common Mistakes
-
-### Duplicate Triggers
-
-```yaml
-# BAD - compiler will fail
-- trigger: analyze
-  action: '#first'
-  description: 'First analysis'
-
-- trigger: analyze
-  action: '#second'
-  description: 'Second analysis'
-```
-
-### Including Auto-Injected Items
-
-```yaml
-# BAD - these are auto-injected
-menu:
-  - trigger: help
-    description: 'Show help'
-
-  - trigger: exit
-    description: 'Exit agent'
-```
-
-### Missing Prompt Reference
-
-```yaml
-# BAD - prompt id doesn't exist
-menu:
-  - trigger: analyze
-    action: '#nonexistent-prompt'
-    description: 'Analysis'
-```
-
-### Hardcoded Paths
-
-```yaml
-# BAD - not portable
-menu:
-  - trigger: run
-    workflow: '/absolute/path/to/workflow.yaml'
-    description: 'Run workflow'
 ```

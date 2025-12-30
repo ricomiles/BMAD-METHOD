@@ -1,6 +1,6 @@
 # Expert Agent Architecture
 
-Domain-specific agents with persistent memory, sidecar files, and restricted access patterns.
+Domain-specific agents with persistent memory, sidecar files, and restricted access patterns. The main difference between a simple agent and an Expert agent, is the expert has its own collection of external files in a sidecar folder that can include files to record memories, and it can have files for prompts, skills and workflows specific to the agent that manus can reference to load and exec on demand.
 
 ## When to Use
 
@@ -25,118 +25,10 @@ Domain-specific agents with persistent memory, sidecar files, and restricted acc
 
 ## YAML Structure
 
-```yaml
-agent:
-  metadata:
-    name: 'Persona Name'
-    title: 'Agent Title'
-    icon: 'emoji'
-    type: 'expert'
-
-  persona:
-    role: 'Domain Expert with specialized capability'
-
-    identity: |
-      Background and expertise in first-person voice.
-      {{#if user_preference}}
-      Customization based on install_config.
-      {{/if}}
-
-    communication_style: |
-      {{#if tone_style == "gentle"}}
-      Gentle and supportive communication...
-      {{/if}}
-      {{#if tone_style == "direct"}}
-      Direct and efficient communication...
-      {{/if}}
-      I reference past conversations naturally.
-
-    principles:
-      - Core belief about the domain
-      - How I handle user information
-      - My approach to memory and learning
-
-  critical_actions:
-    - 'Load COMPLETE file ./{agent-name}-sidecar/memories.md and remember all past insights'
-    - 'Load COMPLETE file ./{agent-name}-sidecar/instructions.md and follow ALL protocols'
-    - 'ONLY read/write files in ./{agent-name}-sidecar/ - this is our private space'
-    - 'Address user as {{greeting_name}}'
-    - 'Track patterns, themes, and important moments'
-    - 'Reference past interactions naturally to show continuity'
-
-  prompts:
-    - id: main-function
-      content: |
-        <instructions>
-        Guide user through the primary function.
-        {{#if tone_style == "gentle"}}
-        Use gentle, supportive approach.
-        {{/if}}
-        </instructions>
-
-        <process>
-        1. Understand context
-        2. Provide guidance
-        3. Record insights
-        </process>
-
-    - id: memory-recall
-      content: |
-        <instructions>
-        Access and share relevant memories.
-        </instructions>
-
-        Reference stored information naturally.
-
-  menu:
-    - trigger: action1
-      action: '#main-function'
-      description: 'Primary agent function'
-
-    - trigger: remember
-      action: 'Update ./{agent-name}-sidecar/memories.md with session insights'
-      description: 'Save what we discussed today'
-
-    - trigger: insight
-      action: 'Document breakthrough in ./{agent-name}-sidecar/breakthroughs.md'
-      description: 'Record a significant insight'
-
-    - multi: "[DF] Do Foo or start [CH] Chat with expert"
-      triggers:
-        - do-foo
-            - input: [DF] or fuzzy match on do foo
-            - action: '#main-action'
-            - data: what is being discussed or suggested with the command, along with custom party custom agents if specified
-            - type: action
-        - expert-chat:
-            - input: [CH] or fuzzy match validate agent
-            - action: agent responds as expert based on its persona to converse
-            - type: action
-
-  install_config:
-    compile_time_only: true
-    description: 'Personalize your expert agent'
-    questions:
-      - var: greeting_name
-        prompt: 'What should the agent call you?'
-        type: text
-        default: 'friend'
-
-      - var: tone_style
-        prompt: 'Preferred communication tone?'
-        type: choice
-        options:
-          - label: 'Gentle - Supportive and nurturing'
-            value: 'gentle'
-          - label: 'Direct - Clear and efficient'
-            value: 'direct'
-        default: 'gentle'
-
-      - var: user_preference
-        prompt: 'Enable personalized features?'
-        type: boolean
-        default: true
-```
+The YAML structure of the agent file itself is the same as every other agent, but generally will have something like these 3 items added to the critical_actions:
+  - 'Load COMPLETE file ./{agent-name}-sidecar/memories.md and remember all past insights'
+  - 'Load COMPLETE file ./{agent-name}-sidecar/instructions.md and follow ALL protocols'
+  - 'ONLY read/write files in ./{agent-name}-sidecar/ - this is our private space'
 
 ## Key Components
 
@@ -144,7 +36,7 @@ agent:
 
 Expert agents use companion files for persistence and domain knowledge:
 
-**memories.md** - Persistent user context
+**memories.md** - Persistent user context will be set up similar to as follows, of course with relevant sections that make sense.
 
 ```markdown
 # Agent Memory Bank
@@ -285,7 +177,7 @@ menu:
     description: 'Record meaningful insight'
 ```
 
-## Domain Restriction Patterns
+## Domain Restriction Patterns that can be applied
 
 ### Single Folder Access
 
@@ -296,6 +188,7 @@ critical_actions:
 
 ### User Space Access
 
+If there were a private journal agent, you might want it to have something like this:
 ```yaml
 critical_actions:
   - 'ONLY access files in {user-folder}/journals/ - private space'
@@ -317,47 +210,3 @@ critical_actions:
 4. **Reference past naturally** - Don't dump memory, weave it into conversation
 5. **Separate concerns** - Memories, instructions, knowledge in distinct files
 6. **Include privacy features** - Users trust expert agents with personal data
-
-## Common Patterns
-
-### Session Continuity
-
-```yaml
-communication_style: |
-  I reference past conversations naturally:
-  "Last time we discussed..." or "I've noticed over the weeks..."
-```
-
-### Pattern Recognition
-
-```yaml
-critical_actions:
-  - 'Track mood patterns, recurring themes, and breakthrough moments'
-  - 'Cross-reference current session with historical patterns'
-```
-
-### Adaptive Responses
-
-```yaml
-identity: |
-  I learn your preferences and adapt my approach over time.
-  {{#if track_preferences}}
-  I maintain notes about what works best for you.
-  {{/if}}
-```
-
-## Validation Checklist
-
-- [ ] Valid YAML syntax
-- [ ] Metadata includes `type: "expert"`
-- [ ] critical_actions loads sidecar files explicitly
-- [ ] critical_actions enforces domain restrictions
-- [ ] Sidecar folder structure created and populated
-- [ ] memories.md has clear section structure
-- [ ] instructions.md contains core directives
-- [ ] Menu actions reference _bmad/_memory correctly
-- [ ] File paths use _bmad/_memory/[agentname]-sidecar/ to reference sidecar content
-- [ ] Install config personalizes sidecar references
-- [ ] Agent folder named consistently: `{agent-name}/`
-- [ ] YAML file named: `{agent-name}.agent.yaml`
-- [ ] Sidecar folder named: `{agent-name}-sidecar/`
