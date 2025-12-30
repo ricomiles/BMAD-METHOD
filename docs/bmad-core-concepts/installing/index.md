@@ -1,5 +1,13 @@
 # Installation
 
+Get BMAD up and running in your project.
+
+## Upgrading?
+
+If you're upgrading from v4, see the [Upgrade Guide](./upgrading.md).
+
+---
+
 ## Quick Install
 
 ```bash
@@ -52,8 +60,9 @@ your-project/
 
 ## Next Steps
 
-1. **Read the [Quick Start Guide](../modules/bmm/quick-start.md)** to build your first feature
-2. **Explore [Workflows](../modules/bmm/workflows-planning.md)** to understand the methodology
+1. **Read the [Quick Start Guide](../../modules/bmm-bmad-method/quick-start)** to build your first feature
+2. **Explore [Workflows](../../modules/bmm-bmad-method/index#-workflow-guides)** to understand the methodology
+3. **Learn about [Agents](../agents.md)** to understand BMAD's core building blocks
 
 ## Troubleshooting
 
