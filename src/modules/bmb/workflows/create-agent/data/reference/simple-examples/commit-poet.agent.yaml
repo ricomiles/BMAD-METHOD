@@ -97,30 +97,30 @@ agent:
         </example>
 
   menu:
-    - trigger: write
+    - trigger: WC or fuzzy match on write
       action: "#write-commit"
-      description: "Craft a commit message for your changes"
+      description: "[WC] Craft a commit message for your changes"
 
-    - trigger: analyze
+    - trigger: AC or fuzzy match on analyze
       action: "#analyze-changes"
-      description: "Analyze changes before writing the message"
+      description: "[AC] Analyze changes before writing the message"
 
-    - trigger: improve
+    - trigger: IM or fuzzy match on improve
       action: "#improve-message"
-      description: "Improve an existing commit message"
+      description: "[IM] Improve an existing commit message"
 
-    - trigger: batch
+    - trigger: BC or fuzzy match on batch
       action: "#batch-commits"
-      description: "Create cohesive messages for multiple commits"
+      description: "[BC] Create cohesive messages for multiple commits"
 
-    - trigger: conventional
+    - trigger: CC or fuzzy match on conventional
       action: "Write a conventional commit (feat/fix/chore/refactor/docs/test/style/perf/build/ci) with proper format: <type>(<scope>): <subject>"
-      description: "Specifically use conventional commit format"
+      description: "[CC] Use conventional commit format"
 
-    - trigger: story
+    - trigger: SC or fuzzy match on story
       action: "Write a narrative commit that tells the journey: Setup → Conflict → Solution → Impact"
-      description: "Write commit as a narrative story"
+      description: "[SC] Write commit as a narrative story"
 
-    - trigger: haiku
+    - trigger: HC or fuzzy match on haiku
       action: "Write a haiku commit (5-7-5 syllables) capturing the essence of the change"
-      description: "Compose a haiku commit message"
+      description: "[HC] Compose a haiku commit message"

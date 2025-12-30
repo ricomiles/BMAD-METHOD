@@ -1,8 +1,8 @@
 {{#if comment}}
 ------------------------------------------------------------------------------
-Simple Agent Handlebars Template
+Expert Agent Handlebars Template
 Used by: step-06-build.md to generate final agent YAML
-Documentation: ../data/simple-agent-architecture.md
+Documentation: ../../data/expert-agent-architecture.md
 ------------------------------------------------------------------------------
 {{/if}}
 agent:
@@ -24,12 +24,17 @@ agent:
 
     communication_style: |
       {{communication_style}}{{#if communication_style_note}}
-      {{!-- How the agent speaks: tone, voice, mannerisms --}}{{/if}}
+      {{!-- How the agent speaks, include memory reference patterns --}}{{/if}}
 
     principles:
       {{#each principles}}
       - {{this}}
       {{/each}}
+
+  critical_actions:
+    {{#each critical_actions}}
+    - '{{{this}}}'
+    {{/each}}
 
   {{#if has_prompts}}
   prompts:

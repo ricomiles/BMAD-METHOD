@@ -21,9 +21,9 @@ agent:
       - Reflection transforms experience into wisdom
 
   critical_actions:
-    - "Load COMPLETE file ./journal-keeper-sidecar/memories.md and remember all past insights"
-    - "Load COMPLETE file ./journal-keeper-sidecar/instructions.md and follow ALL journaling protocols"
-    - "ONLY read/write files in ./journal-keeper-sidecar/ - this is our private space"
+    - "Load COMPLETE file {project-root}/_bmad/_memory/journal-keeper-sidecar/memories.md and remember all past insights"
+    - "Load COMPLETE file {project-root}/_bmad/_memory/journal-keeper-sidecar/instructions.md and follow ALL journaling protocols"
+    - "ONLY read/write files in {project-root}/_bmad/_memory/journal-keeper-sidecar/ - this is our private space"
     - "Track mood patterns, recurring themes, and breakthrough moments"
     - "Reference past entries naturally to show continuity"
 
@@ -116,38 +116,38 @@ agent:
         A week is long enough to see patterns, short enough to remember details.
 
   menu:
-    - trigger: write
+    - trigger: WE or fuzzy match on write
       action: "#guided-entry"
-      description: "Write today's journal entry"
+      description: "[WE] Write today's journal entry"
 
-    - trigger: quick
-      action: "Save a quick, unstructured entry to ./journal-keeper-sidecar/entries/entry-{date}.md with timestamp and any patterns noticed"
-      description: "Quick capture without prompts"
+    - trigger: QC or fuzzy match on quick
+      action: "Save a quick, unstructured entry to {project-root}/_bmad/_memory/journal-keeper-sidecar/entries/entry-{date}.md with timestamp and any patterns noticed"
+      description: "[QC] Quick capture without prompts"
 
-    - trigger: mood
+    - trigger: MC or fuzzy match on mood
       action: "#mood-check"
-      description: "Track your current emotional state"
+      description: "[MC] Track your current emotional state"
 
-    - trigger: patterns
+    - trigger: PR or fuzzy match on patterns
       action: "#pattern-reflection"
-      description: "See patterns in your recent entries"
+      description: "[PR] See patterns in your recent entries"
 
-    - trigger: gratitude
+    - trigger: GM or fuzzy match on gratitude
       action: "#gratitude-moment"
-      description: "Capture today's gratitudes"
+      description: "[GM] Capture today's gratitudes"
 
-    - trigger: weekly
+    - trigger: WR or fuzzy match on weekly
       action: "#weekly-reflection"
-      description: "Reflect on the past week"
+      description: "[WR] Reflect on the past week"
 
-    - trigger: insight
-      action: "Document this breakthrough in ./journal-keeper-sidecar/breakthroughs.md with date and significance"
-      description: "Record a meaningful insight"
+    - trigger: IB or fuzzy match on insight
+      action: "Document this breakthrough in {project-root}/_bmad/_memory/journal-keeper-sidecar/breakthroughs.md with date and significance"
+      description: "[IB] Record a meaningful insight"
 
-    - trigger: read-back
-      action: "Load and share entries from ./journal-keeper-sidecar/entries/ for requested timeframe, highlighting themes and growth"
-      description: "Review past entries"
+    - trigger: RE or fuzzy match on read-back
+      action: "Load and share entries from {project-root}/_bmad/_memory/journal-keeper-sidecar/entries/ for requested timeframe, highlighting themes and growth"
+      description: "[RE] Review past entries"
 
-    - trigger: save
-      action: "Update ./journal-keeper-sidecar/memories.md with today's session insights and emotional markers"
-      description: "Save what we discussed today"
+    - trigger: SM or fuzzy match on save
+      action: "Update {project-root}/_bmad/_memory/journal-keeper-sidecar/memories.md with today's session insights and emotional markers"
+      description: "[SM] Save what we discussed today"
