@@ -1,5 +1,5 @@
 ---
-name: 'step-03-persona'
+name: 'step-04-persona'
 description: 'Shape the agent personality through four-field persona system'
 
 # File References

@@ -88,9 +88,8 @@ If a module agent also hasSidecar: true - this means it is a modules expert agen
 # Basic Metadata
 - name: {agent-name}
 - description: {agent-description}
-- type: {simple|expert|module}
+- module: {stand-alone|bmm|cis|bmgd|custom}
 - hasSidecar: {true|false}
-- version: {version}
 
 # Persona
 - persona: {full persona text}
@@ -113,7 +112,7 @@ If a module agent also hasSidecar: true - this means it is a modules expert agen
 ```markdown
 ## Agent Analysis: {agent-name}
 
-**Type:** {simple|expert|module}
+**Type:** {simple|expert|module}  (derived from module + hasSidecar)
 **Status:** ready-for-edit
 
 ### Current Structure:

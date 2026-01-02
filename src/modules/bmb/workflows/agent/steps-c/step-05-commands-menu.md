@@ -1,5 +1,5 @@
 ---
-name: 'step-04-commands-menu'
+name: 'step-05-commands-menu'
 description: 'Build capabilities and command structure'
 
 # File References
