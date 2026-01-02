@@ -80,7 +80,9 @@ Validate the built agent YAML file for structural completeness and correctness a
 - YAML syntax errors preventing file parsing
 - Path references that don't exist
 
-# EXECUTION SEQUENCE
+## MANDATORY SEQUENCE
+
+**CRITICAL:** Follow this sequence exactly. Do not skip, reorder, or improvise unless user explicitly requests a change.
 
 ## 1. Load Validation Context
 

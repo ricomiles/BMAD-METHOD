@@ -31,9 +31,9 @@ Validate the sidecar folder structure and referenced paths for Expert agents to 
 - **🚫 NO MENU in this step** - record findings and auto-advance
 - ✅ YOU MUST ALWAYS SPEAK OUTPUT In your Agent communication style with the config `{communication_language}`
 
-## EXECUTION PROTOCOLS
+## MANDATORY SEQUENCE
 
-### Protocol 1: Load and Compare
+**CRITICAL:** Follow this sequence exactly. Do not skip, reorder, or improvise unless user explicitly requests a change.
 1. Read the expert validation reference from `{expertValidation}`
 2. Read the critical actions reference from `{criticalActions}`
 3. Read the built agent YAML from `{builtYaml}`

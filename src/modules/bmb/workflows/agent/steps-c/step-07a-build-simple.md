@@ -60,7 +60,9 @@ Assemble the agent plan content into a Simple agent YAML configuration using the
 - Template placeholders (replace with actual content)
 - Comments or notes in final YAML
 
-## EXECUTION SEQUENCE
+## MANDATORY SEQUENCE
+
+**CRITICAL:** Follow this sequence exactly. Do not skip, reorder, or improvise unless user explicitly requests a change.
 
 ### 1. Load Template and Architecture Files
 

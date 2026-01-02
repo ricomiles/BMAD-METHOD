@@ -28,9 +28,9 @@ Validate that the agent's persona (role, identity, communication_style, principl
 - **🚫 NO MENU in this step** - record findings and auto-advance
 - ✅ YOU MUST ALWAYS SPEAK OUTPUT In your Agent communication style with the config `{communication_language}`
 
-## EXECUTION PROTOCOLS
+## MANDATORY SEQUENCE
 
-### Protocol 1: Load and Compare
+**CRITICAL:** Follow this sequence exactly. Do not skip, reorder, or improvise unless user explicitly requests a change.
 1. Read the persona validation reference from `{personaProperties}`
 2. Read the principles crafting guide from `{principlesCrafting}`
 3. Read the built agent YAML from `{builtYaml}`

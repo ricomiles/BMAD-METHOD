@@ -33,7 +33,9 @@ Display all post-edit validation findings and compare with pre-edit state. Prese
 - 📊 Display organized summary with before/after comparison
 - 💾 Allow user to decide how to proceed
 
-## Sequence of Instructions:
+## MANDATORY SEQUENCE
+
+**CRITICAL:** Follow this sequence exactly. Do not skip, reorder, or improvise unless user explicitly requests a change.
 
 ### 1. Load Validation Findings
 

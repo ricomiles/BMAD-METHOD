@@ -48,7 +48,9 @@ Celebrate the successful agent edit, provide summary of changes, and mark edit w
 - Limits: No more edits, only acknowledgment
 - Dependencies: All edits successfully applied
 
-## Sequence of Instructions:
+## MANDATORY SEQUENCE
+
+**CRITICAL:** Follow this sequence exactly. Do not skip, reorder, or improvise unless user explicitly requests a change.:
 
 ### 1. Read Edit Plan
 

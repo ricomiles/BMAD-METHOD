@@ -38,7 +38,9 @@ Validate the agent's sidecar structure (if Expert type) against BMAD standards a
 - 💾 Append findings to validation report
 - ➡️ Auto-advance to summary step
 
-## Sequence of Instructions:
+## MANDATORY SEQUENCE
+
+**CRITICAL:** Follow this sequence exactly. Do not skip, reorder, or improvise unless user explicitly requests a change.
 
 ### 1. Load References
 

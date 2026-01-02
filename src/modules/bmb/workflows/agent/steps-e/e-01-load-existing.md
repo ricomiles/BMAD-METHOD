@@ -59,7 +59,9 @@ Load the existing agent file, parse its structure, and create an edit plan track
 - Limits: Analysis only, no modifications
 - Dependencies: Agent file must exist and be valid YAML
 
-## Sequence of Instructions (Do not deviate, skip, or optimize)
+## MANDATORY SEQUENCE
+
+**CRITICAL:** Follow this sequence exactly. Do not skip, reorder, or improvise unless user explicitly requests a change.
 
 ### 1. Load Agent File
 

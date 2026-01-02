@@ -125,7 +125,9 @@ Present structured options:
 
 ---
 
-# INSTRUCTION SEQUENCE
+## MANDATORY SEQUENCE
+
+**CRITICAL:** Follow this sequence exactly. Do not skip, reorder, or improvise unless user explicitly requests a change.
 
 ## 1. Load Documentation
 Read and internalize:

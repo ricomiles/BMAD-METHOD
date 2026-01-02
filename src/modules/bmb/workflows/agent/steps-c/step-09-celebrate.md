@@ -59,7 +59,9 @@ Celebrate the successful agent creation, recap the agent's capabilities, provide
 - Limits: No agent modifications, only installation guidance and celebration
 - Dependencies: Complete agent ready for installation
 
-## Sequence of Instructions (Do not deviate, skip, or optimize)
+## MANDATORY SEQUENCE
+
+**CRITICAL:** Follow this sequence exactly. Do not skip, reorder, or improvise unless user explicitly requests a change. (Do not deviate, skip, or optimize)
 
 ### 1. Grand Celebration
 

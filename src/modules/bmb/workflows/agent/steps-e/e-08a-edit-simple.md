@@ -47,7 +47,9 @@ Apply all planned edits to the Simple agent YAML file using templates and archit
 - ✅ Validate YAML syntax
 - ➡️ Auto-advance to next validation step
 
-## Sequence of Instructions:
+## MANDATORY SEQUENCE
+
+**CRITICAL:** Follow this sequence exactly. Do not skip, reorder, or improvise unless user explicitly requests a change.
 
 ### 1. Load Reference Documents
 

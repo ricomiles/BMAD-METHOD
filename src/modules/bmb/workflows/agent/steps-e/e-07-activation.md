@@ -39,7 +39,9 @@ Review critical_actions and route to the appropriate type-specific edit step (Si
 - 💾 Route to appropriate type-specific edit step
 - ➡️ Auto-advance to type-specific edit on [C]
 
-## Sequence of Instructions:
+## MANDATORY SEQUENCE
+
+**CRITICAL:** Follow this sequence exactly. Do not skip, reorder, or improvise unless user explicitly requests a change.
 
 ### 1. Load Reference Documents
 

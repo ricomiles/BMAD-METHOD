@@ -129,7 +129,9 @@ routing:
 - Expert agents: Sidecar + stand-alone module
 - Module agents: Sidecar + parent module integration
 
-# EXECUTION SEQUENCE
+## MANDATORY SEQUENCE
+
+**CRITICAL:** Follow this sequence exactly. Do not skip, reorder, or improvise unless user explicitly requests a change.
 
 ## 1. Load Reference Documents
 ```bash

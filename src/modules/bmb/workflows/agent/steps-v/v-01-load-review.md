@@ -34,7 +34,9 @@ Load the existing agent file and initialize a validation report to track all fin
 - 💾 Create validation report document
 - 🚫 FORBIDDEN to proceed without user confirmation
 
-## Sequence of Instructions:
+## MANDATORY SEQUENCE
+
+**CRITICAL:** Follow this sequence exactly. Do not skip, reorder, or improvise unless user explicitly requests a change.
 
 ### 1. Load Agent File
 

@@ -128,7 +128,9 @@ If YOLO mode:
 - Fix option should return to step-06-build, not earlier steps
 - If plan file is ambiguous, note ambiguity but use reasonable interpretation
 
-# SEQUENCE
+## MANDATORY SEQUENCE
+
+**CRITICAL:** Follow this sequence exactly. Do not skip, reorder, or improvise unless user explicitly requests a change.
 
 ## 1. Load Required Files
 ```yaml

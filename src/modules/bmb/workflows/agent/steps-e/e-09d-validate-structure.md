@@ -30,9 +30,9 @@ Validate the built agent YAML file for structural completeness and correctness a
 - **🚫 NO MENU in this step** - record findings and auto-advance
 - ✅ YOU MUST ALWAYS SPEAK OUTPUT In your Agent communication style with the config `{communication_language}`
 
-## EXECUTION PROTOCOLS
+## MANDATORY SEQUENCE
 
-### Protocol 1: Load and Compare
+**CRITICAL:** Follow this sequence exactly. Do not skip, reorder, or improvise unless user explicitly requests a change.
 1. Read the agent compilation reference from `{agentCompilation}`
 2. Read the simple validation checklist from `{simpleValidation}`
 3. Read the expert validation checklist from `{expertValidation}`

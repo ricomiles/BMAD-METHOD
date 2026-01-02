@@ -78,7 +78,9 @@ Validate the sidecar folder structure and referenced paths for Expert agents to 
 - Path references pointing to non-existent files
 - Empty sidecar files that should have content
 
-# EXECUTION SEQUENCE
+## MANDATORY SEQUENCE
+
+**CRITICAL:** Follow this sequence exactly. Do not skip, reorder, or improvise unless user explicitly requests a change.
 
 ## 1. Load Sidecar Context
 
