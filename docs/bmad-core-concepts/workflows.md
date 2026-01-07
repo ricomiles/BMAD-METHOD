@@ -12,6 +12,10 @@ A workflow is a structured process where the AI executes steps sequentially to a
 
 Think of it this way: instead of asking "help me build a nutrition plan" and getting a generic response, a workflow guides you (or runs automatically) through discovery, assessment, strategy, shopping lists, and prep schedules—each step building on the last, nothing missed, no shortcuts taken.
 
+## How do workflows differ from skills?
+
+Actually they really do not - a workflow can be a skill, and a skill can be a workflow. The main thing with a BMad workflow is the suggestion to follow certain conventions, which actually are also skill best practices. A skill has a few optional and required fields to add as the main file workflow and get stored in a specific location depending on your tool choice for automatic invocation by the llm - whereas workflows are generally intentionally launched, with from another process calling them, or a user invoking via a slash command. In the near future, workflows will optionally be installable as skills also - but if you like, you can add front matter to your custom workflows based on the skill spec from Anthropic, and put them in the proper location your tool dictates.
+
 ### The Power of Progressive Disclosure
 
 Here's why workflows work so well: the AI only sees the current step. It doesn't know about step 5 when it's on step 2. It can't get ahead of itself, skip steps, or lose focus. Each step gets the AI's full attention, completing fully before the next step loads.
@@ -20,7 +24,7 @@ This is the opposite of a giant prompt that tries to handle everything at once a
 
 Workflows exist on a spectrum:
 
-- **Interactive workflows** guide users through complex decisions via collaboration
+- **Interactive workflows** guide users through complex decisions via collaboration and facilitation
 - **Automated workflows** run with minimal user input, processing documents or executing tasks
 - **Hybrid workflows** combine both—some steps need user input, others run automatically
 
@@ -129,13 +133,27 @@ brainstorming → research → brief → PRD → UX → architecture → epics �
 
 Each workflow checks for required inputs from prior workflows, validates they're complete, and produces output for the next workflow. This creates powerful end-to-end pipelines for complex processes.
 
+### The Tri-Modal Pattern
+
+For critical workflows that produce important artifacts, BMAD uses a tri-modal structure: Create, Validate, and Edit. Each mode is a separate workflow path that can run independently or flow into the others.
+
+**Create mode** builds new artifacts from scratch. But here's where it gets interesting: create mode can also function as a conversion tool. Feed it a non-compliant document—something that doesn't follow BMAD standards—and it will extract the essential content and rebuild it as a compliant artifact. This means you can bring in existing work and automatically upgrade it to follow proper patterns.
+
+**Validate mode** runs standalone and checks artifacts against standards. Because it's separate, you can run validation whenever you want—immediately after creation, weeks later when things have changed, or even using a different LLM entirely. It's like having a quality assurance checkpoint that's always available but never forced.
+
+**Edit mode** modifies existing artifacts while enforcing standards. As you update documents to reflect changing requirements or new understanding, edit mode ensures you don't accidentally drift away from the patterns that make the artifacts useful. It checks compliance as you work and can route back to create mode if it detects something that needs full conversion.
+
+All BMAD planning workflows and the BMB module (will) use this tri-modal pattern. The pristine example is the workflow workflow in BMB—it creates workflow specifications, validates them against standards, and lets you edit them while maintaining compliance. You can study that workflow to see the pattern in action.
+
+This tri-modal approach gives you the best of both worlds: the creativity and flexibility to build what you need, the quality assurance of validation that can run anytime, and the ability to iterate while staying true to standards that make the artifacts valuable across sessions and team members.
+
 ---
 
 ## Design Decisions
 
 Before building a workflow, answer these questions:
 
-**Module affiliation**: Is this standalone or part of a module? Module-based workflows can access module-specific variables and reference other workflow outputs.
+**Module affiliation**: Is this standalone or part of a module? Module-based workflows can access module-specific variables and reference other workflow outputs. Also when part of a module, generally they will be associated to an agent.
 
 **Continuable or single-session?**: Will users need multiple sessions, or can this be completed in one sitting?
 
@@ -177,14 +195,20 @@ Don't use workflows when:
 
 - **Tasks are simple and one-off**: A single prompt works fine for quick questions
 - **Flexibility trumps structure**: Free-form conversation is better for exploration
-- **Tasks are truly one-step**: If there's only one thing to do, a workflow is overkill
+
+Modified BMad Workflows
+
+- **Tasks are truly one-step**
+
+If there's only one thing to do and it can be explained in under about 300 lines - don't bother with step files. Instead, you can still have
+a short single file workflow.md file.
 
 ---
 
 ## The Bottom Line
 
-Workflows transform AI from a tool that gives variable, unpredictable results into a reliable system for complex, multi-step processes. Through progressive disclosure, sequential execution, and thoughtful design, workflows give you control and repeatability that prompts alone can't match.
+Workflows transform AI from a tool that gives variable, unpredictable results into a reliable system for complex, multi-step processes. Through progressive disclosure, sequential execution, guided facilitation, and thoughtful design, workflows give you control and repeatability that ad-hoc prompting alone can't match.
 
-They're not just for software development. You can create workflows for meal planning, course design, therapy intake, tax preparation, document processing, creative writing, event planning—any complex task that benefits from structure and thoroughness.
+They're not just for software development. You can create workflows for any guided process - meal planning, course design, therapy intake, tax preparation, document processing, creative writing, event planning—any complex task that benefits from structure and thoroughness.
 
 Start simple. Study examples. Build workflows for your own domain. You'll wonder how you ever got by with just prompts.
