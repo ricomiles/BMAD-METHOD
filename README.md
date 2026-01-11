@@ -70,11 +70,11 @@ This analyzes your project and recommends a track:
 
 BMad is free for everyone — and always will be. If you'd like to support development:
 
-- ⭐ [Star us on GitHub](https://github.com/bmad-code-org/BMAD-METHOD/) — helps others discover BMad
-- 📺 [Subscribe on YouTube](https://www.youtube.com/@BMadCode) — master class launching Feb 2025
-- ☕ [Buy Me a Coffee](https://buymeacoffee.com/bmad) — fuel the development
+- ⭐ [Star us on GitHub](https://github.com/bmad-code-org/BMAD-METHOD/) — Helps others discover BMad
+- 📺 [Subscribe on YouTube](https://www.youtube.com/@BMadCode) — Master class launching Feb 2025
+- ☕ [Buy Me a Coffee](https://buymeacoffee.com/bmad) — Fuel the development
 - 🏢 Corporate sponsorship — DM on Discord
-- 🎤 Speaking & media — Available for conferences, podcasts, interviews (Discord)
+- 🎤 Speaking & Media — Available for conferences, podcasts, interviews (Discord)
 
 ## Contributing
 
