@@ -353,7 +353,7 @@ class ClaudeCodeSetup extends BaseIdeSetup {
       };
 
       const selected = await prompts.multiselect({
-        message: `Select subagents to install ${chalk.dim('(↑/↓ navigate, SPACE select, ENTER confirm)')}:`,
+        message: `Select subagents to install ${chalk.dim('(↑/↓ navigates multiselect, SPACE toggles, A to toggles All, ENTER confirm)')}:`,
         options: subagentConfig.files.map((file) => ({
           label: `${file.replace('.md', '')} - ${subagentInfo[file] || 'Specialized assistant'}`,
           value: file,

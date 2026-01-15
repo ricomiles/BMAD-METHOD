@@ -184,6 +184,7 @@ async function groupMultiselect(options) {
     options: options.options,
     initialValues: options.initialValues,
     required: options.required || false,
+    selectableGroups: options.selectableGroups || false,
   });
 
   await handleCancel(result);

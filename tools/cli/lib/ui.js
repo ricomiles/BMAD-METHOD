@@ -395,7 +395,7 @@ class UI {
     const processedIdes = new Set();
     const initialValues = [];
 
-    // First, add previously configured IDEs at the top, marked with ✅
+    // First, add previously configured IDEs, marked with ✅
     if (configuredIdes.length > 0) {
       const configuredGroup = [];
       for (const ideValue of configuredIdes) {
@@ -447,42 +447,33 @@ class UI {
       }));
     }
 
+    // Add standalone "None" option at the end
+    groupedOptions[' '] = [
+      {
+        label: '⚠ None - I am not installing any tools',
+        value: '__NONE__',
+      },
+    ];
+
     let selectedIdes = [];
-    let userConfirmedNoTools = false;
 
-    // Loop until user selects at least one tool OR explicitly confirms no tools
-    while (!userConfirmedNoTools) {
-      selectedIdes = await prompts.groupMultiselect({
-        message: `Select tools to configure ${chalk.dim('(↑/↓ navigate, SPACE select, ENTER confirm)')}:`,
-        options: groupedOptions,
-        initialValues: initialValues.length > 0 ? initialValues : undefined,
-        required: false,
-      });
+    selectedIdes = await prompts.groupMultiselect({
+      message: `Select tools to configure ${chalk.dim('(↑/↓ navigates multiselect, SPACE toggles, A to toggles All, ENTER confirm)')}:`,
+      options: groupedOptions,
+      initialValues: initialValues.length > 0 ? initialValues : undefined,
+      required: true,
+      selectableGroups: false,
+    });
 
-      // If tools were selected, we're done
-      if (selectedIdes && selectedIdes.length > 0) {
-        break;
-      }
-
-      // Warn that no tools were selected - users often miss the spacebar requirement
+    // If user selected both "__NONE__" and other tools, honor the "None" choice
+    if (selectedIdes && selectedIdes.includes('__NONE__') && selectedIdes.length > 1) {
       console.log();
-      console.log(chalk.red.bold('⚠️  WARNING: No tools were selected!'));
-      console.log(chalk.red('   You must press SPACE to select items, then ENTER to confirm.'));
-      console.log(chalk.red('   Simply highlighting an item does NOT select it.'));
+      console.log(chalk.yellow('⚠️  "None - I am not installing any tools" was selected, so no tools will be configured.'));
       console.log();
-
-      const goBack = await prompts.confirm({
-        message: chalk.yellow('Would you like to go back and select at least one tool?'),
-        default: true,
-      });
-
-      if (goBack) {
-        // Re-display a message before looping back
-        console.log();
-      } else {
-        // User explicitly chose to proceed without tools
-        userConfirmedNoTools = true;
-      }
+      selectedIdes = [];
+    } else if (selectedIdes && selectedIdes.includes('__NONE__')) {
+      // Only "__NONE__" was selected
+      selectedIdes = [];
     }
 
     return {
@@ -507,27 +498,6 @@ class UI {
     });
 
     return { backupFirst, preserveCustomizations };
-  }
-
-  /**
-   * Prompt for module selection
-   * @param {Array} modules - Available modules
-   * @returns {Array} Selected modules
-   */
-  async promptModules(modules) {
-    const choices = modules.map((mod) => ({
-      name: `${mod.name} - ${mod.description}`,
-      value: mod.id,
-      checked: false,
-    }));
-
-    const selectedModules = await prompts.multiselect({
-      message: `Select modules to add ${chalk.dim('(↑/↓ navigate, SPACE select, ENTER confirm)')}:`,
-      choices,
-      required: true,
-    });
-
-    return selectedModules;
   }
 
   /**
@@ -697,20 +667,40 @@ class UI {
    * @param {Array} moduleChoices - Available module choices
    * @returns {Array} Selected module IDs
    */
-  async selectModules(moduleChoices, defaultSelections = []) {
-    // Mark choices as checked based on defaultSelections
+  async selectModules(moduleChoices, defaultSelections = null) {
+    // If defaultSelections is provided, use it to override checked state
+    // Otherwise preserve the checked state from moduleChoices (set by getModuleChoices)
     const choicesWithDefaults = moduleChoices.map((choice) => ({
       ...choice,
-      checked: defaultSelections.includes(choice.value),
+      ...(defaultSelections === null ? {} : { checked: defaultSelections.includes(choice.value) }),
     }));
 
+    // Add a "None" option at the end for users who changed their mind
+    const choicesWithSkipOption = [
+      ...choicesWithDefaults,
+      {
+        value: '__NONE__',
+        label: '⚠ None / I changed my mind - skip module installation',
+        checked: false,
+      },
+    ];
+
     const selected = await prompts.multiselect({
-      message: `Select modules to install ${chalk.dim('(↑/↓ navigate, SPACE select, ENTER confirm)')}:`,
-      choices: choicesWithDefaults,
-      required: false,
+      message: `Select modules to install ${chalk.dim('(↑/↓ navigates multiselect, SPACE toggles, A to toggles All, ENTER confirm)')}:`,
+      choices: choicesWithSkipOption,
+      required: true,
     });
 
-    return selected || [];
+    // If user selected both "__NONE__" and other items, honor the "None" choice
+    if (selected && selected.includes('__NONE__') && selected.length > 1) {
+      console.log();
+      console.log(chalk.yellow('⚠️  "None / I changed my mind" was selected, so no modules will be installed.'));
+      console.log();
+      return [];
+    }
+
+    // Filter out the special '__NONE__' value
+    return selected ? selected.filter((m) => m !== '__NONE__') : [];
   }
 
   /**
@@ -1255,12 +1245,32 @@ class UI {
           checked: m.checked,
         }));
 
+        // Add "None / I changed my mind" option at the end
+        const choicesWithSkip = [
+          ...selectChoices,
+          {
+            name: '⚠ None / I changed my mind - keep no custom modules',
+            value: '__NONE__',
+            checked: false,
+          },
+        ];
+
         const keepModules = await prompts.multiselect({
-          message: `Select custom modules to keep ${chalk.dim('(↑/↓ navigate, SPACE select, ENTER confirm)')}:`,
-          choices: selectChoices,
-          required: false,
+          message: `Select custom modules to keep ${chalk.dim('(↑/↓ navigates multiselect, SPACE toggles, A to toggles All, ENTER confirm)')}:`,
+          choices: choicesWithSkip,
+          required: true,
         });
-        result.selectedCustomModules = keepModules || [];
+
+        // If user selected both "__NONE__" and other modules, honor the "None" choice
+        if (keepModules && keepModules.includes('__NONE__') && keepModules.length > 1) {
+          console.log();
+          console.log(chalk.yellow('⚠️  "None / I changed my mind" was selected, so no custom modules will be kept.'));
+          console.log();
+          result.selectedCustomModules = [];
+        } else {
+          // Filter out the special '__NONE__' value
+          result.selectedCustomModules = keepModules ? keepModules.filter((m) => m !== '__NONE__') : [];
+        }
         break;
       }
 
