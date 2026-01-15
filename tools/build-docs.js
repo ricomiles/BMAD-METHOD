@@ -27,7 +27,17 @@ const REPO_URL = 'https://github.com/bmad-code-org/BMAD-METHOD';
 const LLM_MAX_CHARS = 600_000;
 const LLM_WARN_CHARS = 500_000;
 
-const LLM_EXCLUDE_PATTERNS = ['changelog', 'ide-info/', 'v4-to-v6-upgrade', 'downloads/', 'faq'];
+const LLM_EXCLUDE_PATTERNS = [
+  'changelog',
+  'ide-info/',
+  'v4-to-v6-upgrade',
+  'downloads/',
+  'faq',
+  '_STYLE_GUIDE.md',
+  '_archive/',
+  'reference/glossary/',
+  'explanation/game-dev/',
+];
 
 // =============================================================================
 // Main Entry Point
@@ -335,7 +345,6 @@ function runAstroBuild() {
     stdio: 'inherit',
     env: {
       ...process.env,
-      NODE_OPTIONS: `${process.env.NODE_OPTIONS || ''} --disable-warning=MODULE_TYPELESS_PACKAGE_JSON`.trim(),
     },
   });
 }
