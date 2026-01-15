@@ -34,7 +34,6 @@ class Installer {
     this.configCollector = new ConfigCollector();
     this.ideConfigManager = new IdeConfigManager();
     this.installedFiles = new Set(); // Track all installed files
-    this.ttsInjectedFiles = []; // Track files with TTS injection applied
     this.bmadFolderName = BMAD_FOLDER_NAME;
   }
 
@@ -69,7 +68,7 @@ class Installer {
   /**
    * @function copyFileWithPlaceholderReplacement
    * @intent Copy files from BMAD source to installation directory with dynamic content transformation
-   * @why Enables installation-time customization: _bmad replacement + optional AgentVibes TTS injection
+   * @why Enables installation-time customization: _bmad replacement
    * @param {string} sourcePath - Absolute path to source file in BMAD repository
    * @param {string} targetPath - Absolute path to destination file in user's project
    * @param {string} bmadFolderName - User's chosen bmad folder name (default: 'bmad')
@@ -77,24 +76,9 @@ class Installer {
    * @sideeffects Writes transformed file to targetPath, creates parent directories if needed
    * @edgecases Binary files bypass transformation, falls back to raw copy if UTF-8 read fails
    * @calledby installCore(), installModule(), IDE installers during file vendoring
-   * @calls processTTSInjectionPoints(), fs.readFile(), fs.writeFile(), fs.copy()
+   * @calls fs.readFile(), fs.writeFile(), fs.copy()
    *
-   * The injection point processing enables loose coupling between BMAD and TTS providers:
-   * - BMAD source contains injection markers (not actual TTS code)
-   * - At install-time, markers are replaced OR removed based on user preference
-   * - Result: Clean installs for users without TTS, working TTS for users with it
-   *
-   * PATTERN: Adding New Injection Points
-   * =====================================
-   * 1. Add HTML comment marker in BMAD source file:
-   *    <!-- TTS_INJECTION:feature-name -->
-   *
-   * 2. Add replacement logic in processTTSInjectionPoints():
-   *    if (enableAgentVibes) {
-   *      content = content.replace(/<!-- TTS_INJECTION:feature-name -->/g, 'actual code');
-   *    } else {
-   *      content = content.replace(/<!-- TTS_INJECTION:feature-name -->\n?/g, '');
-   *    }
+
    *
    * 3. Document marker in instructions.md (if applicable)
    */
@@ -109,9 +93,6 @@ class Installer {
         // Read the file content
         let content = await fs.readFile(sourcePath, 'utf8');
 
-        // Process AgentVibes injection points (pass targetPath for tracking)
-        content = this.processTTSInjectionPoints(content, targetPath);
-
         // Write to target with replaced content
         await fs.ensureDir(path.dirname(targetPath));
         await fs.writeFile(targetPath, content, 'utf8');
@@ -123,116 +104,6 @@ class Installer {
       // Binary file or other file type - just copy directly
       await fs.copy(sourcePath, targetPath, { overwrite: true });
     }
-  }
-
-  /**
-   * @function processTTSInjectionPoints
-   * @intent Transform TTS injection markers based on user's installation choice
-   * @why Enables optional TTS integration without tight coupling between BMAD and TTS providers
-   * @param {string} content - Raw file content containing potential injection markers
-   * @returns {string} Transformed content with markers replaced (if enabled) or stripped (if disabled)
-   * @sideeffects None - pure transformation function
-   * @edgecases Returns content unchanged if no markers present, safe to call on all files
-   * @calledby copyFileWithPlaceholderReplacement() during every file copy operation
-   * @calls String.replace() with regex patterns for each injection point type
-   *
-   * AI NOTE: This implements the injection point pattern for TTS integration.
-   * Key architectural decisions:
-   *
-   * 1. **Why Injection Points vs Direct Integration?**
-   *    - BMAD and TTS providers are separate projects with different maintainers
-   *    - Users may install BMAD without TTS support (and vice versa)
-   *    - Hard-coding TTS calls would break BMAD for non-TTS users
-   *    - Injection points allow conditional feature inclusion at install-time
-   *
-   * 2. **How It Works:**
-   *    - BMAD source contains markers: <!-- TTS_INJECTION:feature-name -->
-   *    - During installation, user is prompted: "Enable AgentVibes TTS?"
-   *    - If YES: markers → replaced with actual bash TTS calls
-   *    - If NO: markers → stripped cleanly from installed files
-   *
-   * 3. **State Management:**
-   *    - this.enableAgentVibes set in install() method from config.enableAgentVibes
-   *    - config.enableAgentVibes comes from ui.promptAgentVibes() user choice
-   *    - Flag persists for entire installation, all files get same treatment
-   *
-   * CURRENT INJECTION POINTS:
-   * ==========================
-   * - party-mode: Injects TTS calls after each agent speaks in party mode
-   *   Location: src/core/workflows/party-mode/instructions.md
-   *   Marker: <!-- TTS_INJECTION:party-mode -->
-   *   Replacement: Bash call to .claude/hooks/bmad-speak.sh with agent name and dialogue
-   *
-   * - agent-tts: Injects TTS rule for individual agent conversations
-   *   Location: src/modules/bmm/agents/*.md (all agent files)
-   *   Marker: <!-- TTS_INJECTION:agent-tts -->
-   *   Replacement: Rule instructing agent to call bmad-speak.sh with agent ID and response
-   *
-   * ADDING NEW INJECTION POINTS:
-   * =============================
-   * 1. Add new case in this function:
-   *    content = content.replace(
-   *      /<!-- TTS_INJECTION:new-feature -->/g,
-   *      `code to inject when enabled`
-   *    );
-   *
-   * 2. Add marker to BMAD source file at injection location
-   *
-   * 3. Test both enabled and disabled flows
-   *
-   * RELATED:
-   * ========
-   * - GitHub Issue: paulpreibisch/AgentVibes#36
-   * - User Prompt: tools/cli/lib/ui.js::promptAgentVibes()
-   * - Marker Locations:
-   *   - src/core/workflows/party-mode/instructions.md:101
-   *   - src/modules/bmm/agents/*.md (rules sections)
-   * - TTS Hook: .claude/hooks/bmad-speak.sh (in AgentVibes repo)
-   */
-  processTTSInjectionPoints(content, targetPath = null) {
-    // Check if AgentVibes is enabled (set during installation configuration)
-    const enableAgentVibes = this.enableAgentVibes || false;
-
-    // Check if content contains any TTS injection markers
-    const hasPartyMode = content.includes('<!-- TTS_INJECTION:party-mode -->');
-    const hasAgentTTS = content.includes('<!-- TTS_INJECTION:agent-tts -->');
-
-    if (enableAgentVibes) {
-      // Replace party-mode injection marker with actual TTS call
-      // Use single quotes to prevent shell expansion of special chars like !
-      content = content.replaceAll(
-        '<!-- TTS_INJECTION:party-mode -->',
-        `<critical>IMPORTANT: Always use PROJECT hooks (.claude/hooks/), NEVER global hooks (~/.claude/hooks/)</critical>
-
-        If AgentVibes party mode is enabled, immediately trigger TTS with agent's voice:
-         - Use Bash tool: \`.claude/hooks/bmad-speak.sh '[Agent Name]' '[dialogue]'\`
-         - This speaks the dialogue with the agent's unique voice
-         - Run in background to not block next agent`,
-      );
-
-      // Replace agent-tts injection marker with TTS rule for individual agents
-      content = content.replaceAll(
-        '<!-- TTS_INJECTION:agent-tts -->',
-        `- When responding to user messages, speak your responses using TTS:
-          Call: \`.claude/hooks/bmad-speak.sh '{agent-id}' '{response-text}'\` after each response
-          Replace {agent-id} with YOUR agent ID from <agent id="..."> tag at top of this file
-          Replace {response-text} with the text you just output to the user
-          IMPORTANT: Use single quotes as shown - do NOT escape special characters like ! or $ inside single quotes
-          Run in background (&) to avoid blocking`,
-      );
-
-      // Track files that had TTS injection applied
-      if (targetPath && (hasPartyMode || hasAgentTTS)) {
-        const injectionType = hasPartyMode ? 'party-mode' : 'agent-tts';
-        this.ttsInjectedFiles.push({ path: targetPath, type: injectionType });
-      }
-    } else {
-      // Strip injection markers cleanly when AgentVibes is disabled
-      content = content.replaceAll(/<!-- TTS_INJECTION:party-mode -->\n?/g, '');
-      content = content.replaceAll(/<!-- TTS_INJECTION:agent-tts -->\n?/g, '');
-    }
-
-    return content;
   }
 
   /**
@@ -251,7 +122,7 @@ class Installer {
       // Fallback: prompt for tool selection (backwards compatibility)
       const { UI } = require('../../../lib/ui');
       const ui = new UI();
-      toolConfig = await ui.promptToolSelection(projectDir, selectedModules);
+      toolConfig = await ui.promptToolSelection(projectDir);
     } else {
       // IDEs were already selected during initial prompts
       toolConfig = {
@@ -509,9 +380,6 @@ class Installer {
         });
       }
     }
-
-    // Store AgentVibes configuration for injection point processing
-    this.enableAgentVibes = config.enableAgentVibes || false;
 
     // Set bmad folder name on module manager and IDE manager for placeholder replacement
     this.moduleManager.setBmadFolderName(BMAD_FOLDER_NAME);
@@ -1234,8 +1102,6 @@ class Installer {
         modules: config.modules,
         ides: config.ides,
         customFiles: customFiles.length > 0 ? customFiles : undefined,
-        ttsInjectedFiles: this.enableAgentVibes && this.ttsInjectedFiles.length > 0 ? this.ttsInjectedFiles : undefined,
-        agentVibesEnabled: this.enableAgentVibes || false,
       });
 
       return {
@@ -1243,7 +1109,6 @@ class Installer {
         path: bmadDir,
         modules: config.modules,
         ides: config.ides,
-        needsAgentVibes: this.enableAgentVibes && !config.agentVibesInstalled,
         projectDir: projectDir,
       };
     } catch (error) {

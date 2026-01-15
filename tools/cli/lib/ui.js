@@ -171,32 +171,6 @@ class UI {
     // Check if there's an existing BMAD installation (after any folder renames)
     const hasExistingInstall = await fs.pathExists(bmadDir);
 
-    // Collect IDE tool selection early - we need this to know if we should ask about TTS
-    let toolSelection;
-    let agentVibesConfig = { enabled: false, alreadyInstalled: false };
-    let claudeCodeSelected = false;
-
-    if (!hasExistingInstall) {
-      // For new installations, collect IDE selection first
-      // We don't have modules yet, so pass empty array
-      toolSelection = await this.promptToolSelection(confirmedDirectory, []);
-
-      // Check if Claude Code was selected
-      claudeCodeSelected = toolSelection.ides && toolSelection.ides.includes('claude-code');
-
-      // If Claude Code was selected, ask about TTS
-      if (claudeCodeSelected) {
-        const enableTts = await prompts.confirm({
-          message: 'Claude Code supports TTS (Text-to-Speech). Would you like to enable it?',
-          default: false,
-        });
-
-        if (enableTts) {
-          agentVibesConfig = { enabled: true, alreadyInstalled: false };
-        }
-      }
-    }
-
     let customContentConfig = { hasCustomContent: false };
     if (!hasExistingInstall) {
       customContentConfig._shouldAsk = true;
@@ -324,20 +298,8 @@ class UI {
         }
 
         // Get tool selection
-        const toolSelection = await this.promptToolSelection(confirmedDirectory, selectedModules);
+        const toolSelection = await this.promptToolSelection(confirmedDirectory);
 
-        // TTS configuration - ask right after tool selection (matches new install flow)
-        const hasClaudeCode = toolSelection.ides && toolSelection.ides.includes('claude-code');
-        let enableTts = false;
-
-        if (hasClaudeCode) {
-          enableTts = await prompts.confirm({
-            message: 'Claude Code supports TTS (Text-to-Speech). Would you like to enable it?',
-            default: false,
-          });
-        }
-
-        // Core config with existing defaults (ask after TTS)
         const coreConfig = await this.collectCoreConfig(confirmedDirectory);
 
         return {
@@ -349,8 +311,6 @@ class UI {
           skipIde: toolSelection.skipIde,
           coreConfig: coreConfig,
           customContent: customModuleResult.customContentConfig,
-          enableAgentVibes: enableTts,
-          agentVibesInstalled: false,
         };
       }
     }
@@ -372,7 +332,7 @@ class UI {
 
     // Ask about custom content
     const wantsCustomContent = await prompts.confirm({
-      message: 'Would you like to install a local custom module (this includes custom agents and workflows also)?',
+      message: 'Would you like to install a locally stored custom module (this includes custom agents and workflows also)?',
       default: false,
     });
 
@@ -391,18 +351,9 @@ class UI {
       selectedModules = [...selectedModules, ...customContentConfig.selectedModuleIds];
     }
 
-    // Remove core if it's in the list (it's always installed)
     selectedModules = selectedModules.filter((m) => m !== 'core');
-
-    // Tool selection (already done for new installs at the beginning)
-    if (!toolSelection) {
-      toolSelection = await this.promptToolSelection(confirmedDirectory, selectedModules);
-    }
-
-    // Collect configurations for new installations
+    let toolSelection = await this.promptToolSelection(confirmedDirectory);
     const coreConfig = await this.collectCoreConfig(confirmedDirectory);
-
-    // TTS already handled at the beginning for new installs
 
     return {
       actionType: 'install',
@@ -413,18 +364,15 @@ class UI {
       skipIde: toolSelection.skipIde,
       coreConfig: coreConfig,
       customContent: customContentConfig,
-      enableAgentVibes: agentVibesConfig.enabled,
-      agentVibesInstalled: agentVibesConfig.alreadyInstalled,
     };
   }
 
   /**
    * Prompt for tool/IDE selection (called after module configuration)
    * @param {string} projectDir - Project directory to check for existing IDEs
-   * @param {Array} selectedModules - Selected modules from configuration
    * @returns {Object} Tool configuration
    */
-  async promptToolSelection(projectDir, selectedModules) {
+  async promptToolSelection(projectDir) {
     // Check for existing configured IDEs - use findBmadDir to detect custom folder names
     const { Detector } = require('../installers/lib/core/detector');
     const { Installer } = require('../installers/lib/core/installer');
@@ -608,25 +556,6 @@ class UI {
     if (result.modules && result.modules.length > 0) {
       console.log(chalk.dim(`Modules: ${result.modules.join(', ')}`));
     }
-    if (result.agentVibesEnabled) {
-      console.log(chalk.dim(`TTS: Enabled`));
-    }
-
-    // TTS injection info (simplified)
-    if (result.ttsInjectedFiles && result.ttsInjectedFiles.length > 0) {
-      console.log(chalk.dim(`\n💡 TTS enabled for ${result.ttsInjectedFiles.length} agent(s)`));
-      console.log(chalk.dim('   Agents will now speak when using AgentVibes'));
-    }
-
-    console.log(chalk.yellow('\nThank you for helping test the early release version of the new BMad Core and BMad Method!'));
-    console.log(chalk.cyan('Stable Beta coming soon - please read the full README.md and linked documentation to get started!'));
-
-    // Add changelog link at the end
-    console.log(
-      chalk.magenta(
-        "\n📋 Want to see what's new? Check out the changelog: https://github.com/bmad-code-org/BMAD-METHOD/blob/main/CHANGELOG.md",
-      ),
-    );
   }
 
   /**
@@ -1062,136 +991,6 @@ class UI {
   }
 
   /**
-   * @function promptAgentVibes
-   * @intent Ask user if they want AgentVibes TTS integration during BMAD installation
-   * @why Enables optional voice features without forcing TTS on users who don't want it
-   * @param {string} projectDir - Absolute path to user's project directory
-   * @returns {Promise<Object>} Configuration object: { enabled: boolean, alreadyInstalled: boolean }
-   * @sideeffects None - pure user input collection, no files written
-   * @edgecases Shows warning if user enables TTS but AgentVibes not detected
-   * @calledby promptInstall() during installation flow, after core config, before IDE selection
-   * @calls checkAgentVibesInstalled(), prompts.select(), chalk.green/yellow/dim()
-   *
-   * AI NOTE: This prompt is strategically positioned in installation flow:
-   * - AFTER core config (user_name, etc)
-   * - BEFORE IDE selection (which can hang on Windows/PowerShell)
-   *
-   * Flow Logic:
-   * 1. Auto-detect if AgentVibes already installed (checks for hook files)
-   * 2. Show detection status to user (green checkmark or gray "not detected")
-   * 3. Prompt: "Enable AgentVibes TTS?" (defaults to true if detected)
-   * 4. If user says YES but AgentVibes NOT installed:
-   *    → Show warning with installation link (graceful degradation)
-   * 5. Return config to promptInstall(), which passes to installer.install()
-   *
-   * State Flow:
-   * promptAgentVibes() → { enabled, alreadyInstalled }
-   *                    ↓
-   * promptInstall() → config.enableAgentVibes
-   *                    ↓
-   * installer.install() → this.enableAgentVibes
-   *                    ↓
-   * processTTSInjectionPoints() → injects OR strips markers
-   *
-   * RELATED:
-   * ========
-   * - Detection: checkAgentVibesInstalled() - looks for bmad-speak.sh and play-tts.sh
-   * - Processing: installer.js::processTTSInjectionPoints()
-   * - Markers: src/core/workflows/party-mode/instructions.md:101, src/modules/bmm/agents/*.md
-   * - GitHub Issue: paulpreibisch/AgentVibes#36
-   */
-  async promptAgentVibes(projectDir) {
-    CLIUtils.displaySection('🎤 Voice Features', 'Enable TTS for multi-agent conversations');
-
-    // Check if AgentVibes is already installed
-    const agentVibesInstalled = await this.checkAgentVibesInstalled(projectDir);
-
-    if (agentVibesInstalled) {
-      console.log(chalk.green('  ✓ AgentVibes detected'));
-    } else {
-      console.log(chalk.dim('  AgentVibes not detected'));
-    }
-
-    const enableTts = await prompts.confirm({
-      message: 'Enable Agents to Speak Out loud (powered by Agent Vibes? Claude Code only currently)',
-      default: false,
-    });
-
-    if (enableTts && !agentVibesInstalled) {
-      console.log(chalk.yellow('\n  ⚠️  AgentVibes not installed'));
-      console.log(chalk.dim('  Install AgentVibes separately to enable TTS:'));
-      console.log(chalk.dim('  https://github.com/paulpreibisch/AgentVibes\n'));
-    }
-
-    return {
-      enabled: enableTts,
-      alreadyInstalled: agentVibesInstalled,
-    };
-  }
-
-  /**
-   * @function checkAgentVibesInstalled
-   * @intent Detect if AgentVibes TTS hooks are present in user's project
-   * @why Allows auto-enabling TTS and showing helpful installation guidance
-   * @param {string} projectDir - Absolute path to user's project directory
-   * @returns {Promise<boolean>} true if both required AgentVibes hooks exist, false otherwise
-   * @sideeffects None - read-only file existence checks
-   * @edgecases Returns false if either hook missing (both required for functional TTS)
-   * @calledby promptAgentVibes() to determine default value and show detection status
-   * @calls fs.pathExists() twice (bmad-speak.sh, play-tts.sh)
-   *
-   * AI NOTE: This checks for the MINIMUM viable AgentVibes installation.
-   *
-   * Required Files:
-   * ===============
-   * 1. .claude/hooks/bmad-speak.sh
-   *    - Maps agent display names → agent IDs → voice profiles
-   *    - Calls play-tts.sh with agent's assigned voice
-   *    - Created by AgentVibes installer
-   *
-   * 2. .claude/hooks/play-tts.sh
-   *    - Core TTS router (ElevenLabs or Piper)
-   *    - Provider-agnostic interface
-   *    - Required by bmad-speak.sh
-   *
-   * Why Both Required:
-   * ==================
-   * - bmad-speak.sh alone: No TTS backend
-   * - play-tts.sh alone: No BMAD agent voice mapping
-   * - Both together: Full party mode TTS integration
-   *
-   * Detection Strategy:
-   * ===================
-   * We use simple file existence (not version checks) because:
-   * - Fast and reliable
-   * - Works across all AgentVibes versions
-   * - User will discover version issues when TTS runs (fail-fast)
-   *
-   * PATTERN: Adding New Detection Criteria
-   * =======================================
-   * If future AgentVibes features require additional files:
-   * 1. Add new pathExists check to this function
-   * 2. Update documentation in promptAgentVibes()
-   * 3. Consider: should missing file prevent detection or just log warning?
-   *
-   * RELATED:
-   * ========
-   * - AgentVibes Installer: creates these hooks
-   * - bmad-speak.sh: calls play-tts.sh with agent voices
-   * - Party Mode: uses bmad-speak.sh for agent dialogue
-   */
-  async checkAgentVibesInstalled(projectDir) {
-    const fs = require('fs-extra');
-    const path = require('node:path');
-
-    // Check for AgentVibes hook files
-    const hookPath = path.join(projectDir, '.claude', 'hooks', 'bmad-speak.sh');
-    const playTtsPath = path.join(projectDir, '.claude', 'hooks', 'play-tts.sh');
-
-    return (await fs.pathExists(hookPath)) && (await fs.pathExists(playTtsPath));
-  }
-
-  /**
    * Load existing configurations to use as defaults
    * @param {string} directory - Installation directory
    * @returns {Object} Existing configurations
@@ -1201,7 +1000,6 @@ class UI {
       hasCustomContent: false,
       coreConfig: {},
       ideConfig: { ides: [], skipIde: false },
-      agentVibesConfig: { enabled: false, alreadyInstalled: false },
     };
 
     try {
@@ -1214,10 +1012,6 @@ class UI {
         configs.ideConfig.ides = configuredIdes;
         configs.ideConfig.skipIde = false;
       }
-
-      // Load AgentVibes configuration
-      const agentVibesInstalled = await this.checkAgentVibesInstalled(directory);
-      configs.agentVibesConfig = { enabled: agentVibesInstalled, alreadyInstalled: agentVibesInstalled };
 
       return configs;
     } catch {
