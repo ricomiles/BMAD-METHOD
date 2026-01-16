@@ -465,6 +465,13 @@ class Installer {
                   continue;
                 }
 
+                // Check if this is an external official module - skip cache for those
+                const isExternal = await this.moduleManager.isExternalModule(moduleId);
+                if (isExternal) {
+                  // External modules are handled via cloneExternalModule, not from cache
+                  continue;
+                }
+
                 const cachedPath = path.join(cacheDir, moduleId);
 
                 // Check if this is actually a custom module (has module.yaml)
@@ -537,6 +544,13 @@ class Installer {
 
               // Skip if we already have this module from manifest
               if (customModulePaths.has(moduleId)) {
+                continue;
+              }
+
+              // Check if this is an external official module - skip cache for those
+              const isExternal = await this.moduleManager.isExternalModule(moduleId);
+              if (isExternal) {
+                // External modules are handled via cloneExternalModule, not from cache
                 continue;
               }
 
@@ -1163,6 +1177,13 @@ class Installer {
               continue;
             }
 
+            // Check if this is an external official module - skip cache for those
+            const isExternal = await this.moduleManager.isExternalModule(moduleId);
+            if (isExternal) {
+              // External modules are handled via cloneExternalModule, not from cache
+              continue;
+            }
+
             const cachedPath = path.join(cacheDir, moduleId);
 
             // Check if this is actually a custom module (has module.yaml)
@@ -1746,6 +1767,13 @@ class Installer {
               continue;
             }
 
+            // Check if this is an external official module - skip cache for those
+            const isExternal = await this.moduleManager.isExternalModule(moduleId);
+            if (isExternal) {
+              // External modules are handled via cloneExternalModule, not from cache
+              continue;
+            }
+
             const cachedPath = path.join(cacheDir, moduleId);
 
             // Check if this is actually a custom module (has module.yaml)
@@ -1769,6 +1797,23 @@ class Installer {
       // Get available modules (what we have source for)
       const availableModulesData = await this.moduleManager.listAvailable();
       const availableModules = [...availableModulesData.modules, ...availableModulesData.customModules];
+
+      // Add external official modules to available modules
+      // These can always be obtained by cloning from their remote URLs
+      const { ExternalModuleManager } = require('../modules/external-manager');
+      const externalManager = new ExternalModuleManager();
+      const externalModules = await externalManager.listAvailable();
+      for (const externalModule of externalModules) {
+        // Only add if not already in the list and is installed
+        if (installedModules.includes(externalModule.code) && !availableModules.some((m) => m.id === externalModule.code)) {
+          availableModules.push({
+            id: externalModule.code,
+            name: externalModule.name,
+            isExternal: true,
+            fromExternal: true,
+          });
+        }
+      }
 
       // Add custom modules from manifest if their sources exist
       for (const [moduleId, customModule] of customModuleSources) {
@@ -1949,6 +1994,12 @@ class Installer {
 
             // Check if this is actually a custom module
             if (await fs.pathExists(moduleYamlPath)) {
+              // Check if this is an external official module - skip cache for those
+              const isExternal = await this.moduleManager.isExternalModule(moduleId);
+              if (isExternal) {
+                // External modules are handled via cloneExternalModule, not from cache
+                continue;
+              }
               customModuleSources.set(moduleId, cachedPath);
             }
           }
