@@ -252,19 +252,52 @@ class UI {
         const { installedModuleIds } = await this.getExistingInstallation(confirmedDirectory);
 
         console.log(chalk.dim(`  Found existing modules: ${[...installedModuleIds].join(', ')}`));
-        const changeModuleSelection = await prompts.confirm({
-          message: 'Modify official module selection (BMad Method, BMad Builder)?',
-          default: false,
+
+        // Ask about BMad Method Module (bmm)
+        const wantsBmm = await prompts.confirm({
+          message:
+            'Select the BMad Method Module for installation?\n ---> This is the Full BMad Method Agile AI Driven Development Framework Including BMad Quick Flow',
+          default: installedModuleIds.has('bmm'),
         });
 
-        let selectedModules = [];
-        if (changeModuleSelection) {
-          // Show module selection with existing modules pre-selected
-          const moduleChoices = await this.getModuleChoices(new Set(installedModuleIds), { hasCustomContent: false });
-          selectedModules = await this.selectModules(moduleChoices, [...installedModuleIds]);
-        } else {
-          selectedModules = [...installedModuleIds];
+        // Ask about BMad Builder Module (bmb)
+        const wantsBmb = await prompts.confirm({
+          message: 'Select the BMad Builder Module for installation?\n ---> Create Your Own Custom BMad Agents, Workflows and Modules',
+          default: installedModuleIds.has('bmb'),
+        });
+
+        let selectedOfficialModules = [];
+        if (wantsBmm) {
+          selectedOfficialModules.push('bmm');
         }
+        if (wantsBmb) {
+          selectedOfficialModules.push('bmb');
+        }
+
+        // Ask about other external modules
+        // Check if any external modules are already installed (not bmm, bmb, or core)
+        const installedExternalModules = [...installedModuleIds].filter((id) => !['bmm', 'bmb', 'core'].includes(id));
+
+        let selectedExternalModules = [];
+        // If external modules are already installed, skip confirm and go straight to selection
+        // Otherwise ask if they want to choose external modules
+        if (installedExternalModules.length > 0) {
+          const externalModuleChoices = await this.getExternalModuleChoices();
+          selectedExternalModules = await this.selectExternalModules(externalModuleChoices, installedExternalModules);
+        } else {
+          const wantsExternalModules = await prompts.confirm({
+            message: 'Would you like to choose any other Recommended BMad Core Modules for installation?',
+            default: false,
+          });
+
+          if (wantsExternalModules) {
+            const externalModuleChoices = await this.getExternalModuleChoices();
+            selectedExternalModules = await this.selectExternalModules(externalModuleChoices, []);
+          }
+        }
+
+        // Combine official and external modules
+        let selectedModules = [...selectedOfficialModules, ...selectedExternalModules];
 
         // After module selection, ask about custom modules
         console.log('');
@@ -744,16 +777,23 @@ class UI {
   /**
    * Prompt for external module selection
    * @param {Array} externalModuleChoices - Available external module choices
+   * @param {Array} defaultSelections - Module codes to pre-select
    * @returns {Array} Selected external module codes
    */
-  async selectExternalModules(externalModuleChoices) {
+  async selectExternalModules(externalModuleChoices, defaultSelections = []) {
     // Build a message showing available modules
     const availableNames = externalModuleChoices.map((c) => c.name).join(', ');
     const message = `Select official BMad modules to install ${availableNames ? chalk.dim(`(${availableNames})`) : ''} ${chalk.dim('(↑/↓ navigates multiselect, SPACE toggles, A to toggles All, ENTER confirm)')}:`;
 
+    // Mark choices as checked based on defaultSelections
+    const choicesWithDefaults = externalModuleChoices.map((choice) => ({
+      ...choice,
+      checked: defaultSelections.includes(choice.value),
+    }));
+
     // Add a "None" option at the end for users who changed their mind
     const choicesWithSkipOption = [
-      ...externalModuleChoices,
+      ...choicesWithDefaults,
       {
         name: '⚠ None / I changed my mind - skip external module installation',
         value: '__NONE__',
