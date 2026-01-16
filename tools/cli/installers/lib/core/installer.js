@@ -505,6 +505,25 @@ class Installer {
           config._customFiles = customFiles;
           config._modifiedFiles = modifiedFiles;
 
+          // Preserve existing core configuration during updates
+          // Read the current core config.yaml to maintain user's settings
+          const coreConfigPath = path.join(bmadDir, 'core', 'config.yaml');
+          if ((await fs.pathExists(coreConfigPath)) && (!config.coreConfig || Object.keys(config.coreConfig).length === 0)) {
+            try {
+              const yaml = require('yaml');
+              const coreConfigContent = await fs.readFile(coreConfigPath, 'utf8');
+              const existingCoreConfig = yaml.parse(coreConfigContent);
+
+              // Store in config.coreConfig so it's preserved through the installation
+              config.coreConfig = existingCoreConfig;
+
+              // Also store in configCollector for use during config collection
+              this.configCollector.collectedConfig.core = existingCoreConfig;
+            } catch (error) {
+              console.warn(chalk.yellow(`Warning: Could not read existing core config: ${error.message}`));
+            }
+          }
+
           // Also check cache directory for custom modules (like quick update does)
           const cacheDir = path.join(bmadDir, '_config', 'custom');
           if (await fs.pathExists(cacheDir)) {
