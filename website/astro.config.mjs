@@ -146,6 +146,10 @@ export default defineConfig({
               autogenerate: { directory: 'explanation/features' },
             },
             {
+              label: 'TEA (Test Architect)',
+              autogenerate: { directory: 'explanation/tea' },
+            },
+            {
               label: 'Agents',
               autogenerate: { directory: 'explanation/agents' },
             },
@@ -190,6 +194,10 @@ export default defineConfig({
             {
               label: 'Configuration',
               autogenerate: { directory: 'reference/configuration' },
+            },
+            {
+              label: 'TEA (Test Architect)',
+              autogenerate: { directory: 'reference/tea' },
             },
             {
               label: 'Glossary',
