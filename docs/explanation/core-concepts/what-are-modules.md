@@ -47,14 +47,14 @@ Innovation and creativity:
 - Creative thinking techniques
 - Innovation strategy workflows
 - Storytelling and ideation
-- [Available Here](https://github.com/bmad-code-org/bmad-module-game-dev-studio)
+- [Available Here](https://github.com/bmad-code-org/bmad-module-creative-intelligence-suite)
 
 ### BMad Game Dev (BMGD)
 Game development specialization:
 - Game design workflows
 - Narrative development
 - Performance testing frameworks
-- [Available Here](https://github.com/bmad-code-org/bmad-module-creative-intelligence-suite)
+- [Available Here](https://github.com/bmad-code-org/bmad-module-game-dev-studio)
 
 ## Module Structure
 

@@ -223,7 +223,7 @@ Yes! But the paradigm is fundamentally different from traditional agile teams.
 
 ### What is party mode and when should I use it?
 
-Party mode is a unique multi-agent collaboration feature where ALL your installed agents (19+ from BMM, CIS, BMB, custom modules) discuss your challenges together in real-time.
+Party mode is a unique multi-agent collaboration feature where ALL your installed modules agents discuss your challenges together in real-time or have some fun with any topic you have in mind.
 
 **How it works:**
 
