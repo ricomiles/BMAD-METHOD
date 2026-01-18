@@ -53,6 +53,7 @@ class ExternalModuleManager {
         subheader: moduleConfig.subheader,
         description: moduleConfig.description || '',
         defaultSelected: moduleConfig.defaultSelected === true,
+        type: moduleConfig.type || 'community', // bmad-org or community
         isExternal: true,
       });
     }
@@ -93,6 +94,7 @@ class ExternalModuleManager {
       subheader: moduleConfig.subheader,
       description: moduleConfig.description || '',
       defaultSelected: moduleConfig.defaultSelected === true,
+      type: moduleConfig.type || 'community', // bmad-org or community
       isExternal: true,
     };
   }

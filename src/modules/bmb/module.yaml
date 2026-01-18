@@ -1,7 +1,6 @@
 code: bmb
-name: "BMB: BMad Builder - Agent, Workflow and Module Builder"
-header: "BMad Optimized Builder (BoMB) Module Configuration"
-subheader: "Configure the settings for the BoMB Factory!\nThe agent, workflow and module builder for BMad™ "
+name: "BMad Builder (BoMB!)"
+description: "Agent, Workflow and Module Builder"
 default_selected: false # This module will not be selected by default for new installations
 
 # Variables from Core Config inserted:

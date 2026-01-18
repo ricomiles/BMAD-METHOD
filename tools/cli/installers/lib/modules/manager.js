@@ -422,7 +422,7 @@ class ModuleManager {
     // Check if already cloned
     if (await fs.pathExists(moduleCacheDir)) {
       // Try to update if it's a git repo
-      const updateSpinner = ora(`Updating ${moduleInfo.name} from remote repository...`).start();
+      const fetchSpinner = ora(`Fetching ${moduleInfo.name}...`).start();
       try {
         const currentRef = execSync('git rev-parse HEAD', { cwd: moduleCacheDir, stdio: 'pipe' }).toString().trim();
         execSync('git fetch --depth 1', { cwd: moduleCacheDir, stdio: 'pipe' });
@@ -430,15 +430,13 @@ class ModuleManager {
         execSync('git pull --ff-only', { cwd: moduleCacheDir, stdio: 'pipe' });
         const newRef = execSync('git rev-parse HEAD', { cwd: moduleCacheDir, stdio: 'pipe' }).toString().trim();
 
-        if (currentRef === newRef) {
-          updateSpinner.succeed(`${moduleInfo.name} is already up to date`);
-        } else {
-          updateSpinner.succeed(`Updated ${moduleInfo.name} to latest version`);
-          // Force dependency install since we got new code
+        fetchSpinner.succeed(`Fetched ${moduleInfo.name}`);
+        // Force dependency install if we got new code
+        if (currentRef !== newRef) {
           needsDependencyInstall = true;
         }
       } catch {
-        updateSpinner.warn(`Update failed, re-downloading ${moduleInfo.name}`);
+        fetchSpinner.warn(`Fetch failed, re-downloading ${moduleInfo.name}`);
         // If update fails, remove and re-clone
         await fs.remove(moduleCacheDir);
         wasNewClone = true;
@@ -449,14 +447,14 @@ class ModuleManager {
 
     // Clone if not exists or was removed
     if (wasNewClone) {
-      const cloneSpinner = ora(`Downloading ${moduleInfo.name} from remote repository...`).start();
+      const fetchSpinner = ora(`Fetching ${moduleInfo.name}...`).start();
       try {
         execSync(`git clone --depth 1 "${moduleInfo.url}" "${moduleCacheDir}"`, {
           stdio: 'pipe',
         });
-        cloneSpinner.succeed(`Downloaded ${moduleInfo.name}`);
+        fetchSpinner.succeed(`Fetched ${moduleInfo.name}`);
       } catch (error) {
-        cloneSpinner.fail(`Failed to download ${moduleInfo.name}`);
+        fetchSpinner.fail(`Failed to fetch ${moduleInfo.name}`);
         throw new Error(`Failed to clone external module '${moduleCode}': ${error.message}`);
       }
     }

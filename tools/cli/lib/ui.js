@@ -253,51 +253,8 @@ class UI {
 
         console.log(chalk.dim(`  Found existing modules: ${[...installedModuleIds].join(', ')}`));
 
-        // Ask about BMad Method Module (bmm)
-        const wantsBmm = await prompts.confirm({
-          message:
-            'Select the BMad Method Module for installation?\n ---> This is the Full BMad Method Agile AI Driven Development Framework Including BMad Quick Flow',
-          default: installedModuleIds.has('bmm'),
-        });
-
-        // Ask about BMad Builder Module (bmb)
-        const wantsBmb = await prompts.confirm({
-          message: 'Select the BMad Builder Module for installation?\n ---> Create Your Own Custom BMad Agents, Workflows and Modules',
-          default: installedModuleIds.has('bmb'),
-        });
-
-        let selectedOfficialModules = [];
-        if (wantsBmm) {
-          selectedOfficialModules.push('bmm');
-        }
-        if (wantsBmb) {
-          selectedOfficialModules.push('bmb');
-        }
-
-        // Ask about other external modules
-        // Check if any external modules are already installed (not bmm, bmb, or core)
-        const installedExternalModules = [...installedModuleIds].filter((id) => !['bmm', 'bmb', 'core'].includes(id));
-
-        let selectedExternalModules = [];
-        // If external modules are already installed, skip confirm and go straight to selection
-        // Otherwise ask if they want to choose external modules
-        if (installedExternalModules.length > 0) {
-          const externalModuleChoices = await this.getExternalModuleChoices();
-          selectedExternalModules = await this.selectExternalModules(externalModuleChoices, installedExternalModules);
-        } else {
-          const wantsExternalModules = await prompts.confirm({
-            message: 'Would you like to choose any other Recommended BMad Core Modules for installation?',
-            default: false,
-          });
-
-          if (wantsExternalModules) {
-            const externalModuleChoices = await this.getExternalModuleChoices();
-            selectedExternalModules = await this.selectExternalModules(externalModuleChoices, []);
-          }
-        }
-
-        // Combine official and external modules
-        let selectedModules = [...selectedOfficialModules, ...selectedExternalModules];
+        // Unified module selection - all modules in one grouped multiselect
+        let selectedModules = await this.selectAllModules(installedModuleIds);
 
         // After module selection, ask about custom modules
         console.log('');
@@ -352,36 +309,10 @@ class UI {
     // This section is only for new installations (update returns early above)
     const { installedModuleIds } = await this.getExistingInstallation(confirmedDirectory);
 
-    // Ask about BMad Method Module (this repo)
-    const wantsBmm = await prompts.confirm({
-      message:
-        'Select the BMad Method Module for installation?\n ---> This is the Full BMad Method Agile AI Driven Development Framework Including BMad Quick Flow',
-      default: true,
-    });
+    // Unified module selection - all modules in one grouped multiselect
+    let selectedModules = await this.selectAllModules(installedModuleIds);
 
-    // Ask about BMad Builder Module
-    const wantsBmg = await prompts.confirm({
-      message: 'Select the BMad Builder Module for installation?\n ---> Create Your Own Custom BMad Agents, Workflows and Modules',
-      default: false,
-    });
-
-    let selectedOfficialModules = [];
-    if (wantsBmm) {
-      selectedOfficialModules.push('bmm');
-    }
-
-    const wantsExternalModules = await prompts.confirm({
-      message: 'Would you like to choose any other Recommended BMad Core Modules for installation?\n',
-      default: true,
-    });
-
-    let selectedExternalModules = [];
-    if (wantsExternalModules) {
-      const externalModuleChoices = await this.getExternalModuleChoices();
-      selectedExternalModules = await this.selectExternalModules(externalModuleChoices);
-    }
-
-    // Ask about custom content
+    // Ask about custom content (local modules/agents/workflows)
     const wantsCustomContent = await prompts.confirm({
       message: 'Would you like to install a locally stored custom module (this includes custom agents and workflows also)?',
       default: false,
@@ -391,19 +322,9 @@ class UI {
       customContentConfig = await this.promptCustomContentSource();
     }
 
-    // Store the selected modules for later
-    customContentConfig._selectedOfficialModules = selectedOfficialModules;
-    customContentConfig._selectedExternalModules = selectedExternalModules;
-
-    // Build the final list of selected modules
-    let selectedModules = [
-      ...(customContentConfig._selectedOfficialModules || []),
-      ...(customContentConfig._selectedExternalModules || []),
-    ];
-
     // Add custom content modules if any were selected
     if (customContentConfig && customContentConfig.selectedModuleIds) {
-      selectedModules = [...selectedModules, ...customContentConfig.selectedModuleIds];
+      selectedModules.push(...customContentConfig.selectedModuleIds);
     }
 
     selectedModules = selectedModules.filter((m) => m !== 'core');
@@ -513,7 +434,7 @@ class UI {
     let selectedIdes = [];
 
     selectedIdes = await prompts.groupMultiselect({
-      message: `Select tools to configure ${chalk.dim('(↑/↓ navigates multiselect, SPACE toggles, A to toggles All, ENTER confirm)')}:`,
+      message: `Select tools to configure ${chalk.dim('(↑/↓ navigates, SPACE toggles, ENTER to confirm)')}:`,
       options: groupedOptions,
       initialValues: initialValues.length > 0 ? initialValues : undefined,
       required: true,
@@ -663,6 +584,7 @@ class UI {
             value: `__CUSTOM_CONTENT__${customFile}`, // Unique value for each custom content
             checked: true, // Default to selected since user chose to provide custom content
             path: customInfo.path, // Track path to avoid duplicates
+            hint: customInfo.description || undefined,
           });
         }
       }
@@ -689,6 +611,7 @@ class UI {
           name: `${chalk.cyan('✓')} ${mod.name} ${chalk.gray(`(cached)`)}`,
           value: mod.id,
           checked: isNewInstallation ? mod.defaultSelected || false : installedModuleIds.has(mod.id),
+          hint: mod.description || undefined,
         });
       }
     }
@@ -710,6 +633,7 @@ class UI {
           name: mod.name,
           value: mod.id,
           checked: isNewInstallation ? mod.defaultSelected || false : installedModuleIds.has(mod.id),
+          hint: mod.description || undefined,
         });
       }
     }
@@ -741,7 +665,7 @@ class UI {
     ];
 
     const selected = await prompts.multiselect({
-      message: `Select modules to install ${chalk.dim('(↑/↓ navigates multiselect, SPACE toggles, A to toggles All, ENTER confirm)')}:`,
+      message: `Select modules to install ${chalk.dim('(↑/↓ navigates, SPACE toggles, ENTER to confirm)')}:`,
       choices: choicesWithSkipOption,
       required: true,
     });
@@ -770,6 +694,7 @@ class UI {
       name: mod.name,
       value: mod.code, // Use the code (e.g., 'cis') as the value
       checked: mod.defaultSelected || false,
+      hint: mod.description || undefined, // Show description as hint
       module: mod, // Store full module info for later use
     }));
   }
@@ -783,7 +708,7 @@ class UI {
   async selectExternalModules(externalModuleChoices, defaultSelections = []) {
     // Build a message showing available modules
     const availableNames = externalModuleChoices.map((c) => c.name).join(', ');
-    const message = `Select official BMad modules to install ${availableNames ? chalk.dim(`(${availableNames})`) : ''} ${chalk.dim('(↑/↓ navigates multiselect, SPACE toggles, A to toggles All, ENTER confirm)')}:`;
+    const message = `Select official BMad modules to install ${chalk.dim('(↑/↓ navigates, SPACE toggles, ENTER to confirm)')}:`;
 
     // Mark choices as checked based on defaultSelections
     const choicesWithDefaults = externalModuleChoices.map((choice) => ({
@@ -811,6 +736,116 @@ class UI {
     if (selected && selected.includes('__NONE__') && selected.length > 1) {
       console.log();
       console.log(chalk.yellow('⚠️  "None / I changed my mind" was selected, so no external modules will be installed.'));
+      console.log();
+      return [];
+    }
+
+    // Filter out the special '__NONE__' value
+    return selected ? selected.filter((m) => m !== '__NONE__') : [];
+  }
+
+  /**
+   * Select all modules (core + official + community) using grouped multiselect
+   * @param {Set} installedModuleIds - Currently installed module IDs
+   * @returns {Array} Selected module codes
+   */
+  async selectAllModules(installedModuleIds = new Set()) {
+    const { ModuleManager } = require('../installers/lib/modules/manager');
+    const moduleManager = new ModuleManager();
+    const { modules: localModules } = await moduleManager.listAvailable();
+
+    // Get external modules
+    const externalManager = new ExternalModuleManager();
+    const externalModules = await externalManager.listAvailable();
+
+    // Build grouped options
+    const groupedOptions = {};
+    const initialValues = [];
+
+    // Helper to build module entry with proper sorting and selection
+    const buildModuleEntry = (mod, value) => {
+      const isInstalled = installedModuleIds.has(value);
+      const isDefault = mod.defaultSelected === true;
+      return {
+        label: mod.description ? `${mod.name} — ${mod.description}` : mod.name,
+        value,
+        // For sorting: defaultSelected=0, others=1
+        sortKey: isDefault ? 0 : 1,
+        // Pre-select if default selected OR already installed
+        selected: isDefault || isInstalled,
+      };
+    };
+
+    // Group 1: BMad Core (BMM, BMB)
+    const coreModules = [];
+    for (const mod of localModules) {
+      if (!mod.isCustom && (mod.id === 'bmm' || mod.id === 'bmb')) {
+        const entry = buildModuleEntry(mod, mod.id);
+        coreModules.push(entry);
+        if (entry.selected) {
+          initialValues.push(mod.id);
+        }
+      }
+    }
+    // Sort: defaultSelected first, then others
+    coreModules.sort((a, b) => a.sortKey - b.sortKey);
+    // Remove sortKey from final entries
+    if (coreModules.length > 0) {
+      groupedOptions['BMad Core'] = coreModules.map(({ label, value }) => ({ label, value }));
+    }
+
+    // Group 2: BMad Official Modules (type: bmad-org)
+    const officialModules = [];
+    for (const mod of externalModules) {
+      if (mod.type === 'bmad-org') {
+        const entry = buildModuleEntry(mod, mod.code);
+        officialModules.push(entry);
+        if (entry.selected) {
+          initialValues.push(mod.code);
+        }
+      }
+    }
+    officialModules.sort((a, b) => a.sortKey - b.sortKey);
+    if (officialModules.length > 0) {
+      groupedOptions['BMad Official Modules'] = officialModules.map(({ label, value }) => ({ label, value }));
+    }
+
+    // Group 3: Community Modules (type: community)
+    const communityModules = [];
+    for (const mod of externalModules) {
+      if (mod.type === 'community') {
+        const entry = buildModuleEntry(mod, mod.code);
+        communityModules.push(entry);
+        if (entry.selected) {
+          initialValues.push(mod.code);
+        }
+      }
+    }
+    communityModules.sort((a, b) => a.sortKey - b.sortKey);
+    if (communityModules.length > 0) {
+      groupedOptions['Community Modules'] = communityModules.map(({ label, value }) => ({ label, value }));
+    }
+
+    // Add "None" option at the end
+    groupedOptions[' '] = [
+      {
+        label: '⚠ None - Skip module installation',
+        value: '__NONE__',
+      },
+    ];
+
+    const selected = await prompts.groupMultiselect({
+      message: `Select modules to install ${chalk.dim('(↑/↓ navigates, SPACE toggles, ENTER to confirm)')}:`,
+      options: groupedOptions,
+      initialValues: initialValues.length > 0 ? initialValues : undefined,
+      required: true,
+      selectableGroups: false,
+    });
+
+    // If user selected both "__NONE__" and other items, honor the "None" choice
+    if (selected && selected.includes('__NONE__') && selected.length > 1) {
+      console.log();
+      console.log(chalk.yellow('⚠️  "None" was selected, so no modules will be installed.'));
       console.log();
       return [];
     }
@@ -1372,7 +1407,7 @@ class UI {
         ];
 
         const keepModules = await prompts.multiselect({
-          message: `Select custom modules to keep ${chalk.dim('(↑/↓ navigates multiselect, SPACE toggles, A to toggles All, ENTER confirm)')}:`,
+          message: `Select custom modules to keep ${chalk.dim('(↑/↓ navigates, SPACE toggles, ENTER to confirm)')}:`,
           choices: choicesWithSkip,
           required: true,
         });
