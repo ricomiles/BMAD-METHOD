@@ -86,6 +86,8 @@ MIT License — see [LICENSE](LICENSE) for details.
 
 ---
 
-**BMad** and **BMAD-METHOD** are trademarks of BMad Code, LLC.
+**BMad** and **BMAD-METHOD** are trademarks of BMad Code, LLC. See [TRADEMARK.md](TRADEMARK.md) for details.
 
 [![Contributors](https://contrib.rocks/image?repo=bmad-code-org/BMAD-METHOD)](https://github.com/bmad-code-org/BMAD-METHOD/graphs/contributors)
+
+See [CONTRIBUTORS.md](CONTRIBUTORS.md) for contributor information.

@@ -20,11 +20,13 @@ modules:
     defaultSelected: false
     type: bmad-org
 
-  whiteport-design-system:
-    url: https://github.com/bmad-code-org/bmad-method-wds-expansion
-    module-definition: src/module.yaml
-    code: WDS
-    name: "Whiteport UX Design System"
-    description: "UX design framework with Figma integration"
-    defaultSelected: false
-    type: community
+# TODO: Enable once fixes applied:
+
+# whiteport-design-system:
+#   url: https://github.com/bmad-code-org/bmad-method-wds-expansion
+#   module-definition: src/module.yaml
+#   code: WDS
+#   name: "Whiteport UX Design System"
+#   description: "UX design framework with Figma integration"
+#   defaultSelected: false
+#   type: community
