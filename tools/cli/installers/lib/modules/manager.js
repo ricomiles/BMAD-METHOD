@@ -2,6 +2,7 @@ const path = require('node:path');
 const fs = require('fs-extra');
 const yaml = require('yaml');
 const chalk = require('chalk');
+const ora = require('ora');
 const { XmlHandler } = require('../../../lib/xml-handler');
 const { getProjectRoot, getSourcePath, getModulePath } = require('../../../lib/project-root');
 const { filterCustomizationData } = require('../../../lib/agent/compiler');
@@ -414,27 +415,48 @@ class ModuleManager {
     // Create cache directory if it doesn't exist
     await fs.ensureDir(cacheDir);
 
+    // Track if we need to install dependencies
+    let needsDependencyInstall = false;
+    let wasNewClone = false;
+
     // Check if already cloned
     if (await fs.pathExists(moduleCacheDir)) {
       // Try to update if it's a git repo
+      const updateSpinner = ora(`Updating ${moduleInfo.name} from remote repository...`).start();
       try {
+        const currentRef = execSync('git rev-parse HEAD', { cwd: moduleCacheDir, stdio: 'pipe' }).toString().trim();
         execSync('git fetch --depth 1', { cwd: moduleCacheDir, stdio: 'pipe' });
         execSync('git checkout -f', { cwd: moduleCacheDir, stdio: 'pipe' });
         execSync('git pull --ff-only', { cwd: moduleCacheDir, stdio: 'pipe' });
+        const newRef = execSync('git rev-parse HEAD', { cwd: moduleCacheDir, stdio: 'pipe' }).toString().trim();
+
+        if (currentRef === newRef) {
+          updateSpinner.succeed(`${moduleInfo.name} is already up to date`);
+        } else {
+          updateSpinner.succeed(`Updated ${moduleInfo.name} to latest version`);
+          // Force dependency install since we got new code
+          needsDependencyInstall = true;
+        }
       } catch {
+        updateSpinner.warn(`Update failed, re-downloading ${moduleInfo.name}`);
         // If update fails, remove and re-clone
         await fs.remove(moduleCacheDir);
+        wasNewClone = true;
       }
+    } else {
+      wasNewClone = true;
     }
 
     // Clone if not exists or was removed
-    if (!(await fs.pathExists(moduleCacheDir))) {
-      console.log(chalk.dim(`  Cloning external module: ${moduleInfo.name}`));
+    if (wasNewClone) {
+      const cloneSpinner = ora(`Downloading ${moduleInfo.name} from remote repository...`).start();
       try {
         execSync(`git clone --depth 1 "${moduleInfo.url}" "${moduleCacheDir}"`, {
           stdio: 'pipe',
         });
+        cloneSpinner.succeed(`Downloaded ${moduleInfo.name}`);
       } catch (error) {
+        cloneSpinner.fail(`Failed to download ${moduleInfo.name}`);
         throw new Error(`Failed to clone external module '${moduleCode}': ${error.message}`);
       }
     }
@@ -444,11 +466,25 @@ class ModuleManager {
     const nodeModulesPath = path.join(moduleCacheDir, 'node_modules');
     if (await fs.pathExists(packageJsonPath)) {
       // Install if node_modules doesn't exist, or if package.json is newer (dependencies changed)
-      const needsInstall = !(await fs.pathExists(nodeModulesPath));
-      let packageJsonNewer = false;
+      const nodeModulesMissing = !(await fs.pathExists(nodeModulesPath));
 
-      if (!needsInstall) {
+      // Force install if we updated or cloned new
+      if (needsDependencyInstall || wasNewClone || nodeModulesMissing) {
+        const installSpinner = ora(`Installing dependencies for ${moduleInfo.name}...`).start();
+        try {
+          execSync('npm install --production --no-audit --no-fund --prefer-offline --no-progress', {
+            cwd: moduleCacheDir,
+            stdio: 'pipe',
+            timeout: 120_000, // 2 minute timeout
+          });
+          installSpinner.succeed(`Installed dependencies for ${moduleInfo.name}`);
+        } catch (error) {
+          installSpinner.warn(`Failed to install dependencies for ${moduleInfo.name}`);
+          console.warn(chalk.yellow(`  Warning: ${error.message}`));
+        }
+      } else {
         // Check if package.json is newer than node_modules
+        let packageJsonNewer = false;
         try {
           const packageStats = await fs.stat(packageJsonPath);
           const nodeModulesStats = await fs.stat(nodeModulesPath);
@@ -457,18 +493,20 @@ class ModuleManager {
           // If stat fails, assume we need to install
           packageJsonNewer = true;
         }
-      }
 
-      if (needsInstall || packageJsonNewer) {
-        console.log(chalk.dim(`  Installing dependencies for ${moduleInfo.name}...`));
-        try {
-          execSync('npm install --production --no-audit --no-fund --prefer-offline --no-progress', {
-            cwd: moduleCacheDir,
-            stdio: 'inherit',
-            timeout: 120_000, // 2 minute timeout
-          });
-        } catch (error) {
-          console.warn(chalk.yellow(`  Warning: Failed to install dependencies for ${moduleInfo.name}: ${error.message}`));
+        if (packageJsonNewer) {
+          const installSpinner = ora(`Installing dependencies for ${moduleInfo.name}...`).start();
+          try {
+            execSync('npm install --production --no-audit --no-fund --prefer-offline --no-progress', {
+              cwd: moduleCacheDir,
+              stdio: 'pipe',
+              timeout: 120_000, // 2 minute timeout
+            });
+            installSpinner.succeed(`Installed dependencies for ${moduleInfo.name}`);
+          } catch (error) {
+            installSpinner.warn(`Failed to install dependencies for ${moduleInfo.name}`);
+            console.warn(chalk.yellow(`  Warning: ${error.message}`));
+          }
         }
       }
     }
