@@ -119,7 +119,7 @@ class UI {
       console.log('');
 
       const proceed = await prompts.select({
-        message: 'What would you like to do?',
+        message: 'How would you like to proceed?',
         choices: [
           {
             name: 'Cancel and do a fresh install (recommended)',
@@ -220,7 +220,7 @@ class UI {
       choices.push({ name: 'Modify BMAD Installation', value: 'update' });
 
       actionType = await prompts.select({
-        message: 'What would you like to do?',
+        message: 'How would you like to proceed?',
         choices: choices,
         default: choices[0].value,
       });
@@ -259,7 +259,7 @@ class UI {
         // After module selection, ask about custom modules
         console.log('');
         const changeCustomModules = await prompts.confirm({
-          message: 'Modify custom module selection (add, update, or remove custom modules/agents/workflows)?',
+          message: 'Modify custom modules, agents, or workflows?',
           default: false,
         });
 
@@ -314,7 +314,7 @@ class UI {
 
     // Ask about custom content (local modules/agents/workflows)
     const wantsCustomContent = await prompts.confirm({
-      message: 'Would you like to install a locally stored custom module (this includes custom agents and workflows also)?',
+      message: 'Add custom modules, agents, or workflows from your computer?',
       default: false,
     });
 
@@ -932,7 +932,7 @@ class UI {
     } else {
       // Ask for confirmation to create the directory
       const create = await prompts.confirm({
-        message: `The directory '${directory}' doesn't exist. Would you like to create it?`,
+        message: `Create directory: ${directory}?`,
         default: false,
       });
 
@@ -1258,7 +1258,7 @@ class UI {
       while (!isValid) {
         // Use sync validation because @clack/prompts doesn't support async validate
         const inputPath = await prompts.text({
-          message: 'Enter the path to your custom content folder (or press Enter to cancel):',
+          message: 'Path to custom module folder (press Enter to skip):',
           validate: (input) => this.validateCustomContentPathSync(input),
         });
 
@@ -1293,7 +1293,7 @@ class UI {
 
     // Ask if user wants to add these to the installation
     const shouldInstall = await prompts.confirm({
-      message: `Install ${customContentConfig.sources.length} custom module(s) now?`,
+      message: `Install these ${customContentConfig.sources.length} custom modules?`,
       default: true,
     });
 
@@ -1375,7 +1375,7 @@ class UI {
     }
 
     const customAction = await prompts.select({
-      message: cachedCustomModules.length > 0 ? 'What would you like to do with custom modules?' : 'Would you like to add custom modules?',
+      message: cachedCustomModules.length > 0 ? 'Manage custom modules?' : 'Add custom modules?',
       choices: choices,
       default: cachedCustomModules.length > 0 ? 'keep' : 'add',
     });
@@ -1562,7 +1562,7 @@ class UI {
     console.log('');
 
     const proceed = await prompts.select({
-      message: 'What would you like to do?',
+      message: 'How would you like to proceed?',
       choices: [
         {
           name: 'Proceed with update anyway (may have issues)',
