@@ -13,16 +13,14 @@ By the end of this 30-minute tutorial, you'll have:
 - Passing tests for an existing demo app feature
 
 :::note[Prerequisites]
-- Node.js installed (v18 or later)
+- Node.js installed (v20 or later)
 - 30 minutes of focused time
-
-- We'll use TodoMVC (<https://todomvc.com/examples/react/dist/>) as our demo app
+- We'll use TodoMVC (<https://todomvc.com/examples/react/>) as our demo app
 :::
 
 :::tip[Quick Path]
 Load TEA (`*tea`) → scaffold framework (`*framework`) → create test plan (`*test-design`) → generate tests (`*automate`) → run with `npx playwright test`.
 :::
-
 
 ## TEA Approaches Explained
 
