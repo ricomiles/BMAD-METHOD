@@ -33,7 +33,7 @@ tea_use_mcp_enhancements: false
 
 ### Canonical Schema (Source of Truth)
 
-**Location:** `src/modules/bmm/module.yaml`
+**Location:** `src/bmm/module.yaml`
 
 **Purpose:** Defines available configuration keys, defaults, and installer prompts
 
@@ -53,7 +53,7 @@ tea_use_mcp_enhancements: false
 
 Enable Playwright Utils integration for production-ready fixtures and utilities.
 
-**Schema Location:** `src/modules/bmm/module.yaml:52-56`
+**Schema Location:** `src/bmm/module.yaml:52-56`
 
 **User Config:** `_bmad/bmm/config.yaml`
 
@@ -105,7 +105,7 @@ npm install -D @seontechnologies/playwright-utils
 
 Enable Playwright MCP servers for live browser verification during test generation.
 
-**Schema Location:** `src/modules/bmm/module.yaml:47-50`
+**Schema Location:** `src/bmm/module.yaml:47-50`
 
 **User Config:** `_bmad/bmm/config.yaml`
 
@@ -484,7 +484,7 @@ npm install -g js-yaml
 js-yaml _bmad/bmm/config.yaml
 
 # Check for typos (compare to module.yaml)
-diff _bmad/bmm/config.yaml src/modules/bmm/module.yaml
+diff _bmad/bmm/config.yaml src/bmm/module.yaml
 ```
 
 ### Playwright Utils Not Working

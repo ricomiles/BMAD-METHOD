@@ -34,7 +34,7 @@ Result: Focused context, consistent quality standards
 User runs a TEA workflow (e.g., `*test-design`)
 
 ### 2. Manifest Lookup
-TEA reads `src/modules/bmm/testarch/tea-index.csv`:
+TEA reads `src/bmm/testarch/tea-index.csv`:
 ```csv
 id,name,description,tags,fragment_file
 test-quality,Test Quality,Execution limits and isolation rules,quality;standards,knowledge/test-quality.md
@@ -55,10 +55,10 @@ Core patterns for test infrastructure and fixture composition.
 
 | Fragment | Description | Key Topics |
 |----------|-------------|-----------|
-| [fixture-architecture](../../../src/modules/bmm/testarch/knowledge/fixture-architecture.md) | Pure function → Fixture → mergeTests composition with auto-cleanup | Testability, composition, reusability |
-| [network-first](../../../src/modules/bmm/testarch/knowledge/network-first.md) | Intercept-before-navigate workflow, HAR capture, deterministic waits | Flakiness prevention, network patterns |
-| [playwright-config](../../../src/modules/bmm/testarch/knowledge/playwright-config.md) | Environment switching, timeout standards, artifact outputs | Configuration, environments, CI |
-| [fixtures-composition](../../../src/modules/bmm/testarch/knowledge/fixtures-composition.md) | mergeTests composition patterns for combining utilities | Fixture merging, utility composition |
+| [fixture-architecture](../../../src/bmm/testarch/knowledge/fixture-architecture.md) | Pure function → Fixture → mergeTests composition with auto-cleanup | Testability, composition, reusability |
+| [network-first](../../../src/bmm/testarch/knowledge/network-first.md) | Intercept-before-navigate workflow, HAR capture, deterministic waits | Flakiness prevention, network patterns |
+| [playwright-config](../../../src/bmm/testarch/knowledge/playwright-config.md) | Environment switching, timeout standards, artifact outputs | Configuration, environments, CI |
+| [fixtures-composition](../../../src/bmm/testarch/knowledge/fixtures-composition.md) | mergeTests composition patterns for combining utilities | Fixture merging, utility composition |
 
 **Used in:** `*framework`, `*test-design`, `*atdd`, `*automate`, `*test-review`
 
@@ -70,9 +70,9 @@ Patterns for test data generation, authentication, and setup.
 
 | Fragment | Description | Key Topics |
 |----------|-------------|-----------|
-| [data-factories](../../../src/modules/bmm/testarch/knowledge/data-factories.md) | Factory patterns with faker, overrides, API seeding, cleanup | Test data, factories, cleanup |
-| [email-auth](../../../src/modules/bmm/testarch/knowledge/email-auth.md) | Magic link extraction, state preservation, negative flows | Authentication, email testing |
-| [auth-session](../../../src/modules/bmm/testarch/knowledge/auth-session.md) | Token persistence, multi-user, API/browser authentication | Auth patterns, session management |
+| [data-factories](../../../src/bmm/testarch/knowledge/data-factories.md) | Factory patterns with faker, overrides, API seeding, cleanup | Test data, factories, cleanup |
+| [email-auth](../../../src/bmm/testarch/knowledge/email-auth.md) | Magic link extraction, state preservation, negative flows | Authentication, email testing |
+| [auth-session](../../../src/bmm/testarch/knowledge/auth-session.md) | Token persistence, multi-user, API/browser authentication | Auth patterns, session management |
 
 **Used in:** `*framework`, `*atdd`, `*automate`, `*test-review`
 
@@ -84,10 +84,10 @@ Network interception, error handling, and reliability patterns.
 
 | Fragment | Description | Key Topics |
 |----------|-------------|-----------|
-| [network-recorder](../../../src/modules/bmm/testarch/knowledge/network-recorder.md) | HAR record/playback, CRUD detection for offline testing | Offline testing, network replay |
-| [intercept-network-call](../../../src/modules/bmm/testarch/knowledge/intercept-network-call.md) | Network spy/stub, JSON parsing for UI tests | Mocking, interception, stubbing |
-| [error-handling](../../../src/modules/bmm/testarch/knowledge/error-handling.md) | Scoped exception handling, retry validation, telemetry logging | Error patterns, resilience |
-| [network-error-monitor](../../../src/modules/bmm/testarch/knowledge/network-error-monitor.md) | HTTP 4xx/5xx detection for UI tests | Error detection, monitoring |
+| [network-recorder](../../../src/bmm/testarch/knowledge/network-recorder.md) | HAR record/playback, CRUD detection for offline testing | Offline testing, network replay |
+| [intercept-network-call](../../../src/bmm/testarch/knowledge/intercept-network-call.md) | Network spy/stub, JSON parsing for UI tests | Mocking, interception, stubbing |
+| [error-handling](../../../src/bmm/testarch/knowledge/error-handling.md) | Scoped exception handling, retry validation, telemetry logging | Error patterns, resilience |
+| [network-error-monitor](../../../src/bmm/testarch/knowledge/network-error-monitor.md) | HTTP 4xx/5xx detection for UI tests | Error detection, monitoring |
 
 **Used in:** `*atdd`, `*automate`, `*test-review`
 
@@ -99,9 +99,9 @@ CI/CD patterns, burn-in testing, and selective test execution.
 
 | Fragment | Description | Key Topics |
 |----------|-------------|-----------|
-| [ci-burn-in](../../../src/modules/bmm/testarch/knowledge/ci-burn-in.md) | Staged jobs, shard orchestration, burn-in loops | CI/CD, flakiness detection |
-| [burn-in](../../../src/modules/bmm/testarch/knowledge/burn-in.md) | Smart test selection, git diff for CI optimization | Test selection, performance |
-| [selective-testing](../../../src/modules/bmm/testarch/knowledge/selective-testing.md) | Tag/grep usage, spec filters, diff-based runs | Test filtering, optimization |
+| [ci-burn-in](../../../src/bmm/testarch/knowledge/ci-burn-in.md) | Staged jobs, shard orchestration, burn-in loops | CI/CD, flakiness detection |
+| [burn-in](../../../src/bmm/testarch/knowledge/burn-in.md) | Smart test selection, git diff for CI optimization | Test selection, performance |
+| [selective-testing](../../../src/bmm/testarch/knowledge/selective-testing.md) | Tag/grep usage, spec filters, diff-based runs | Test filtering, optimization |
 
 **Used in:** `*ci`, `*test-review`
 
@@ -113,11 +113,11 @@ Test quality standards, test level selection, and TDD patterns.
 
 | Fragment | Description | Key Topics |
 |----------|-------------|-----------|
-| [test-quality](../../../src/modules/bmm/testarch/knowledge/test-quality.md) | Execution limits, isolation rules, green criteria | DoD, best practices, anti-patterns |
-| [test-levels-framework](../../../src/modules/bmm/testarch/knowledge/test-levels-framework.md) | Guidelines for unit, integration, E2E selection | Test pyramid, level selection |
-| [test-priorities-matrix](../../../src/modules/bmm/testarch/knowledge/test-priorities-matrix.md) | P0-P3 criteria, coverage targets, execution ordering | Prioritization, risk-based testing |
-| [test-healing-patterns](../../../src/modules/bmm/testarch/knowledge/test-healing-patterns.md) | Common failure patterns and automated fixes | Debugging, healing, fixes |
-| [component-tdd](../../../src/modules/bmm/testarch/knowledge/component-tdd.md) | Red→green→refactor workflow, provider isolation | TDD, component testing |
+| [test-quality](../../../src/bmm/testarch/knowledge/test-quality.md) | Execution limits, isolation rules, green criteria | DoD, best practices, anti-patterns |
+| [test-levels-framework](../../../src/bmm/testarch/knowledge/test-levels-framework.md) | Guidelines for unit, integration, E2E selection | Test pyramid, level selection |
+| [test-priorities-matrix](../../../src/bmm/testarch/knowledge/test-priorities-matrix.md) | P0-P3 criteria, coverage targets, execution ordering | Prioritization, risk-based testing |
+| [test-healing-patterns](../../../src/bmm/testarch/knowledge/test-healing-patterns.md) | Common failure patterns and automated fixes | Debugging, healing, fixes |
+| [component-tdd](../../../src/bmm/testarch/knowledge/component-tdd.md) | Red→green→refactor workflow, provider isolation | TDD, component testing |
 
 **Used in:** `*test-design`, `*atdd`, `*automate`, `*test-review`, `*trace`
 
@@ -129,9 +129,9 @@ Risk assessment, governance, and gate decision frameworks.
 
 | Fragment | Description | Key Topics |
 |----------|-------------|-----------|
-| [risk-governance](../../../src/modules/bmm/testarch/knowledge/risk-governance.md) | Scoring matrix, category ownership, gate decision rules | Risk assessment, governance |
-| [probability-impact](../../../src/modules/bmm/testarch/knowledge/probability-impact.md) | Probability × impact scale for scoring matrix | Risk scoring, impact analysis |
-| [nfr-criteria](../../../src/modules/bmm/testarch/knowledge/nfr-criteria.md) | Security, performance, reliability, maintainability status | NFRs, compliance, enterprise |
+| [risk-governance](../../../src/bmm/testarch/knowledge/risk-governance.md) | Scoring matrix, category ownership, gate decision rules | Risk assessment, governance |
+| [probability-impact](../../../src/bmm/testarch/knowledge/probability-impact.md) | Probability × impact scale for scoring matrix | Risk scoring, impact analysis |
+| [nfr-criteria](../../../src/bmm/testarch/knowledge/nfr-criteria.md) | Security, performance, reliability, maintainability status | NFRs, compliance, enterprise |
 
 **Used in:** `*test-design`, `*nfr-assess`, `*trace`
 
@@ -143,9 +143,9 @@ Selector resilience, race condition debugging, and visual debugging.
 
 | Fragment | Description | Key Topics |
 |----------|-------------|-----------|
-| [selector-resilience](../../../src/modules/bmm/testarch/knowledge/selector-resilience.md) | Robust selector strategies and debugging | Selectors, locators, resilience |
-| [timing-debugging](../../../src/modules/bmm/testarch/knowledge/timing-debugging.md) | Race condition identification and deterministic fixes | Race conditions, timing issues |
-| [visual-debugging](../../../src/modules/bmm/testarch/knowledge/visual-debugging.md) | Trace viewer usage, artifact expectations | Debugging, trace viewer, artifacts |
+| [selector-resilience](../../../src/bmm/testarch/knowledge/selector-resilience.md) | Robust selector strategies and debugging | Selectors, locators, resilience |
+| [timing-debugging](../../../src/bmm/testarch/knowledge/timing-debugging.md) | Race condition identification and deterministic fixes | Race conditions, timing issues |
+| [visual-debugging](../../../src/bmm/testarch/knowledge/visual-debugging.md) | Trace viewer usage, artifact expectations | Debugging, trace viewer, artifacts |
 
 **Used in:** `*atdd`, `*automate`, `*test-review`
 
@@ -157,9 +157,9 @@ Feature flag testing, contract testing, and API testing patterns.
 
 | Fragment | Description | Key Topics |
 |----------|-------------|-----------|
-| [feature-flags](../../../src/modules/bmm/testarch/knowledge/feature-flags.md) | Enum management, targeting helpers, cleanup, checklists | Feature flags, toggles |
-| [contract-testing](../../../src/modules/bmm/testarch/knowledge/contract-testing.md) | Pact publishing, provider verification, resilience | Contract testing, Pact |
-| [api-testing-patterns](../../../src/modules/bmm/testarch/knowledge/api-testing-patterns.md) | Pure API patterns without browser | API testing, backend testing |
+| [feature-flags](../../../src/bmm/testarch/knowledge/feature-flags.md) | Enum management, targeting helpers, cleanup, checklists | Feature flags, toggles |
+| [contract-testing](../../../src/bmm/testarch/knowledge/contract-testing.md) | Pact publishing, provider verification, resilience | Contract testing, Pact |
+| [api-testing-patterns](../../../src/bmm/testarch/knowledge/api-testing-patterns.md) | Pure API patterns without browser | API testing, backend testing |
 
 **Used in:** `*test-design`, `*atdd`, `*automate`
 
@@ -171,15 +171,15 @@ Patterns for using `@seontechnologies/playwright-utils` package (9 utilities).
 
 | Fragment | Description | Key Topics |
 |----------|-------------|-----------|
-| [api-request](../../../src/modules/bmm/testarch/knowledge/api-request.md) | Typed HTTP client, schema validation, retry logic | API calls, HTTP, validation |
-| [auth-session](../../../src/modules/bmm/testarch/knowledge/auth-session.md) | Token persistence, multi-user, API/browser authentication | Auth patterns, session management |
-| [network-recorder](../../../src/modules/bmm/testarch/knowledge/network-recorder.md) | HAR record/playback, CRUD detection for offline testing | Offline testing, network replay |
-| [intercept-network-call](../../../src/modules/bmm/testarch/knowledge/intercept-network-call.md) | Network spy/stub, JSON parsing for UI tests | Mocking, interception, stubbing |
-| [recurse](../../../src/modules/bmm/testarch/knowledge/recurse.md) | Async polling for API responses, background jobs | Polling, eventual consistency |
-| [log](../../../src/modules/bmm/testarch/knowledge/log.md) | Structured logging for API and UI tests | Logging, debugging, reporting |
-| [file-utils](../../../src/modules/bmm/testarch/knowledge/file-utils.md) | CSV/XLSX/PDF/ZIP handling with download support | File validation, exports |
-| [burn-in](../../../src/modules/bmm/testarch/knowledge/burn-in.md) | Smart test selection with git diff analysis | CI optimization, selective testing |
-| [network-error-monitor](../../../src/modules/bmm/testarch/knowledge/network-error-monitor.md) | Auto-detect HTTP 4xx/5xx errors during tests | Error monitoring, silent failures |
+| [api-request](../../../src/bmm/testarch/knowledge/api-request.md) | Typed HTTP client, schema validation, retry logic | API calls, HTTP, validation |
+| [auth-session](../../../src/bmm/testarch/knowledge/auth-session.md) | Token persistence, multi-user, API/browser authentication | Auth patterns, session management |
+| [network-recorder](../../../src/bmm/testarch/knowledge/network-recorder.md) | HAR record/playback, CRUD detection for offline testing | Offline testing, network replay |
+| [intercept-network-call](../../../src/bmm/testarch/knowledge/intercept-network-call.md) | Network spy/stub, JSON parsing for UI tests | Mocking, interception, stubbing |
+| [recurse](../../../src/bmm/testarch/knowledge/recurse.md) | Async polling for API responses, background jobs | Polling, eventual consistency |
+| [log](../../../src/bmm/testarch/knowledge/log.md) | Structured logging for API and UI tests | Logging, debugging, reporting |
+| [file-utils](../../../src/bmm/testarch/knowledge/file-utils.md) | CSV/XLSX/PDF/ZIP handling with download support | File validation, exports |
+| [burn-in](../../../src/bmm/testarch/knowledge/burn-in.md) | Smart test selection with git diff analysis | CI optimization, selective testing |
+| [network-error-monitor](../../../src/bmm/testarch/knowledge/network-error-monitor.md) | Auto-detect HTTP 4xx/5xx errors during tests | Error monitoring, silent failures |
 
 **Note:** `fixtures-composition` is listed under Architecture & Fixtures (general Playwright `mergeTests` pattern, applies to all fixtures).
 
@@ -191,7 +191,7 @@ Patterns for using `@seontechnologies/playwright-utils` package (9 utilities).
 
 ## Fragment Manifest (tea-index.csv)
 
-**Location:** `src/modules/bmm/testarch/tea-index.csv`
+**Location:** `src/bmm/testarch/tea-index.csv`
 
 **Purpose:** Tracks all knowledge fragments and their usage in workflows
 
@@ -209,9 +209,9 @@ risk-governance,Risk Governance,Risk scoring and gate decisions,risk;governance,
 - `tags` - Searchable tags (semicolon-separated)
 - `fragment_file` - Relative path to fragment markdown file
 
-**Fragment Location:** `src/modules/bmm/testarch/knowledge/` (all 33 fragments in single directory)
+**Fragment Location:** `src/bmm/testarch/knowledge/` (all 33 fragments in single directory)
 
-**Manifest:** `src/modules/bmm/testarch/tea-index.csv`
+**Manifest:** `src/bmm/testarch/tea-index.csv`
 
 ---
 

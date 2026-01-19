@@ -80,15 +80,15 @@ Check that your custom content appears in the `_bmad/` directory and is accessib
 
 BMad supports several categories of custom content:
 
-| Type | Description |
-|------|-------------|
+| Type                    | Description                                          |
+| ----------------------- | ---------------------------------------------------- |
 | **Stand Alone Modules** | Complete modules with their own agents and workflows |
-| **Add On Modules** | Extensions that add to existing modules |
-| **Global Modules** | Content available across all modules |
-| **Custom Agents** | Individual agent definitions |
-| **Custom Workflows** | Individual workflow definitions |
+| **Add On Modules**      | Extensions that add to existing modules              |
+| **Global Modules**      | Content available across all modules                 |
+| **Custom Agents**       | Individual agent definitions                         |
+| **Custom Workflows**    | Individual workflow definitions                      |
 
-For detailed information about content types, see [Custom Content Types](/docs/explanation/bmad-builder/custom-content-types.md).
+For detailed information about content types, see [Custom Content Types](https://github.com/bmad-code-org/bmad-builder/blob/main/docs/explanation/bmad-builder/custom-content-types.md).
 
 ## Updating Custom Content
 

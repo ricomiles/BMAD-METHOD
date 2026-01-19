@@ -88,7 +88,9 @@ Choose **Simple** for focused, one-off tasks with no memory needs. Choose **Expe
 
 ## Creating Custom Agents
 
-BMad provides the **BMad Builder (BMB)** module for creating your own agents. See the [Agent Creation Guide](/docs/tutorials/advanced/create-custom-agent.md) for step-by-step instructions.
+BMad provides the **BMad Builder (BMB)** module for creating your own agents. See the [Agent Creation Guide](https://github.com/bmad-code-org/bmad-builder/blob/main/docs/tutorials/create-custom-agent.md) for step-by-step instructions.
+
+
 
 ## Customizing Existing Agents
 

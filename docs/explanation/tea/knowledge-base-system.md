@@ -81,7 +81,7 @@ Without a knowledge base:
 
 **1. Manifest Defines Fragments**
 
-`src/modules/bmm/testarch/tea-index.csv`:
+`src/bmm/testarch/tea-index.csv`:
 ```csv
 id,name,description,tags,fragment_file
 test-quality,Test Quality,Execution limits and isolation rules,quality;standards,knowledge/test-quality.md
