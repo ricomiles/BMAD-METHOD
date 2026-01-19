@@ -2,11 +2,20 @@
 # allowing us to keep the source of these projects in separate repos.
 
 modules:
+  bmad-builder:
+    url: https://github.com/bmad-code-org/bmad-builder
+    module-definition: src/module.yaml
+    code: bmb
+    name: "BMad Builder"
+    description: "Agent, Workflow and Module Builder"
+    defaultSelected: false
+    type: bmad-org
+
   bmad-creative-intelligence-suite:
     url: https://github.com/bmad-code-org/bmad-module-creative-intelligence-suite
     module-definition: src/module.yaml
     code: cis
-    name: "Creative Innovation Suite"
+    name: "BMad Creative Innovation Suite"
     description: "Creative tools for writing, brainstorming, and more"
     defaultSelected: false
     type: bmad-org
@@ -14,7 +23,7 @@ modules:
   bmad-game-dev-studio:
     url: https://github.com/bmad-code-org/bmad-module-game-dev-studio.git
     module-definition: src/module.yaml
-    code: BGDS
+    code: gds
     name: "BMad Game Dev Suite"
     description: "Game development agents and workflows"
     defaultSelected: false
