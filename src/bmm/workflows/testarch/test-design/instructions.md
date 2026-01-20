@@ -28,12 +28,7 @@ The workflow auto-detects which mode to use based on project phase.
    - If `{implementation_artifacts}/sprint-status.yaml` exists → **Epic-Level Mode** (Phase 4)
    - If NOT exists → Check workflow status
 
-2. **Check workflow-status.yaml**
-   - Read `{planning_artifacts}/bmm-workflow-status.yaml`
-   - If `implementation-readiness: required` or `implementation-readiness: recommended` → **System-Level Mode** (Phase 3)
-   - Otherwise → **Epic-Level Mode** (Phase 4 without sprint status yet)
-
-3. **Mode-Specific Requirements**
+2. **Mode-Specific Requirements**
 
    **System-Level Mode (Phase 3 - Testability Review):**
    - ✅ Architecture document exists (architecture.md or tech-spec)

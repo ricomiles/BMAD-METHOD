@@ -73,17 +73,7 @@ I've successfully collaborated with you to create a comprehensive Product Brief 
 
 This brief serves as the foundation for all subsequent product development activities and strategic decisions."
 
-### 2. Workflow Status Update
-
-**Status File Management:**
-Update the main workflow status file:
-
-- Check if `{output_folder} or {planning_artifacts}/bmm-workflow-status.yaml` exists
-- If so, update workflow_status["product-brief"] = `{outputFile}`
-- Add completion timestamp and metadata
-- Save file, preserving all comments and structure
-
-### 3. Document Quality Check
+### 2. Document Quality Check
 
 **Completeness Validation:**
 Perform final validation of the product brief:
@@ -101,7 +91,7 @@ Perform final validation of the product brief:
 - Are success criteria traceable to user needs and business goals?
 - Does MVP scope align with the problem and solution?
 
-### 4. Suggest Next Steps
+### 3. Suggest Next Steps
 
 **Recommended Next Workflow:**
 Provide guidance on logical next workflows:
@@ -124,7 +114,7 @@ Provide guidance on logical next workflows:
 - Use brief to validate concept before committing to detailed work
 - Brief can guide early technical feasibility discussions
 
-### 5. Present MENU OPTIONS
+### 4. Present MENU OPTIONS
 
 **Completion Confirmation:**
 "**Your Product Brief for {{project_name}} is now complete and ready for the next phase!**

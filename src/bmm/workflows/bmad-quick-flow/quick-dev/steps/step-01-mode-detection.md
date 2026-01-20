@@ -104,12 +104,12 @@ Present choice:
 This looks like a focused feature with multiple components.
 
 **[t] Create tech-spec first** (recommended)
-**[w] Seems bigger than quick-dev** - see what BMad Method recommends
+**[w] Seems bigger than quick-dev** - Recommend the Full BMad Flow PRD Process
 **[e] Execute directly**
 ```
 
 - **[t]:** Direct to `{quick_spec_workflow}`. **EXIT Quick Dev.**
-- **[w]:** Direct to `{workflow_init}`. **EXIT Quick Dev.**
+- **[w]:** Direct user to run the PRD workflow instead. **EXIT Quick Dev.**
 - **[e]:** Ask for guidance, then **NEXT:** Load `step-02-context-gathering.md`
 
 ### Escalation Triggered - Level 3+
@@ -122,8 +122,8 @@ This sounds like platform/system work.
 **[e] Execute directly** - feeling lucky
 ```
 
-- **[w]:** Direct to `{workflow_init}`. **EXIT Quick Dev.**
 - **[t]:** Direct to `{quick_spec_workflow}`. **EXIT Quick Dev.**
+- **[w]:** Direct user to run the PRD workflow instead. **EXIT Quick Dev.**
 - **[e]:** Ask for guidance, then **NEXT:** Load `step-02-context-gathering.md`
 
 ---

@@ -25,10 +25,6 @@ agent:
     - "Find if this exists, if it does, always treat it as the bible I plan and execute against: `**/project-context.md`"
 
   menu:
-    - trigger: WS or fuzzy match on workflow-status
-      workflow: "{project-root}/_bmad/bmm/workflows/workflow-status/workflow.yaml"
-      description: "[WS] Workflow Status: Initialize, Get or Update the Project Workflow"
-
     - trigger: SP or fuzzy match on sprint-planning
       workflow: "{project-root}/_bmad/bmm/workflows/4-implementation/sprint-planning/workflow.yaml"
       description: "[SP] Sprint Planning: Generate or update the record that will sequence the tasks to complete the full project that the dev agent will follow"

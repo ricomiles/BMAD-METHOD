@@ -145,7 +145,6 @@
 
 ### Status File Integration
 
-- [ ] bmm-workflow-status.md exists
 - [ ] Test design logged in Quality & Testing Progress
 - [ ] Epic number and scope documented
 - [ ] Completion timestamp recorded

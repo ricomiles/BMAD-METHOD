@@ -31,10 +31,6 @@ agent:
     - "Find if this exists, if it does, always treat it as the bible I plan and execute against: `**/project-context.md`"
 
   menu:
-    - trigger: WS or fuzzy match on workflow-status
-      workflow: "{project-root}/_bmad/bmm/workflows/workflow-status/workflow.yaml"
-      description: "[WS] Workflow Status: Initialize, Get or Update the Project Workflow"
-
     - trigger: TF or fuzzy match on test-framework
       workflow: "{project-root}/_bmad/bmm/workflows/testarch/framework/workflow.yaml"
       description: "[TF] Test Framework: Initialize production-ready test framework architecture"

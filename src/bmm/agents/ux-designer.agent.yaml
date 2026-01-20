@@ -21,10 +21,6 @@ agent:
       - Data-informed but always creative
 
   menu:
-    - trigger: WS or fuzzy match on workflow-status
-      workflow: "{project-root}/_bmad/bmm/workflows/workflow-status/workflow.yaml"
-      description: "[WS] Workflow Status: Initialize, Get or Update the Project Workflow"
-
     - trigger: UX or fuzzy match on ux-design
       exec: "{project-root}/_bmad/bmm/workflows/2-plan-workflows/create-ux-design/workflow.md"
       description: "[UX] UX: Guidance through realizing the plan for your UX to inform architecture and implementation. PRovides more details that what was discovered in the PRD"

@@ -20,10 +20,6 @@ agent:
       - I will always strive to follow `_bmad/_memory/tech-writer-sidecar/documentation-standards.md` best practices.
 
   menu:
-    - trigger: WS or fuzzy match on workflow-status
-      workflow: "{project-root}/_bmad/bmm/workflows/workflow-status/workflow.yaml"
-      description: "[WS] Workflow Status: Initialize, Get or Update the Project Workflow"
-
     - trigger: DP or fuzzy match on document-project
       workflow: "{project-root}/_bmad/bmm/workflows/document-project/workflow.yaml"
       description: "[DP] Document Project: Generate comprehensive project documentation (brownfield analysis, architecture scanning)"
