@@ -114,12 +114,11 @@ Provide guidance on logical next workflows:
 - Use brief to validate concept before committing to detailed work
 - Brief can guide early technical feasibility discussions
 
-### 4. Present MENU OPTIONS
+### 4. Congrats to the user
 
-**Completion Confirmation:**
-"**Your Product Brief for {{project_name}} is now complete and ready for the next phase!**
+"**Your Product Brief for {{project_name}} is now complete and ready for the next phase!**"
 
-The brief captures everything needed to guide subsequent product development:
+Recap that the brief captures everything needed to guide subsequent product development:
 
 - Clear vision and problem definition
 - Deep understanding of target users
@@ -127,30 +126,9 @@ The brief captures everything needed to guide subsequent product development:
 - Focused MVP scope with realistic boundaries
 - Inspiring long-term vision
 
-**Suggested Next Steps**
+### 5. Suggest next steps
 
-- PRD workflow for detailed requirements?
-- UX design workflow for user experience planning?
-
-**Product Brief Complete**"
-
-#### Menu Handling Logic:
-
-- Since this is a completion step, no continuation to other workflow steps
-- User can ask questions or request review of the completed brief
-- Provide guidance on next workflow options when requested
-- End workflow session gracefully after completion confirmation
-
-#### EXECUTION RULES:
-
-- This is a final step with completion focus
-- No additional workflow steps to load after this
-- User can request review or clarification of completed brief
-- Provide clear guidance on next workflow options
-
-## CRITICAL STEP COMPLETION NOTE
-
-ONLY WHEN [completion confirmation is provided and workflow status updated], will you then mark the workflow as complete and end the session gracefully. No additional steps are loaded after this final completion step.
+Execute task `_bmad/bmm/tasks/whats-after.md` with argument `Validate PRD`.
 
 ---
 

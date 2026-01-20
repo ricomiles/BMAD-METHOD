@@ -1,0 +1,18 @@
+phase,name,code,sequence,workflow-file,command,required,agent,options,description
+0,Document Project,DP,10,_bmad/bmm/workflows/document-project/workflow.yaml,bmm:document-project,false,analyst,Create Mode,Analyze an existing project to produce useful documentation
+1,Brainstorm Project,BP,10,_bmad/core/workflows/brainstorming/workflow.md,bmm:brainstorming,false,analyst,data=_bmad/bmm/data/project-context-template.md,Expert Guided Facilitation through a single or multiple techniques
+1,Research,RS,20,_bmad/bmm/workflows/1-analysis/research/workflow.md,bmm:research,false,analyst,Create Mode,Choose from or specify market domain competitive analysis or technical research
+1,Create Brief,CB,30,_bmad/bmm/workflows/1-analysis/create-product-brief/workflow.md,bmm:create-brief,false,analyst,Create Mode,A guided experience to nail down your product idea
+1,Validate Brief,VB,40,_bmad/bmm/workflows/1-analysis/create-product-brief/workflow.md,bmm:validate-brief,false,analyst,Validate Mode,Validates product brief completeness
+2,Create PRD,CP,10,_bmad/bmm/workflows/2-plan-workflows/prd/workflow.md,bmm:create-prd,true,pm,Create Mode,Expert led facilitation to produce your Product Requirements Document
+2,Validate PRD,VP,20,_bmad/bmm/workflows/2-plan-workflows/prd/workflow.md,bmm:validate-prd,false,pm,Validate Mode,Validate PRD is comprehensive lean well organized and cohesive
+2,Create UX,CU,30,_bmad/bmm/workflows/2-plan-workflows/create-ux-design/workflow.md,bmm:create-ux,false,ux-designer,Create Mode,Guidance through realizing the plan for your UX
+2,Validate UX,VU,40,_bmad/bmm/workflows/2-plan-workflows/create-ux-design/workflow.md,bmm:validate-ux,false,ux-designer,Validate Mode,Validates UX design deliverables
+3,Create Architecture,CA,10,_bmad/bmm/workflows/3-solutioning/create-architecture/workflow.md,bmm:create-architecture,true,architect,Create Mode,Guided Workflow to document technical decisions
+3,Validate Architecture,VA,20,_bmad/bmm/workflows/3-solutioning/create-architecture/workflow.md,bmm:validate-architecture,false,architect,Validate Mode,Validates architecture completeness
+3,Create Epics and Stories,CE,30,_bmad/bmm/workflows/3-solutioning/create-epics-and-stories/workflow.md,bmm:create-epics-and-stories,true,pm,Create Mode,Create the Epics and Stories Listing
+3,Validate Epics and Stories,VE,40,_bmad/bmm/workflows/3-solutioning/create-epics-and-stories/workflow.md,bmm:validate-epics-and-stories,false,pm,Validate Mode,Validates epics and stories completeness
+3,Test Design,TD,50,_bmad/bmm/workflows/testarch/test-design/workflow.yaml,bmm:test-design,false,tea,Create Mode,Create comprehensive test scenarios ahead of development
+3,Validate Test Design,VT,60,_bmad/bmm/workflows/testarch/test-design/workflow.yaml,bmm:validate-test-design,false,tea,Validate Mode,Validates test design coverage
+3,Implementation Readiness,IR,70,_bmad/bmm/workflows/3-solutioning/check-implementation-readiness/workflow.md,bmm:implementation-readiness,true,architect,Validate Mode,Ensure PRD UX Architecture and Epics Stories are aligned
+4,Sprint Planning,SP,10,_bmad/bmm/workflows/4-implementation/sprint-planning/workflow.yaml,bmm:sprint-planning,true,sm,Create Mode,Generate sprint plan for development tasks

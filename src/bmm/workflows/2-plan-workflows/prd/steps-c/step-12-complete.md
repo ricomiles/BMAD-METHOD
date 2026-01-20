@@ -87,39 +87,7 @@ Offer validation workflows to ensure PRD is ready for implementation:
 
 ### 4. Suggest Next Workflows
 
-Provide guidance on logical next workflows - strongly suggesting any of these chosen are started in a fresh context with the appropriate agent:
-
-**Typical Next Workflows:**
-
-**Immediate Next Steps:**
-
-1. **PRD Quality Validation First (Recommended):**
-   - execute the `{validationFlow}` workflow if selected or start a new chat with me and select the validate PRD menu item
-   - Ensures PRD is complete and ready
-   - Identifies any gaps or issues
-   - Validates before committing to architecture/design
-
-2. **UX Design:** `workflow create-ux-design` with the UX-Designer Agent (if UI exists)
-   - User journey insights from step-04 inform interaction design
-   - Functional requirements from step-09 define design scope
-   - Polish-optimized document provides clear design requirements
-
-3. **Technical Architecture:** `workflow create-architecture` with the Architect Agent
-   - Project-type requirements from step-07 guide technical decisions
-   - Non-functional requirements from step-10 inform architecture choices
-   - Functional requirements define system capabilities
-
-4. **Epic Breakdown:** `workflow create-epics-and-stories` with me again - but really recommend first doing a UX if needed and an architecture!
-   - Functional requirements from step-09 become epics and stories
-   - Scope definition from step-03 guides sprint planning
-   - Richer when created after UX/architecture
-
-**Strategic Considerations:**
-
-- Validation adds confidence before architecture/design investment
-- UX design and architecture can happen in parallel after validation
-- Epics/stories are richer when created after UX/architecture
-- Order depends on team preferences and project needs
+Execute task `_bmad/bmm/tasks/whats-after.md` with argument `Create PRD`.
 
 ### 5. Final Completion Confirmation
 
@@ -148,30 +116,6 @@ Provide guidance on logical next workflows - strongly suggesting any of these ch
 
 ❌ **CRITICAL**: Reading only partial step file - leads to incomplete understanding and poor decisions
 ❌ **CRITICAL**: Making decisions without complete understanding of step requirements and protocols
-
-## WORKFLOW COMPLETION CHECKLIST:
-
-### Document Structure Complete:
-
-- [ ] Executive Summary with vision and differentiator
-- [ ] Success Criteria with measurable outcomes
-- [ ] Product Scope (MVP, Growth, Vision)
-- [ ] User Journeys (comprehensive coverage)
-- [ ] Domain Requirements (if applicable)
-- [ ] Innovation Analysis (if applicable)
-- [ ] Project-Type Requirements
-- [ ] Functional Requirements (capability contract)
-- [ ] Non-Functional Requirements
-- [ ] Document polished for flow and coherence
-
-### Process Complete:
-
-- [ ] All steps (including polish) completed with user confirmation
-- [ ] All content saved and optimized
-- [ ] Frontmatter properly updated
-- [ ] Workflow status file updated (if exists)
-- [ ] Validation options presented
-- [ ] Next steps clearly communicated
 
 ## FINAL REMINDER to give the user:
 

@@ -163,7 +163,7 @@ Display:
 **[R] Review Detailed Findings** - Walk through validation report section by section
 **[E] Use Edit Workflow** - Use validation report with Edit workflow for systematic improvements
 **[F] Fix Simpler Items** - Immediate fixes for simple issues (anti-patterns, leakage, missing headers)
-**[X] Exit** - Exit and review validation report
+**[X] Exit** - Exit and Suggest Next Steps.
 
 #### EXECUTION RULES:
 
@@ -197,8 +197,7 @@ Display:
 - **IF X (Exit):**
   - Display: "**Validation Report Saved:** {validationReportPath}"
   - Display: "**Summary:** {overall status} - {recommendation}"
-  - Display: "**Next Steps:** Review the validation report and address findings. For systematic improvements, consider using Edit workflow when available, or manually fix issues identified in this report."
-  - Exit validation
+  - Exit and Execute task `_bmad/bmm/tasks/whats-after.md` with argument `Validate PRD`.
 
 - **IF Any other:** Help user, then redisplay menu
 

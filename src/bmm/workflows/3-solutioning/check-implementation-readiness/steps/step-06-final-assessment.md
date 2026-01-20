@@ -115,6 +115,8 @@ The assessment found [number] issues requiring attention. Review the detailed re
 
 The implementation readiness workflow is now complete. The report contains all findings and recommendations for the user to consider.
 
+Execute task `_bmad/bmm/tasks/whats-after.md` with argument `implementation readiness`.
+
 ---
 
 ## 🚨 SYSTEM SUCCESS/FAILURE METRICS

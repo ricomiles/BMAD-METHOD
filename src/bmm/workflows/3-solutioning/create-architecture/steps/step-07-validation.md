@@ -299,7 +299,7 @@ Show the validation results and present choices:
 **What would you like to do?**
 [A] Advanced Elicitation - Address any complex architectural concerns
 [P] Party Mode - Review validation from different implementation perspectives
-[C] Continue - Complete the architecture and finish workflow"
+[C] Continue - Complete the architecture and finish workflow
 
 ### 8. Handle Menu Selection
 
