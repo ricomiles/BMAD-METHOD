@@ -118,7 +118,7 @@ Follow all instructions in the ${type} file exactly as written.
 
   /**
    * Generate task and tool commands using COLON format (for folder-based IDEs)
-   * Creates flat files like: bmad:bmm:whats-after.md
+   * Creates flat files like: bmad:bmm:bmad-help.md
    *
    * @param {string} projectDir - Project directory
    * @param {string} bmadDir - BMAD installation directory
@@ -166,7 +166,7 @@ Follow all instructions in the ${type} file exactly as written.
 
   /**
    * Generate task and tool commands using DASH format (for flat IDEs)
-   * Creates flat files like: bmad-bmm-whats-after.md
+   * Creates flat files like: bmad-bmm-bmad-help.md
    *
    * @param {string} projectDir - Project directory
    * @param {string} bmadDir - BMAD installation directory
@@ -214,7 +214,7 @@ Follow all instructions in the ${type} file exactly as written.
 
   /**
    * Write task/tool artifacts using COLON format (for folder-based IDEs)
-   * Creates flat files like: bmad:bmm:whats-after.md
+   * Creates flat files like: bmad:bmm:bmad-help.md
    *
    * @param {string} baseCommandsDir - Base commands directory for the IDE
    * @param {Array} artifacts - Task/tool artifacts with relativePath
@@ -240,7 +240,7 @@ Follow all instructions in the ${type} file exactly as written.
 
   /**
    * Write task/tool artifacts using DASH format (for flat IDEs)
-   * Creates flat files like: bmad-bmm-whats-after.md
+   * Creates flat files like: bmad-bmm-bmad-help.md
    *
    * @param {string} baseCommandsDir - Base commands directory for the IDE
    * @param {Array} artifacts - Task/tool artifacts with relativePath

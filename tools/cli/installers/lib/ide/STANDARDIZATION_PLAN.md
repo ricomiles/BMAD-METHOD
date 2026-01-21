@@ -51,7 +51,7 @@ Examples:
 - Agent:      bmad:bmm:agents:pm.md
 - Agent:      bmad:core:agents:dev.md
 - Workflow:   bmad:bmm:workflows:correct-course.md
-- Task:       bmad:bmm:tasks:whats-after.md
+- Task:       bmad:bmm:tasks:bmad-help.md
 - Tool:       bmad:core:tools:code-review.md
 - Custom:     bmad:custom:agents:fred-commit-poet.md
 ```
@@ -66,7 +66,7 @@ Format: bmad-{module}-{type}-{name}.md
 Examples:
 - Agent:      bmad-bmm-agents-pm.md
 - Workflow:   bmad-bmm-workflows-correct-course.md
-- Task:       bmad-bmm-tasks-whats-after.md
+- Task:       bmad-bmm-tasks-bmad-help.md
 - Custom:     bmad-custom-agents-fred-commit-poet.md
 ```
 
