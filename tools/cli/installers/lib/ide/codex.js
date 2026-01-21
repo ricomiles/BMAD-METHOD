@@ -5,7 +5,9 @@ const chalk = require('chalk');
 const { BaseIdeSetup } = require('./_base-ide');
 const { WorkflowCommandGenerator } = require('./shared/workflow-command-generator');
 const { AgentCommandGenerator } = require('./shared/agent-command-generator');
+const { TaskToolCommandGenerator } = require('./shared/task-tool-command-generator');
 const { getTasksFromBmad } = require('./shared/bmad-artifacts');
+const { toDashPath, customAgentDashName } = require('./shared/path-utils');
 const prompts = require('../../../lib/prompts');
 
 /**
@@ -83,7 +85,41 @@ class CodexSetup extends BaseIdeSetup {
     const destDir = this.getCodexPromptDir(projectDir, installLocation);
     await fs.ensureDir(destDir);
     await this.clearOldBmadFiles(destDir);
-    const written = await this.flattenAndWriteArtifacts(artifacts, destDir);
+
+    // Collect artifacts and write using DASH format
+    const agentGen = new AgentCommandGenerator(this.bmadFolderName);
+    const { artifacts: agentArtifacts } = await agentGen.collectAgentArtifacts(bmadDir, options.selectedModules || []);
+    const agentCount = await agentGen.writeDashArtifacts(destDir, agentArtifacts);
+
+    const tasks = await getTasksFromBmad(bmadDir, options.selectedModules || []);
+    const taskArtifacts = [];
+    for (const task of tasks) {
+      const content = await this.readAndProcessWithProject(
+        task.path,
+        {
+          module: task.module,
+          name: task.name,
+        },
+        projectDir,
+      );
+      taskArtifacts.push({
+        type: 'task',
+        module: task.module,
+        sourcePath: task.path,
+        relativePath: path.join(task.module, 'tasks', `${task.name}.md`),
+        content,
+      });
+    }
+
+    const workflowGenerator = new WorkflowCommandGenerator(this.bmadFolderName);
+    const { artifacts: workflowArtifacts } = await workflowGenerator.collectWorkflowArtifacts(bmadDir);
+    const workflowCount = await workflowGenerator.writeDashArtifacts(destDir, workflowArtifacts);
+
+    // Also write tasks using dash format
+    const ttGen = new TaskToolCommandGenerator();
+    const tasksWritten = await ttGen.writeDashArtifacts(destDir, taskArtifacts);
+
+    const written = agentCount + workflowCount + tasksWritten;
 
     console.log(chalk.green(`✓ ${this.name} configured:`));
     console.log(chalk.dim(`  - Mode: CLI`));
@@ -256,7 +292,7 @@ class CodexSetup extends BaseIdeSetup {
       chalk.dim("  To use with other projects, you'd need to copy the _bmad dir"),
       '',
       chalk.green('  ✓ You can now use /commands in Codex CLI'),
-      chalk.dim('    Example: /bmad-bmm-agents-pm'),
+      chalk.dim('    Example: /bmad-bmm-pm'),
       chalk.dim('    Type / to see all available commands'),
       '',
       chalk.bold.cyan('═'.repeat(70)),
@@ -361,7 +397,8 @@ You must fully embody this agent's persona and follow all activation instruction
 </agent-activation>
 `;
 
-    const fileName = `bmad-custom-agents-${agentName}.md`;
+    // Use dash format: bmad-custom-agents-fred-commit-poet.md
+    const fileName = customAgentDashName(agentName);
     const launcherPath = path.join(destDir, fileName);
     await fs.writeFile(launcherPath, launcherContent, 'utf8');
 

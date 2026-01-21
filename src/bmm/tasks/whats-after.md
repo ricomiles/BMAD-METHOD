@@ -1,6 +1,7 @@
 ---
-name: whats-next
+name: whats-after
 description: Show what workflow steps come next in the BMad Method based on what's been completed
+standalone: true
 ---
 
 # Task: What's Next?
@@ -21,9 +22,9 @@ If no explicit workflow is provided, check the conversation context:
 
 ## EXECUTION
 
-Load `{project-root}/_bmad/bmm/data/workflows.csv` and `{project-root}/_bmad/_config/agent-manifest.csv`. Find all workflow items after the completed row. Present these in a clear, conversational format.
+Load `./workflows.csv` and `{project-root}/_bmad/_config/agent-manifest.csv`. Find all workflow items after the completed row. Present these in a clear, conversational format.
 
-**Phases reference:** Phase 0 (Any Time), Phase 1 (Analysis), Phase 2 (Planning), Phase 3 (Solutioning), Phase 4 (Implementation)
+**Phases number to name reference:** Phase 0 (Any Time), Phase 1 (Analysis), Phase 2 (Planning), Phase 3 (Solutioning), Phase 4 (Implementation)
 
 **Present the next steps as follows:**
 
@@ -31,7 +32,7 @@ Load `{project-root}/_bmad/bmm/data/workflows.csv` and `{project-root}/_bmad/_co
 2. **Required items next** - List the next required workflow
 3. For each item, show:
    - The workflow **name**
-   - The **command** (prefixed with `/`, e.g., `/bmm:create-architecture`)
+   - The **command** (prefixed with `/`, e.g., `/bmad:bmm:create-architecture`)
    - The **agent** displayName and title from the loaded agent-manifest that corresponds with the agent value in each row who can help, e.g., `Winston the Architect`
    - A brief **description** so the user can decide easily
 

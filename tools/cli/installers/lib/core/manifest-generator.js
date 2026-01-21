@@ -385,26 +385,45 @@ class ManifestGenerator {
         const filePath = path.join(dirPath, file);
         const content = await fs.readFile(filePath, 'utf8');
 
-        // Extract task metadata from content if possible
-        const nameMatch = content.match(/name="([^"]+)"/);
+        let name = file.replace(/\.(xml|md)$/, '');
+        let displayName = name;
+        let description = '';
+        let standalone = false;
 
-        // Try description attribute first, fall back to <objective> element
-        const descMatch = content.match(/description="([^"]+)"/);
-        const objMatch = content.match(/<objective>([^<]+)<\/objective>/);
-        const description = descMatch ? descMatch[1] : objMatch ? objMatch[1].trim() : '';
+        if (file.endsWith('.md')) {
+          // Parse YAML frontmatter for .md tasks
+          const frontmatterMatch = content.match(/^---\n([\s\S]*?)\n---/);
+          if (frontmatterMatch) {
+            try {
+              const frontmatter = yaml.parse(frontmatterMatch[1]);
+              name = frontmatter.name || name;
+              displayName = frontmatter.displayName || frontmatter.name || name;
+              description = frontmatter.description || '';
+              standalone = frontmatter.standalone === true || frontmatter.standalone === 'true';
+            } catch {
+              // If YAML parsing fails, use defaults
+            }
+          }
+        } else {
+          // For .xml tasks, extract from tag attributes
+          const nameMatch = content.match(/name="([^"]+)"/);
+          displayName = nameMatch ? nameMatch[1] : name;
 
-        // Check for standalone attribute in <task> tag (default: false)
-        const standaloneMatch = content.match(/<task[^>]+standalone="true"/);
-        const standalone = !!standaloneMatch;
+          const descMatch = content.match(/description="([^"]+)"/);
+          const objMatch = content.match(/<objective>([^<]+)<\/objective>/);
+          description = descMatch ? descMatch[1] : objMatch ? objMatch[1].trim() : '';
+
+          const standaloneMatch = content.match(/<task[^>]+standalone="true"/);
+          standalone = !!standaloneMatch;
+        }
 
         // Build relative path for installation
         const installPath =
           moduleName === 'core' ? `${this.bmadFolderName}/core/tasks/${file}` : `${this.bmadFolderName}/${moduleName}/tasks/${file}`;
 
-        const taskName = file.replace(/\.(xml|md)$/, '');
         tasks.push({
-          name: taskName,
-          displayName: nameMatch ? nameMatch[1] : taskName,
+          name: name,
+          displayName: displayName,
           description: description.replaceAll('"', '""'),
           module: moduleName,
           path: installPath,
@@ -414,7 +433,7 @@ class ManifestGenerator {
         // Add to files list
         this.files.push({
           type: 'task',
-          name: taskName,
+          name: name,
           module: moduleName,
           path: installPath,
         });
@@ -455,26 +474,45 @@ class ManifestGenerator {
         const filePath = path.join(dirPath, file);
         const content = await fs.readFile(filePath, 'utf8');
 
-        // Extract tool metadata from content if possible
-        const nameMatch = content.match(/name="([^"]+)"/);
+        let name = file.replace(/\.(xml|md)$/, '');
+        let displayName = name;
+        let description = '';
+        let standalone = false;
 
-        // Try description attribute first, fall back to <objective> element
-        const descMatch = content.match(/description="([^"]+)"/);
-        const objMatch = content.match(/<objective>([^<]+)<\/objective>/);
-        const description = descMatch ? descMatch[1] : objMatch ? objMatch[1].trim() : '';
+        if (file.endsWith('.md')) {
+          // Parse YAML frontmatter for .md tools
+          const frontmatterMatch = content.match(/^---\n([\s\S]*?)\n---/);
+          if (frontmatterMatch) {
+            try {
+              const frontmatter = yaml.parse(frontmatterMatch[1]);
+              name = frontmatter.name || name;
+              displayName = frontmatter.displayName || frontmatter.name || name;
+              description = frontmatter.description || '';
+              standalone = frontmatter.standalone === true || frontmatter.standalone === 'true';
+            } catch {
+              // If YAML parsing fails, use defaults
+            }
+          }
+        } else {
+          // For .xml tools, extract from tag attributes
+          const nameMatch = content.match(/name="([^"]+)"/);
+          displayName = nameMatch ? nameMatch[1] : name;
 
-        // Check for standalone attribute in <tool> tag (default: false)
-        const standaloneMatch = content.match(/<tool[^>]+standalone="true"/);
-        const standalone = !!standaloneMatch;
+          const descMatch = content.match(/description="([^"]+)"/);
+          const objMatch = content.match(/<objective>([^<]+)<\/objective>/);
+          description = descMatch ? descMatch[1] : objMatch ? objMatch[1].trim() : '';
+
+          const standaloneMatch = content.match(/<tool[^>]+standalone="true"/);
+          standalone = !!standaloneMatch;
+        }
 
         // Build relative path for installation
         const installPath =
           moduleName === 'core' ? `${this.bmadFolderName}/core/tools/${file}` : `${this.bmadFolderName}/${moduleName}/tools/${file}`;
 
-        const toolName = file.replace(/\.(xml|md)$/, '');
         tools.push({
-          name: toolName,
-          displayName: nameMatch ? nameMatch[1] : toolName,
+          name: name,
+          displayName: displayName,
           description: description.replaceAll('"', '""'),
           module: moduleName,
           path: installPath,
@@ -484,7 +522,7 @@ class ManifestGenerator {
         // Add to files list
         this.files.push({
           type: 'tool',
-          name: toolName,
+          name: name,
           module: moduleName,
           path: installPath,
         });

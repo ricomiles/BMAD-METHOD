@@ -2,6 +2,7 @@ const path = require('node:path');
 const fs = require('fs-extra');
 const csv = require('csv-parse/sync');
 const chalk = require('chalk');
+const { toColonPath, toDashPath, customAgentColonName, customAgentDashName } = require('./path-utils');
 
 /**
  * Generates command files for each workflow in the manifest
@@ -236,6 +237,56 @@ When running any workflow:
       columns: true,
       skip_empty_lines: true,
     });
+  }
+
+  /**
+   * Write workflow command artifacts using COLON format (for folder-based IDEs)
+   * Creates flat files like: bmad:bmm:correct-course.md
+   *
+   * @param {string} baseCommandsDir - Base commands directory for the IDE
+   * @param {Array} artifacts - Workflow artifacts
+   * @returns {number} Count of commands written
+   */
+  async writeColonArtifacts(baseCommandsDir, artifacts) {
+    let writtenCount = 0;
+
+    for (const artifact of artifacts) {
+      if (artifact.type === 'workflow-command') {
+        // Convert relativePath to colon format: bmm/workflows/correct-course.md → bmad:bmm:correct-course.md
+        const flatName = toColonPath(artifact.relativePath);
+        const commandPath = path.join(baseCommandsDir, flatName);
+        await fs.ensureDir(path.dirname(commandPath));
+        await fs.writeFile(commandPath, artifact.content);
+        writtenCount++;
+      }
+    }
+
+    return writtenCount;
+  }
+
+  /**
+   * Write workflow command artifacts using DASH format (for flat IDEs)
+   * Creates flat files like: bmad-bmm-correct-course.md
+   *
+   * @param {string} baseCommandsDir - Base commands directory for the IDE
+   * @param {Array} artifacts - Workflow artifacts
+   * @returns {number} Count of commands written
+   */
+  async writeDashArtifacts(baseCommandsDir, artifacts) {
+    let writtenCount = 0;
+
+    for (const artifact of artifacts) {
+      if (artifact.type === 'workflow-command') {
+        // Convert relativePath to dash format: bmm/workflows/correct-course.md → bmad-bmm-correct-course.md
+        const flatName = toDashPath(artifact.relativePath);
+        const commandPath = path.join(baseCommandsDir, flatName);
+        await fs.ensureDir(path.dirname(commandPath));
+        await fs.writeFile(commandPath, artifact.content);
+        writtenCount++;
+      }
+    }
+
+    return writtenCount;
   }
 }
 

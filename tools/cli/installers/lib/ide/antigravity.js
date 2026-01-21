@@ -13,6 +13,7 @@ const {
   resolveSubagentFiles,
 } = require('./shared/module-injections');
 const { getAgentsFromBmad, getAgentsFromDir } = require('./shared/bmad-artifacts');
+const { toDashPath, customAgentDashName } = require('./shared/path-utils');
 const prompts = require('../../../lib/prompts');
 
 /**
@@ -125,16 +126,10 @@ class AntigravitySetup extends BaseIdeSetup {
     const agentGen = new AgentCommandGenerator(this.bmadFolderName);
     const { artifacts: agentArtifacts, counts: agentCounts } = await agentGen.collectAgentArtifacts(bmadDir, options.selectedModules || []);
 
-    // Write agent launcher files with FLATTENED naming
-    // Antigravity ignores directory structure, so we flatten to: bmad-module-agents-name.md
-    // This creates slash commands like /bmad-bmm-agents-dev instead of /dev
-    let agentCount = 0;
-    for (const artifact of agentArtifacts) {
-      const flattenedName = this.flattenFilename(artifact.relativePath);
-      const targetPath = path.join(bmadWorkflowsDir, flattenedName);
-      await this.writeFile(targetPath, artifact.content);
-      agentCount++;
-    }
+    // Write agent launcher files with FLATTENED naming using shared utility
+    // Antigravity ignores directory structure, so we flatten to: bmad-module-name.md
+    // This creates slash commands like /bmad-bmm-dev instead of /dev
+    const agentCount = await agentGen.writeDashArtifacts(bmadWorkflowsDir, agentArtifacts);
 
     // Process Antigravity specific injections for installed modules
     // Use pre-collected configuration if available, or skip if already configured
@@ -152,16 +147,8 @@ class AntigravitySetup extends BaseIdeSetup {
     const workflowGen = new WorkflowCommandGenerator(this.bmadFolderName);
     const { artifacts: workflowArtifacts } = await workflowGen.collectWorkflowArtifacts(bmadDir);
 
-    // Write workflow-command artifacts with FLATTENED naming
-    let workflowCommandCount = 0;
-    for (const artifact of workflowArtifacts) {
-      if (artifact.type === 'workflow-command') {
-        const flattenedName = this.flattenFilename(artifact.relativePath);
-        const targetPath = path.join(bmadWorkflowsDir, flattenedName);
-        await this.writeFile(targetPath, artifact.content);
-        workflowCommandCount++;
-      }
-    }
+    // Write workflow-command artifacts with FLATTENED naming using shared utility
+    const workflowCommandCount = await workflowGen.writeDashArtifacts(bmadWorkflowsDir, workflowArtifacts);
 
     // Generate task and tool commands from manifests (if they exist)
     const taskToolGen = new TaskToolCommandGenerator();
@@ -468,7 +455,8 @@ usage: |
 
 ⚠️ **IMPORTANT**: Run @${agentPath} to load the complete agent before using this launcher!`;
 
-    const fileName = `bmad-custom-agents-${agentName}.md`;
+    // Use dash format: bmad-custom-agents-fred-commit-poet.md
+    const fileName = customAgentDashName(agentName);
     const launcherPath = path.join(bmadWorkflowsDir, fileName);
 
     // Write the launcher file
@@ -477,7 +465,7 @@ usage: |
     return {
       ide: 'antigravity',
       path: path.relative(projectDir, launcherPath),
-      command: `/${agentName}`,
+      command: `/${fileName.replace('.md', '')}`,
       type: 'custom-agent-launcher',
     };
   }
