@@ -1,6 +1,6 @@
 module,phase,name,code,sequence,workflow-file,command,required,agent,options,description,output-location,outputs
 core,,Advanced Elicitation,AE,10,_bmad/core/workflows/advanced-elicitation/workflow.xml,bmad:advanced-elicitation,false,,,"Apply elicitation methods iteratively to enhance content being generated, presenting options and allowing reshuffle or full method listing for comprehensive content improvement",,
-core,,Brainstorming,BS,20,_bmad/core/workflows/brainstorming/workflow.md,bmad:brainstorming,false,analyst,,Facilitate interactive brainstorming sessions using diverse creative techniques and ideation methods,{output_folder}/analysis/brainstorming-session-{{date}}.md,,
+core,,Brainstorming,BS,20,_bmad/core/workflows/brainstorming/workflow.md,bmad:brainstorming,false,analyst,,Facilitate interactive brainstorming sessions using diverse creative techniques and ideation methods,{output_folder}/brainstorming/brainstorming-session-{{date}}.md,,
 core,,Party Mode,PM,30,_bmad/core/workflows/party-mode/workflow.md,bmad:party-mode,false,party-mode facilitator,,Orchestrates group discussions between all installed BMAD agents enabling natural multi-agent conversations,,
 core,,bmad-help,BH,40,_bmad/core/tasks/bmad-help.md,bmad:help,false,system,,Get unstuck by showing what workflow steps come next or answering questions about what to do in the BMad Method,,
 core,,Index Docs,ID,50,_bmad/core/tasks/index-docs.xml,bmad:index-docs,false,llm,,Generates or updates an index.md of all documents in the specified directory,,
