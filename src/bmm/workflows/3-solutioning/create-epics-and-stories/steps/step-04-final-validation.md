@@ -144,6 +144,6 @@ If all validations pass:
 
 When C is selected, the workflow is complete and the epics.md is ready for development.
 
-Execute task `_bmad/bmm/tasks/bmad-help.md` with argument `Create Epics and Stories`.
+Execute task `_bmad/core/tasks/bmad-help.md` with argument `Create Epics and Stories`.
 
 Upon Completion of task output: offer to answer any questions about the Epics and Stories.

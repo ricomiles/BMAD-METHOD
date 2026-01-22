@@ -128,7 +128,7 @@ Recap that the brief captures everything needed to guide subsequent product deve
 
 ### 5. Suggest next steps
 
-Execute task `_bmad/bmm/tasks/bmad-help.md` with argument `Validate PRD`.
+Execute task `_bmad/core/tasks/bmad-help.md` with argument `Validate PRD`.
 
 ---
 

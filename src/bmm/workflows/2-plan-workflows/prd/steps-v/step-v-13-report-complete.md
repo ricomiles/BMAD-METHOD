@@ -197,7 +197,7 @@ Display:
 - **IF X (Exit):**
   - Display: "**Validation Report Saved:** {validationReportPath}"
   - Display: "**Summary:** {overall status} - {recommendation}"
-  - Exit and Execute task `_bmad/bmm/tasks/bmad-help.md` with argument `Validate PRD`.
+  - Exit and Execute task `_bmad/core/tasks/bmad-help.md` with argument `Validate PRD`.
 
 - **IF Any other:** Help user, then redisplay menu
 

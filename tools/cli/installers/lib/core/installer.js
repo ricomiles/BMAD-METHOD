@@ -958,6 +958,11 @@ class Installer {
 
       // All content is now installed as modules - no separate custom content handling needed
 
+      // Merge all module-help.csv files into bmad-help.csv
+      spinner.start('Generating workflow help catalog...');
+      await this.mergeModuleHelpCatalogs(bmadDir);
+      spinner.succeed('Workflow help catalog generated');
+
       // Generate clean config.yaml files for each installed module
       spinner.start('Generating module configurations...');
       await this.generateModuleConfigs(bmadDir, moduleConfigs);
@@ -1367,6 +1372,240 @@ class Installer {
   /**
    * Private: Create directory structure
    */
+  /**
+   * Merge all module-help.csv files into a single bmad-help.csv
+   * Scans all installed modules for module-help.csv and merges them
+   * Enriches agent info from agent-manifest.csv
+   * Output is written to _bmad/_config/bmad-help.csv
+   * @param {string} bmadDir - BMAD installation directory
+   */
+  async mergeModuleHelpCatalogs(bmadDir) {
+    const allRows = [];
+    const headerRow =
+      'module,phase,name,code,sequence,workflow-file,command,required,agent-name,agent-command,agent-display-name,agent-title,options,description,output-location,outputs';
+
+    // Load agent manifest for agent info lookup
+    const agentManifestPath = path.join(bmadDir, '_config', 'agent-manifest.csv');
+    const agentInfo = new Map(); // agent-name -> {command, displayName, title+icon}
+
+    if (await fs.pathExists(agentManifestPath)) {
+      const manifestContent = await fs.readFile(agentManifestPath, 'utf8');
+      const lines = manifestContent.split('\n').filter((line) => line.trim());
+
+      for (const line of lines) {
+        if (line.startsWith('name,')) continue; // Skip header
+
+        const cols = line.split(',');
+        if (cols.length >= 4) {
+          const agentName = cols[0].replaceAll('"', '').trim();
+          const displayName = cols[1].replaceAll('"', '').trim();
+          const title = cols[2].replaceAll('"', '').trim();
+          const icon = cols[3].replaceAll('"', '').trim();
+          const module = cols[10] ? cols[10].replaceAll('"', '').trim() : '';
+
+          // Build agent command: bmad:module:agent:name
+          const agentCommand = module ? `bmad:${module}:agent:${agentName}` : `bmad:agent:${agentName}`;
+
+          agentInfo.set(agentName, {
+            command: agentCommand,
+            displayName: displayName || agentName,
+            title: icon && title ? `${icon} ${title}` : title || agentName,
+          });
+        }
+      }
+    }
+
+    // Get all installed module directories
+    const entries = await fs.readdir(bmadDir, { withFileTypes: true });
+    const installedModules = entries
+      .filter((entry) => entry.isDirectory() && entry.name !== '_config' && entry.name !== 'docs' && entry.name !== '_memory')
+      .map((entry) => entry.name);
+
+    // Add core module to scan (it's installed at root level as _config, but we check src/core)
+    const coreModulePath = getSourcePath('core');
+    const modulePaths = new Map();
+
+    // Map all module source paths
+    if (await fs.pathExists(coreModulePath)) {
+      modulePaths.set('core', coreModulePath);
+    }
+
+    // Map installed module paths
+    for (const moduleName of installedModules) {
+      const modulePath = path.join(bmadDir, moduleName);
+      modulePaths.set(moduleName, modulePath);
+    }
+
+    // Scan each module for module-help.csv
+    for (const [moduleName, modulePath] of modulePaths) {
+      const helpFilePath = path.join(modulePath, 'module-help.csv');
+
+      if (await fs.pathExists(helpFilePath)) {
+        try {
+          const content = await fs.readFile(helpFilePath, 'utf8');
+          const lines = content.split('\n').filter((line) => line.trim() && !line.startsWith('#'));
+
+          for (const line of lines) {
+            // Skip header row
+            if (line.startsWith('module,')) {
+              continue;
+            }
+
+            // Parse the line - handle quoted fields with commas
+            const columns = this.parseCSVLine(line);
+            if (columns.length >= 12) {
+              // Map old schema to new schema
+              // Old: module,phase,name,code,sequence,workflow-file,command,required,agent,options,description,output-location,outputs
+              // New: module,phase,name,code,sequence,workflow-file,command,required,agent-name,agent-command,agent-display-name,agent-title,options,description,output-location,outputs
+
+              const [
+                module,
+                phase,
+                name,
+                code,
+                sequence,
+                workflowFile,
+                command,
+                required,
+                agentName,
+                options,
+                description,
+                outputLocation,
+                outputs,
+              ] = columns;
+
+              // If module column is empty, set it to this module's name (except for core which stays empty for universal tools)
+              const finalModule = (!module || module.trim() === '') && moduleName !== 'core' ? moduleName : module || '';
+
+              // Lookup agent info
+              const cleanAgentName = agentName ? agentName.trim() : '';
+              const agentData = agentInfo.get(cleanAgentName) || { command: '', displayName: '', title: '' };
+
+              // Build new row with agent info
+              const newRow = [
+                finalModule,
+                phase || '',
+                name || '',
+                code || '',
+                sequence || '',
+                workflowFile || '',
+                command || '',
+                required || 'false',
+                cleanAgentName,
+                agentData.command,
+                agentData.displayName,
+                agentData.title,
+                options || '',
+                description || '',
+                outputLocation || '',
+                outputs || '',
+              ];
+
+              allRows.push(newRow.map((c) => this.escapeCSVField(c)).join(','));
+            }
+          }
+
+          if (process.env.BMAD_VERBOSE_INSTALL === 'true') {
+            console.log(chalk.dim(`  Merged module-help from: ${moduleName}`));
+          }
+        } catch (error) {
+          console.warn(chalk.yellow(`  Warning: Failed to read module-help.csv from ${moduleName}:`, error.message));
+        }
+      }
+    }
+
+    // Sort by module, then phase, then sequence
+    allRows.sort((a, b) => {
+      const colsA = this.parseCSVLine(a);
+      const colsB = this.parseCSVLine(b);
+
+      // Module comparison (empty module/universal tools come first)
+      const moduleA = (colsA[0] || '').toLowerCase();
+      const moduleB = (colsB[0] || '').toLowerCase();
+      if (moduleA !== moduleB) {
+        return moduleA.localeCompare(moduleB);
+      }
+
+      // Phase comparison
+      const phaseA = colsA[1] || '';
+      const phaseB = colsB[1] || '';
+      if (phaseA !== phaseB) {
+        return phaseA.localeCompare(phaseB);
+      }
+
+      // Sequence comparison
+      const seqA = parseInt(colsA[4] || '0', 10);
+      const seqB = parseInt(colsB[4] || '0', 10);
+      return seqA - seqB;
+    });
+
+    // Write merged catalog
+    const outputDir = path.join(bmadDir, '_config');
+    await fs.ensureDir(outputDir);
+    const outputPath = path.join(outputDir, 'bmad-help.csv');
+
+    const mergedContent = [headerRow, ...allRows].join('\n');
+    await fs.writeFile(outputPath, mergedContent, 'utf8');
+
+    // Track the installed file
+    this.installedFiles.add(outputPath);
+
+    if (process.env.BMAD_VERBOSE_INSTALL === 'true') {
+      console.log(chalk.dim(`  Generated bmad-help.csv: ${allRows.length} workflows`));
+    }
+  }
+
+  /**
+   * Parse a CSV line, handling quoted fields
+   * @param {string} line - CSV line to parse
+   * @returns {Array} Array of field values
+   */
+  parseCSVLine(line) {
+    const result = [];
+    let current = '';
+    let inQuotes = false;
+
+    for (let i = 0; i < line.length; i++) {
+      const char = line[i];
+      const nextChar = line[i + 1];
+
+      if (char === '"') {
+        if (inQuotes && nextChar === '"') {
+          // Escaped quote
+          current += '"';
+          i++; // Skip next quote
+        } else {
+          // Toggle quote mode
+          inQuotes = !inQuotes;
+        }
+      } else if (char === ',' && !inQuotes) {
+        result.push(current);
+        current = '';
+      } else {
+        current += char;
+      }
+    }
+    result.push(current);
+    return result;
+  }
+
+  /**
+   * Escape a CSV field if it contains special characters
+   * @param {string} field - Field value to escape
+   * @returns {string} Escaped field
+   */
+  escapeCSVField(field) {
+    if (field === null || field === undefined) {
+      return '';
+    }
+    const str = String(field);
+    // If field contains comma, quote, or newline, wrap in quotes and escape inner quotes
+    if (str.includes(',') || str.includes('"') || str.includes('\n')) {
+      return `"${str.replaceAll('"', '""')}"`;
+    }
+    return str;
+  }
+
   async createDirectoryStructure(bmadDir) {
     await fs.ensureDir(bmadDir);
     await fs.ensureDir(path.join(bmadDir, '_config'));

@@ -82,7 +82,7 @@ Update the main workflow status file:
 
 ### 3. Suggest Next Steps
 
-Execute task `_bmad/bmm/tasks/bmad-help.md` with argument `Create UX`.
+Execute task `_bmad/core/tasks/bmad-help.md` with argument `Create UX`.
 
 ### 5. Final Completion Confirmation
 

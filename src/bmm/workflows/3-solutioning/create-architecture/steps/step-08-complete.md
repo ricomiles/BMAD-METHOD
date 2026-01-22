@@ -41,7 +41,7 @@ completedAt: '{{current_date}}'
 
 ### 3. Next Steps Guidance
 
-Execute task `_bmad/bmm/tasks/bmad-help.md` with argument `Create Architecture`.
+Execute task `_bmad/core/tasks/bmad-help.md` with argument `Create Architecture`.
 
 Upon Completion of task output: offer to answer any questions about the Architecture Document.
 
