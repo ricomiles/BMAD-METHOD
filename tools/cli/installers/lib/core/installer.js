@@ -958,11 +958,6 @@ class Installer {
 
       // All content is now installed as modules - no separate custom content handling needed
 
-      // Merge all module-help.csv files into bmad-help.csv
-      spinner.start('Generating workflow help catalog...');
-      await this.mergeModuleHelpCatalogs(bmadDir);
-      spinner.succeed('Workflow help catalog generated');
-
       // Generate clean config.yaml files for each installed module
       spinner.start('Generating module configurations...');
       await this.generateModuleConfigs(bmadDir, moduleConfigs);
@@ -980,6 +975,7 @@ class Installer {
       this.installedFiles.add(path.join(cfgDir, 'task-manifest.csv'));
 
       // Generate CSV manifests for workflows, agents, tasks AND ALL FILES with hashes BEFORE IDE setup
+      // This must happen BEFORE mergeModuleHelpCatalogs because it depends on agent-manifest.csv
       spinner.start('Generating workflow and agent manifests...');
       const manifestGen = new ManifestGenerator();
 
@@ -1011,6 +1007,12 @@ class Installer {
       spinner.succeed(
         `Manifests generated: ${manifestStats.workflows} workflows, ${manifestStats.agents} agents, ${manifestStats.tasks} tasks, ${manifestStats.tools} tools, ${manifestStats.files} files`,
       );
+
+      // Merge all module-help.csv files into bmad-help.csv
+      // This must happen AFTER generateManifests because it depends on agent-manifest.csv
+      spinner.start('Generating workflow help catalog...');
+      await this.mergeModuleHelpCatalogs(bmadDir);
+      spinner.succeed('Workflow help catalog generated');
 
       // Configure IDEs and copy documentation
       if (!config.skipIde && config.ides && config.ides.length > 0) {
