@@ -16,8 +16,11 @@ class TaskToolCommandGenerator {
 
   /**
    * Generate command content for a task or tool
+   * @param {Object} item - Task or tool item from manifest
+   * @param {string} type - 'task' or 'tool'
+   * @param {string} [format='yaml'] - Output format: 'yaml' or 'toml'
    */
-  generateCommandContent(item, type) {
+  generateCommandContent(item, type, format = 'yaml') {
     const description = item.description || `Execute ${item.displayName || item.name}`;
 
     // Convert path to use {project-root} placeholder
@@ -26,16 +29,29 @@ class TaskToolCommandGenerator {
       itemPath = `{project-root}/${itemPath}`;
     }
 
-    return `---
-description: '${description.replaceAll("'", "''")}'
----
-
-# ${item.displayName || item.name}
+    const content = `# ${item.displayName || item.name}
 
 LOAD and execute the ${type} at: ${itemPath}
 
 Follow all instructions in the ${type} file exactly as written.
 `;
+
+    if (format === 'toml') {
+      // Escape any triple quotes in content
+      const escapedContent = content.replace(/"""/g, '\\"\\"\\"');
+      return `description = "${description}"
+prompt = """
+${escapedContent}
+"""
+`;
+    }
+
+    // Default YAML format
+    return `---
+description: '${description.replaceAll("'", "''")}'
+---
+
+${content}`;
   }
 
   /**
@@ -91,9 +107,10 @@ Follow all instructions in the ${type} file exactly as written.
    * @param {string} projectDir - Project directory
    * @param {string} bmadDir - BMAD installation directory
    * @param {string} baseCommandsDir - Base commands directory for the IDE
+   * @param {string} [fileExtension='.md'] - File extension including dot (e.g., '.md', '.toml')
    * @returns {Object} Generation results
    */
-  async generateColonTaskToolCommands(projectDir, bmadDir, baseCommandsDir) {
+  async generateColonTaskToolCommands(projectDir, bmadDir, baseCommandsDir, fileExtension = '.md') {
     const tasks = await this.loadTaskManifest(bmadDir);
     const tools = await this.loadToolManifest(bmadDir);
 
@@ -101,16 +118,18 @@ Follow all instructions in the ${type} file exactly as written.
     const standaloneTasks = tasks ? tasks.filter((t) => t.standalone === 'true' || t.standalone === true) : [];
     const standaloneTools = tools ? tools.filter((t) => t.standalone === 'true' || t.standalone === true) : [];
 
+    // Determine format based on file extension
+    const format = fileExtension === '.toml' ? 'toml' : 'yaml';
     let generatedCount = 0;
 
     // DEBUG: Log parameters
-    console.log(`[DEBUG generateColonTaskToolCommands] baseCommandsDir: ${baseCommandsDir}`);
+    console.log(`[DEBUG generateColonTaskToolCommands] baseCommandsDir: ${baseCommandsDir}, format=${format}`);
 
     // Generate command files for tasks
     for (const task of standaloneTasks) {
-      const commandContent = this.generateCommandContent(task, 'task');
-      // Use underscore format: bmad_bmm_name.md
-      const flatName = toColonName(task.module, 'tasks', task.name);
+      const commandContent = this.generateCommandContent(task, 'task', format);
+      // Use underscore format: bmad_bmm_name.<ext>
+      const flatName = toColonName(task.module, 'tasks', task.name, fileExtension);
       const commandPath = path.join(baseCommandsDir, flatName);
       console.log(`[DEBUG generateColonTaskToolCommands] Writing task ${task.name} to: ${commandPath}`);
       await fs.ensureDir(path.dirname(commandPath));
@@ -120,9 +139,9 @@ Follow all instructions in the ${type} file exactly as written.
 
     // Generate command files for tools
     for (const tool of standaloneTools) {
-      const commandContent = this.generateCommandContent(tool, 'tool');
-      // Use underscore format: bmad_bmm_name.md
-      const flatName = toColonName(tool.module, 'tools', tool.name);
+      const commandContent = this.generateCommandContent(tool, 'tool', format);
+      // Use underscore format: bmad_bmm_name.<ext>
+      const flatName = toColonName(tool.module, 'tools', tool.name, fileExtension);
       const commandPath = path.join(baseCommandsDir, flatName);
       await fs.ensureDir(path.dirname(commandPath));
       await fs.writeFile(commandPath, commandContent);
@@ -137,15 +156,16 @@ Follow all instructions in the ${type} file exactly as written.
   }
 
   /**
-   * Generate task and tool commands using underscore format (Windows-compatible)
-   * Creates flat files like: bmad_bmm_bmad-help.md
+   * Generate task and tool commands using dash format
+   * Creates flat files like: bmad-bmm-bmad-help.md
    *
    * @param {string} projectDir - Project directory
    * @param {string} bmadDir - BMAD installation directory
    * @param {string} baseCommandsDir - Base commands directory for the IDE
+   * @param {string} [fileExtension='.md'] - File extension including dot (e.g., '.md', '.toml')
    * @returns {Object} Generation results
    */
-  async generateDashTaskToolCommands(projectDir, bmadDir, baseCommandsDir) {
+  async generateDashTaskToolCommands(projectDir, bmadDir, baseCommandsDir, fileExtension = '.md') {
     const tasks = await this.loadTaskManifest(bmadDir);
     const tools = await this.loadToolManifest(bmadDir);
 
@@ -153,13 +173,15 @@ Follow all instructions in the ${type} file exactly as written.
     const standaloneTasks = tasks ? tasks.filter((t) => t.standalone === 'true' || t.standalone === true) : [];
     const standaloneTools = tools ? tools.filter((t) => t.standalone === 'true' || t.standalone === true) : [];
 
+    // Determine format based on file extension
+    const format = fileExtension === '.toml' ? 'toml' : 'yaml';
     let generatedCount = 0;
 
     // Generate command files for tasks
     for (const task of standaloneTasks) {
-      const commandContent = this.generateCommandContent(task, 'task');
-      // Use underscore format: bmad_bmm_name.md (toDashPath aliases toColonPath)
-      const flatName = toDashPath(`${task.module}/tasks/${task.name}.md`);
+      const commandContent = this.generateCommandContent(task, 'task', format);
+      // Use dash format: bmad-bmm-task-name.<ext>
+      const flatName = toDashPath(`${task.module}/tasks/${task.name}.md`, fileExtension);
       const commandPath = path.join(baseCommandsDir, flatName);
       await fs.ensureDir(path.dirname(commandPath));
       await fs.writeFile(commandPath, commandContent);
@@ -168,9 +190,9 @@ Follow all instructions in the ${type} file exactly as written.
 
     // Generate command files for tools
     for (const tool of standaloneTools) {
-      const commandContent = this.generateCommandContent(tool, 'tool');
-      // Use underscore format: bmad_bmm_name.md (toDashPath aliases toColonPath)
-      const flatName = toDashPath(`${tool.module}/tools/${tool.name}.md`);
+      const commandContent = this.generateCommandContent(tool, 'tool', format);
+      // Use dash format: bmad-bmm-tool-name.<ext>
+      const flatName = toDashPath(`${tool.module}/tools/${tool.name}.md`, fileExtension);
       const commandPath = path.join(baseCommandsDir, flatName);
       await fs.ensureDir(path.dirname(commandPath));
       await fs.writeFile(commandPath, commandContent);

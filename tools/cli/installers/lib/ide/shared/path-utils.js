@@ -5,6 +5,9 @@
  * - Underscore format (bmad_module_name.md) - Windows-compatible universal format
  */
 
+// Default file extension for backward compatibility
+const DEFAULT_FILE_EXTENSION = '.md';
+
 // Type segments - agents are included in naming, others are filtered out
 const TYPE_SEGMENTS = ['workflows', 'tasks', 'tools'];
 const AGENT_SEGMENT = 'agents';
@@ -18,15 +21,16 @@ const AGENT_SEGMENT = 'agents';
  * @param {string} module - Module name (e.g., 'bmm', 'core')
  * @param {string} type - Artifact type ('agents', 'workflows', 'tasks', 'tools')
  * @param {string} name - Artifact name (e.g., 'pm', 'brainstorming')
+ * @param {string} [fileExtension=DEFAULT_FILE_EXTENSION] - File extension including dot (e.g., '.md', '.toml')
  * @returns {string} Flat filename like 'bmad_bmm_agent_pm.md' or 'bmad_bmm_correct-course.md'
  */
-function toUnderscoreName(module, type, name) {
+function toUnderscoreName(module, type, name, fileExtension = DEFAULT_FILE_EXTENSION) {
   const isAgent = type === AGENT_SEGMENT;
   // For core module, skip the module prefix: use 'bmad_name.md' instead of 'bmad_core_name.md'
   if (module === 'core') {
-    return isAgent ? `bmad_agent_${name}.md` : `bmad_${name}.md`;
+    return isAgent ? `bmad_agent_${name}${fileExtension}` : `bmad_${name}${fileExtension}`;
   }
-  return isAgent ? `bmad_${module}_agent_${name}.md` : `bmad_${module}_${name}.md`;
+  return isAgent ? `bmad_${module}_agent_${name}${fileExtension}` : `bmad_${module}_${name}${fileExtension}`;
 }
 
 /**
@@ -36,10 +40,14 @@ function toUnderscoreName(module, type, name) {
  * Converts: 'core/agents/brainstorming.md' → 'bmad_agent_brainstorming.md' (core items skip module prefix)
  *
  * @param {string} relativePath - Path like 'bmm/agents/pm.md'
+ * @param {string} [fileExtension=DEFAULT_FILE_EXTENSION] - File extension including dot (e.g., '.md', '.toml')
  * @returns {string} Flat filename like 'bmad_bmm_agent_pm.md' or 'bmad_brainstorming.md'
  */
-function toUnderscorePath(relativePath) {
-  const withoutExt = relativePath.replace('.md', '');
+function toUnderscorePath(relativePath, fileExtension = DEFAULT_FILE_EXTENSION) {
+  // Extract extension from relativePath to properly remove it
+  const extMatch = relativePath.match(/\.[^.]+$/);
+  const originalExt = extMatch ? extMatch[0] : '';
+  const withoutExt = relativePath.replace(originalExt, '');
   const parts = withoutExt.split(/[/\\]/);
 
   const module = parts[0];
@@ -47,7 +55,7 @@ function toUnderscorePath(relativePath) {
   const name = parts.slice(2).join('_');
 
   // Use toUnderscoreName for consistency
-  return toUnderscoreName(module, type, name);
+  return toUnderscoreName(module, type, name, fileExtension);
 }
 
 /**
@@ -55,10 +63,11 @@ function toUnderscorePath(relativePath) {
  * Creates: 'bmad_custom_fred-commit-poet.md'
  *
  * @param {string} agentName - Custom agent name
+ * @param {string} [fileExtension=DEFAULT_FILE_EXTENSION] - File extension including dot (e.g., '.md', '.toml')
  * @returns {string} Flat filename like 'bmad_custom_fred-commit-poet.md'
  */
-function customAgentUnderscoreName(agentName) {
-  return `bmad_custom_${agentName}.md`;
+function customAgentUnderscoreName(agentName, fileExtension = DEFAULT_FILE_EXTENSION) {
+  return `bmad_custom_${agentName}${fileExtension}`;
 }
 
 /**
@@ -134,9 +143,9 @@ function parseUnderscoreName(filename) {
 }
 
 // Backward compatibility aliases (deprecated)
+// Note: These now use toDashPath and customAgentDashName which convert underscores to dashes
 const toColonName = toUnderscoreName;
-const toColonPath = toUnderscorePath;
-const toDashPath = toUnderscorePath;
+const toDashName = toUnderscoreName;
 const customAgentColonName = customAgentUnderscoreName;
 const customAgentDashName = customAgentUnderscoreName;
 const isColonFormat = isUnderscoreFormat;
@@ -144,7 +153,46 @@ const isDashFormat = isUnderscoreFormat;
 const parseColonName = parseUnderscoreName;
 const parseDashName = parseUnderscoreName;
 
+/**
+ * Convert relative path to flat colon-separated name (for backward compatibility)
+ * This is actually the same as underscore format now (underscores in filenames)
+ * @param {string} relativePath - Path like 'bmm/agents/pm.md'
+ * @param {string} [fileExtension=DEFAULT_FILE_EXTENSION] - File extension including dot
+ * @returns {string} Flat filename like 'bmad_bmm_agent_pm.md'
+ */
+function toColonPath(relativePath, fileExtension = DEFAULT_FILE_EXTENSION) {
+  return toUnderscorePath(relativePath, fileExtension);
+}
+
+/**
+ * Convert relative path to flat dash-separated name
+ * Converts: 'bmm/agents/pm.md' → 'bmad-bmm-agent-pm.md'
+ * Converts: 'bmm/workflows/correct-course' → 'bmad-bmm-correct-course.md'
+ * @param {string} relativePath - Path like 'bmm/agents/pm.md'
+ * @param {string} [fileExtension=DEFAULT_FILE_EXTENSION] - File extension including dot
+ * @returns {string} Flat filename like 'bmad-bmm-agent-pm.md'
+ */
+function toDashPath(relativePath, fileExtension = DEFAULT_FILE_EXTENSION) {
+  // Extract extension from relativePath to properly remove it
+  const extMatch = relativePath.match(/\.[^.]+$/);
+  const originalExt = extMatch ? extMatch[0] : '';
+  const withoutExt = relativePath.replace(originalExt, '');
+  const parts = withoutExt.split(/[/\\]/);
+
+  const module = parts[0];
+  const type = parts[1];
+  const name = parts.slice(2).join('-');
+
+  // Use dash naming style
+  const isAgent = type === AGENT_SEGMENT;
+  if (module === 'core') {
+    return isAgent ? `bmad-agent-${name}${fileExtension}` : `bmad-${name}${fileExtension}`;
+  }
+  return isAgent ? `bmad-${module}-agent-${name}${fileExtension}` : `bmad-${module}-${name}${fileExtension}`;
+}
+
 module.exports = {
+  DEFAULT_FILE_EXTENSION,
   toUnderscoreName,
   toUnderscorePath,
   customAgentUnderscoreName,
@@ -153,6 +201,7 @@ module.exports = {
   // Backward compatibility aliases
   toColonName,
   toColonPath,
+  toDashName,
   toDashPath,
   customAgentColonName,
   customAgentDashName,

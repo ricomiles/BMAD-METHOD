@@ -3,8 +3,7 @@ const fs = require('fs-extra');
 const yaml = require('yaml');
 const { BaseIdeSetup } = require('./_base-ide');
 const chalk = require('chalk');
-const { AgentCommandGenerator } = require('./shared/agent-command-generator');
-const { WorkflowCommandGenerator } = require('./shared/workflow-command-generator');
+const { UnifiedInstaller, NamingStyle, TemplateType } = require('./shared/unified-installer');
 
 /**
  * Gemini CLI setup handler
@@ -15,8 +14,6 @@ class GeminiSetup extends BaseIdeSetup {
     super('gemini', 'Gemini CLI', false);
     this.configDir = '.gemini';
     this.commandsDir = 'commands';
-    this.agentTemplatePath = path.join(__dirname, 'templates', 'gemini-agent-command.toml');
-    this.taskTemplatePath = path.join(__dirname, 'templates', 'gemini-task-command.toml');
   }
 
   /**
@@ -62,167 +59,37 @@ class GeminiSetup extends BaseIdeSetup {
 
     await this.ensureDir(commandsDir);
 
-    // Clean up any existing BMAD files before reinstalling
-    await this.cleanup(projectDir);
+    // Use UnifiedInstaller for agents and workflows
+    const installer = new UnifiedInstaller(this.bmadFolderName);
 
-    // Generate agent launchers
-    const agentGen = new AgentCommandGenerator(this.bmadFolderName);
-    const { artifacts: agentArtifacts } = await agentGen.collectAgentArtifacts(bmadDir, options.selectedModules || []);
+    const config = {
+      targetDir: commandsDir,
+      namingStyle: NamingStyle.FLAT_DASH,
+      templateType: TemplateType.GEMINI,
+      fileExtension: '.toml',
+    };
 
-    // Get tasks and workflows (ALL workflows now generate commands)
-    const tasks = await this.getTasks(bmadDir);
+    const counts = await installer.install(projectDir, bmadDir, config, options.selectedModules || []);
 
-    // Get ALL workflows using the new workflow command generator
-    const workflowGenerator = new WorkflowCommandGenerator(this.bmadFolderName);
-    const { artifacts: workflowArtifacts, counts: workflowCounts } = await workflowGenerator.collectWorkflowArtifacts(bmadDir);
-
-    // Install agents as TOML files with bmad- prefix (flat structure)
-    let agentCount = 0;
-    for (const artifact of agentArtifacts) {
-      const tomlContent = await this.createAgentLauncherToml(artifact);
-
-      // Flat structure: bmad-agent-{module}-{name}.toml
-      const tomlPath = path.join(commandsDir, `bmad-agent-${artifact.module}-${artifact.name}.toml`);
-      await this.writeFile(tomlPath, tomlContent);
-      agentCount++;
-
-      console.log(chalk.green(`  ✓ Added agent: /bmad_agents_${artifact.module}_${artifact.name}`));
-    }
-
-    // Install tasks as TOML files with bmad- prefix (flat structure)
-    let taskCount = 0;
-    for (const task of tasks) {
-      const content = await this.readFile(task.path);
-      const tomlContent = await this.createTaskToml(task, content);
-
-      // Flat structure: bmad-task-{module}-{name}.toml
-      const tomlPath = path.join(commandsDir, `bmad-task-${task.module}-${task.name}.toml`);
-      await this.writeFile(tomlPath, tomlContent);
-      taskCount++;
-
-      console.log(chalk.green(`  ✓ Added task: /bmad_tasks_${task.module}_${task.name}`));
-    }
-
-    // Install workflows as TOML files with bmad- prefix (flat structure)
-    let workflowCount = 0;
-    for (const artifact of workflowArtifacts) {
-      if (artifact.type === 'workflow-command') {
-        // Create TOML wrapper around workflow command content
-        const tomlContent = await this.createWorkflowToml(artifact);
-
-        // Flat structure: bmad-workflow-{module}-{name}.toml
-        const workflowName = path.basename(artifact.relativePath, '.md');
-        const tomlPath = path.join(commandsDir, `bmad-workflow-${artifact.module}-${workflowName}.toml`);
-        await this.writeFile(tomlPath, tomlContent);
-        workflowCount++;
-
-        console.log(chalk.green(`  ✓ Added workflow: /bmad_workflows_${artifact.module}_${workflowName}`));
-      }
-    }
+    // Generate activation names for display
+    const agentActivation = `/bmad_agents_{agent-name}`;
+    const workflowActivation = `/bmad_workflows_{workflow-name}`;
+    const taskActivation = `/bmad_tasks_{task-name}`;
 
     console.log(chalk.green(`✓ ${this.name} configured:`));
-    console.log(chalk.dim(`  - ${agentCount} agents configured`));
-    console.log(chalk.dim(`  - ${taskCount} tasks configured`));
-    console.log(chalk.dim(`  - ${workflowCount} workflows configured`));
+    console.log(chalk.dim(`  - ${counts.agents} agents configured`));
+    console.log(chalk.dim(`  - ${counts.workflows} workflows configured`));
+    console.log(chalk.dim(`  - ${counts.tasks} tasks configured`));
+    console.log(chalk.dim(`  - ${counts.tools} tools configured`));
     console.log(chalk.dim(`  - Commands directory: ${path.relative(projectDir, commandsDir)}`));
-    console.log(chalk.dim(`  - Agent activation: /bmad_agents_{agent-name}`));
-    console.log(chalk.dim(`  - Task activation: /bmad_tasks_{task-name}`));
-    console.log(chalk.dim(`  - Workflow activation: /bmad_workflows_{workflow-name}`));
+    console.log(chalk.dim(`  - Agent activation: ${agentActivation}`));
+    console.log(chalk.dim(`  - Workflow activation: ${workflowActivation}`));
+    console.log(chalk.dim(`  - Task activation: ${taskActivation}`));
 
     return {
       success: true,
-      agents: agentCount,
-      tasks: taskCount,
-      workflows: workflowCount,
+      ...counts,
     };
-  }
-
-  /**
-   * Create agent launcher TOML content from artifact
-   */
-  async createAgentLauncherToml(artifact) {
-    // Strip frontmatter from launcher content
-    const frontmatterRegex = /^---\s*\n[\s\S]*?\n---\s*\n/;
-    const contentWithoutFrontmatter = artifact.content.replace(frontmatterRegex, '').trim();
-
-    // Extract title from launcher frontmatter
-    const titleMatch = artifact.content.match(/description:\s*"([^"]+)"/);
-    const title = titleMatch ? titleMatch[1] : this.formatTitle(artifact.name);
-
-    // Create TOML wrapper around launcher content (without frontmatter)
-    const description = `BMAD ${artifact.module.toUpperCase()} Agent: ${title}`;
-
-    return `description = "${description}"
-prompt = """
-${contentWithoutFrontmatter}
-"""
-`;
-  }
-
-  /**
-   * Create agent TOML content using template
-   */
-  async createAgentToml(agent, content) {
-    // Extract metadata
-    const titleMatch = content.match(/title="([^"]+)"/);
-    const title = titleMatch ? titleMatch[1] : this.formatTitle(agent.name);
-
-    // Load template
-    const template = await fs.readFile(this.agentTemplatePath, 'utf8');
-
-    // Replace template variables
-    // Note: {user_name} and other {config_values} are left as-is for runtime substitution by Gemini
-    const tomlContent = template
-      .replaceAll('{{title}}', title)
-      .replaceAll('{_bmad}', '_bmad')
-      .replaceAll('{_bmad}', this.bmadFolderName)
-      .replaceAll('{{module}}', agent.module)
-      .replaceAll('{{name}}', agent.name);
-
-    return tomlContent;
-  }
-
-  /**
-   * Create task TOML content using template
-   */
-  async createTaskToml(task, content) {
-    // Extract task name from XML if available
-    const nameMatch = content.match(/<name>([^<]+)<\/name>/);
-    const taskName = nameMatch ? nameMatch[1] : this.formatTitle(task.name);
-
-    // Load template
-    const template = await fs.readFile(this.taskTemplatePath, 'utf8');
-
-    // Replace template variables
-    const tomlContent = template
-      .replaceAll('{{taskName}}', taskName)
-      .replaceAll('{_bmad}', '_bmad')
-      .replaceAll('{_bmad}', this.bmadFolderName)
-      .replaceAll('{{module}}', task.module)
-      .replaceAll('{{filename}}', task.filename);
-
-    return tomlContent;
-  }
-
-  /**
-   * Create workflow TOML content from artifact
-   */
-  async createWorkflowToml(artifact) {
-    // Extract description from artifact content
-    const descriptionMatch = artifact.content.match(/description:\s*"([^"]+)"/);
-    const description = descriptionMatch
-      ? descriptionMatch[1]
-      : `BMAD ${artifact.module.toUpperCase()} Workflow: ${path.basename(artifact.relativePath, '.md')}`;
-
-    // Strip frontmatter from command content
-    const frontmatterRegex = /^---\s*\n[\s\S]*?\n---\s*\n/;
-    const contentWithoutFrontmatter = artifact.content.replace(frontmatterRegex, '').trim();
-
-    return `description = "${description}"
-prompt = """
-${contentWithoutFrontmatter}
-"""
-`;
   }
 
   /**

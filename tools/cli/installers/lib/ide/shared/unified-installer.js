@@ -39,6 +39,7 @@ const TemplateType = {
   CLINE: 'cline', // No frontmatter, direct content
   WINDSURF: 'windsurf', // YAML with auto_execution_mode
   AUGMENT: 'augment', // YAML frontmatter
+  GEMINI: 'gemini', // TOML frontmatter with description/prompt
 };
 
 /**
@@ -47,6 +48,7 @@ const TemplateType = {
  * @property {string} targetDir - Full path to target directory
  * @property {NamingStyle} namingStyle - How to name files
  * @property {TemplateType} templateType - What template format to use
+ * @property {string} [fileExtension='.md'] - File extension including dot (e.g., '.md', '.toml')
  * @property {boolean} includeNestedStructure - For NESTED style, create subdirectories
  * @property {Function} [customTemplateFn] - Optional custom template function
  */
@@ -73,12 +75,13 @@ class UnifiedInstaller {
       targetDir,
       namingStyle = NamingStyle.FLAT_COLON,
       templateType = TemplateType.CLAUDE,
+      fileExtension = '.md',
       includeNestedStructure = false,
       customTemplateFn = null,
     } = config;
 
     // Clean up any existing BMAD files in target directory
-    await this.cleanupBmadFiles(targetDir);
+    await this.cleanupBmadFiles(targetDir, fileExtension);
 
     // Ensure target directory exists
     await fs.ensureDir(targetDir);
@@ -95,7 +98,7 @@ class UnifiedInstaller {
     // 1. Install Agents
     const agentGen = new AgentCommandGenerator(this.bmadFolderName);
     const { artifacts: agentArtifacts } = await agentGen.collectAgentArtifacts(bmadDir, selectedModules);
-    counts.agents = await this.writeArtifacts(agentArtifacts, targetDir, namingStyle, templateType, customTemplateFn, 'agent');
+    counts.agents = await this.writeArtifacts(agentArtifacts, targetDir, namingStyle, templateType, fileExtension, customTemplateFn, 'agent');
 
     // 2. Install Workflows (filter out README artifacts)
     const workflowGen = new WorkflowCommandGenerator(this.bmadFolderName);
@@ -109,6 +112,7 @@ class UnifiedInstaller {
       targetDir,
       namingStyle,
       templateType,
+      fileExtension,
       customTemplateFn,
       'workflow',
     );
@@ -121,8 +125,8 @@ class UnifiedInstaller {
     // TODO: Remove nested branch entirely after verification
     const taskToolResult =
       namingStyle === NamingStyle.FLAT_DASH
-        ? await ttGen.generateDashTaskToolCommands(projectDir, bmadDir, targetDir)
-        : await ttGen.generateColonTaskToolCommands(projectDir, bmadDir, targetDir);
+        ? await ttGen.generateDashTaskToolCommands(projectDir, bmadDir, targetDir, fileExtension)
+        : await ttGen.generateColonTaskToolCommands(projectDir, bmadDir, targetDir, fileExtension);
 
     counts.tasks = taskToolResult.tasks || 0;
     counts.tools = taskToolResult.tools || 0;
@@ -134,8 +138,10 @@ class UnifiedInstaller {
 
   /**
    * Clean up any existing BMAD files in target directory
+   * @param {string} targetDir - Target directory to clean
+   * @param {string} [fileExtension='.md'] - File extension to match
    */
-  async cleanupBmadFiles(targetDir) {
+  async cleanupBmadFiles(targetDir, fileExtension = '.md') {
     if (!(await fs.pathExists(targetDir))) {
       return;
     }
@@ -144,7 +150,8 @@ class UnifiedInstaller {
     const entries = await fs.readdir(targetDir, { withFileTypes: true });
 
     for (const entry of entries) {
-      if (entry.name.startsWith('bmad')) {
+      // Only remove files with the matching extension
+      if (entry.name.startsWith('bmad') && entry.name.endsWith(fileExtension)) {
         const entryPath = path.join(targetDir, entry.name);
         await fs.remove(entryPath);
       }
@@ -153,9 +160,17 @@ class UnifiedInstaller {
 
   /**
    * Write artifacts with specified naming style and template
+   * @param {Array} artifacts - Artifacts to write
+   * @param {string} targetDir - Target directory
+   * @param {NamingStyle} namingStyle - Naming style to use
+   * @param {TemplateType} templateType - Template type to use
+   * @param {string} fileExtension - File extension including dot
+   * @param {Function} customTemplateFn - Optional custom template function
+   * @param {string} artifactType - Type of artifact for logging
+   * @returns {Promise<number>} Number of artifacts written
    */
-  async writeArtifacts(artifacts, targetDir, namingStyle, templateType, customTemplateFn, artifactType) {
-    console.log(`[DEBUG] writeArtifacts: artifactType=${artifactType}, count=${artifacts.length}, targetDir=${targetDir}`);
+  async writeArtifacts(artifacts, targetDir, namingStyle, templateType, fileExtension, customTemplateFn, artifactType) {
+    console.log(`[DEBUG] writeArtifacts: artifactType=${artifactType}, count=${artifacts.length}, targetDir=${targetDir}, fileExtension=${fileExtension}`);
     let written = 0;
 
     for (const artifact of artifacts) {
@@ -165,14 +180,14 @@ class UnifiedInstaller {
       console.log(`[DEBUG] writeArtifacts processing: relativePath=${artifact.relativePath}, name=${artifact.name}`);
 
       if (namingStyle === NamingStyle.FLAT_COLON) {
-        const flatName = toColonPath(artifact.relativePath);
+        const flatName = toColonPath(artifact.relativePath, fileExtension);
         targetPath = path.join(targetDir, flatName);
       } else if (namingStyle === NamingStyle.FLAT_DASH) {
-        const flatName = toDashPath(artifact.relativePath);
+        const flatName = toDashPath(artifact.relativePath, fileExtension);
         targetPath = path.join(targetDir, flatName);
       } else {
         // Fallback: treat as flat even if NESTED specified
-        const flatName = toColonPath(artifact.relativePath);
+        const flatName = toColonPath(artifact.relativePath, fileExtension);
         targetPath = path.join(targetDir, flatName);
       }
 
@@ -216,6 +231,11 @@ class UnifiedInstaller {
       case TemplateType.AUGMENT: {
         // Add Augment frontmatter
         return this.addAugmentFrontmatter(artifact, content);
+      }
+
+      case TemplateType.GEMINI: {
+        // Add Gemini TOML frontmatter
+        return this.addGeminiFrontmatter(artifact, content);
       }
 
       default: {
@@ -267,6 +287,31 @@ description: ${name}
       return frontmatter + content;
     }
     return content;
+  }
+
+  /**
+   * Add Gemini TOML frontmatter
+   * Converts content to TOML format with description and prompt fields
+   */
+  addGeminiFrontmatter(artifact, content) {
+    // Remove existing YAML frontmatter if present
+    const frontmatterRegex = /^---\s*\n[\s\S]*?\n---\s*\n/;
+    const contentWithoutFrontmatter = content.replace(frontmatterRegex, '').trim();
+
+    // Extract description from artifact or content
+    let description = artifact.name || artifact.displayName || 'BMAD Command';
+    if (artifact.module) {
+      description = `BMAD ${artifact.module.toUpperCase()} ${artifact.type || 'Command'}: ${description}`;
+    }
+
+    // Escape any triple quotes in content
+    const escapedContent = contentWithoutFrontmatter.replace(/"""/g, '\\"\\"\\"');
+
+    return `description = "${description}"
+prompt = """
+${escapedContent}
+"""
+`;
   }
 
   /**
