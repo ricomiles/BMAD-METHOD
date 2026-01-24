@@ -28,12 +28,17 @@ class AuggieSetup extends BaseIdeSetup {
     const targetDir = path.join(projectDir, '.augment', 'commands');
 
     // Install using UnifiedInstaller
-    const counts = await this.installer.install(projectDir, bmadDir, {
-      targetDir,
-      namingStyle: NamingStyle.FLAT_COLON,
-      templateType: TemplateType.AUGMENT,
-      includeNestedStructure: false,
-    }, options.selectedModules || []);
+    const counts = await this.installer.install(
+      projectDir,
+      bmadDir,
+      {
+        targetDir,
+        namingStyle: NamingStyle.FLAT_COLON,
+        templateType: TemplateType.AUGMENT,
+        includeNestedStructure: false,
+      },
+      options.selectedModules || [],
+    );
 
     console.log(chalk.green(`✓ ${this.name} configured:`));
     console.log(chalk.dim(`  - ${counts.agents} agents installed`));

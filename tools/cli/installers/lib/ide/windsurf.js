@@ -39,12 +39,17 @@ class WindsurfSetup extends BaseIdeSetup {
     await this.cleanup(projectDir);
 
     // Use UnifiedInstaller with Windsurf-specific configuration
-    const counts = await this.unifiedInstaller.install(projectDir, bmadDir, {
-      targetDir: workflowsDir,
-      namingStyle: NamingStyle.FLAT_DASH,
-      templateType: TemplateType.WINDSURF,
-      customTemplateFn: this.windsurfTemplate.bind(this),
-    }, options.selectedModules || []);
+    const counts = await this.unifiedInstaller.install(
+      projectDir,
+      bmadDir,
+      {
+        targetDir: workflowsDir,
+        namingStyle: NamingStyle.FLAT_DASH,
+        templateType: TemplateType.WINDSURF,
+        customTemplateFn: this.windsurfTemplate.bind(this),
+      },
+      options.selectedModules || [],
+    );
 
     // Post-process tasks and tools to add Windsurf auto_execution_mode
     // UnifiedInstaller handles agents/workflows correctly, but tasks/tools
@@ -129,7 +134,7 @@ ${contentWithoutFrontmatter}`;
       const parts = entry.name.replace('bmad-', '').replace('.md', '').split('-');
       if (parts.length < 2) continue;
 
-      const type = parts[parts.length - 2]; // second to last part should be 'task' or 'tool'
+      const type = parts.at(-2); // second to last part should be 'task' or 'tool'
 
       if (type === 'task' || type === 'tool') {
         // Check if auto_execution_mode is already present

@@ -2,6 +2,7 @@ const path = require('node:path');
 const { BaseIdeSetup } = require('./_base-ide');
 const chalk = require('chalk');
 const { AgentCommandGenerator } = require('./shared/agent-command-generator');
+const { UnifiedInstaller, NamingStyle, TemplateType } = require('./shared/unified-installer');
 const prompts = require('../../../lib/prompts');
 
 /**
@@ -13,6 +14,7 @@ class GitHubCopilotSetup extends BaseIdeSetup {
     super('github-copilot', 'GitHub Copilot', true); // preferred IDE
     this.configDir = '.github';
     this.agentsDir = 'agents';
+    this.promptsDir = 'prompts';
     this.vscodeDir = '.vscode';
   }
 
@@ -94,41 +96,63 @@ class GitHubCopilotSetup extends BaseIdeSetup {
     const config = options.preCollectedConfig || {};
     await this.configureVsCodeSettings(projectDir, { ...options, ...config });
 
-    // Create .github/agents directory
+    // Create .github/agents and .github/prompts directories
     const githubDir = path.join(projectDir, this.configDir);
     const agentsDir = path.join(githubDir, this.agentsDir);
+    const promptsDir = path.join(githubDir, this.promptsDir);
     await this.ensureDir(agentsDir);
+    await this.ensureDir(promptsDir);
 
     // Clean up any existing BMAD files before reinstalling
     await this.cleanup(projectDir);
 
-    // Generate agent launchers
+    // 1. Generate agent launchers (custom .agent.md format - not using UnifiedInstaller)
     const agentGen = new AgentCommandGenerator(this.bmadFolderName);
     const { artifacts: agentArtifacts } = await agentGen.collectAgentArtifacts(bmadDir, options.selectedModules || []);
 
-    // Create agent files with bmd- prefix
+    // Create agent files with bmad- prefix
     let agentCount = 0;
     for (const artifact of agentArtifacts) {
       const content = artifact.content;
       const agentContent = await this.createAgentContent({ module: artifact.module, name: artifact.name }, content);
 
-      // Use bmd- prefix: bmd-custom-{module}-{name}.agent.md
-      const targetPath = path.join(agentsDir, `bmd-custom-${artifact.module}-${artifact.name}.agent.md`);
+      // Use bmad- prefix: bmad-{module}-{name}.agent.md
+      const targetPath = path.join(agentsDir, `bmad-${artifact.module}-${artifact.name}.agent.md`);
       await this.writeFile(targetPath, agentContent);
       agentCount++;
 
-      console.log(chalk.green(`  ✓ Created agent: bmd-custom-${artifact.module}-${artifact.name}`));
+      console.log(chalk.green(`  ✓ Created agent: bmad-${artifact.module}-${artifact.name}`));
     }
+
+    // 2. Install prompts using UnifiedInstaller
+    const installer = new UnifiedInstaller(this.bmadFolderName);
+    const promptCounts = await installer.install(
+      projectDir,
+      bmadDir,
+      {
+        targetDir: promptsDir,
+        namingStyle: NamingStyle.FLAT_DASH,
+        templateType: TemplateType.COPILOT,
+      },
+      options.selectedModules || [],
+    );
 
     console.log(chalk.green(`✓ ${this.name} configured:`));
     console.log(chalk.dim(`  - ${agentCount} agents created`));
+    console.log(
+      chalk.dim(
+        `  - ${promptCounts.agents} prompts, ${promptCounts.workflows} workflows, ${promptCounts.tasks + promptCounts.tools} tasks/tools`,
+      ),
+    );
     console.log(chalk.dim(`  - Agents directory: ${path.relative(projectDir, agentsDir)}`));
+    console.log(chalk.dim(`  - Prompts directory: ${path.relative(projectDir, promptsDir)}`));
     console.log(chalk.dim(`  - VS Code settings configured`));
-    console.log(chalk.dim('\n  Agents available in VS Code Chat view'));
+    console.log(chalk.dim('\n  Agents and prompts available in VS Code Chat view'));
 
     return {
       success: true,
       agents: agentCount,
+      prompts: promptCounts.total,
       settings: true,
     };
   }
@@ -286,14 +310,15 @@ ${cleanContent}
       }
     }
 
-    // Clean up new agents directory
+    // Clean up agents directory
     const agentsDir = path.join(projectDir, this.configDir, this.agentsDir);
     if (await fs.pathExists(agentsDir)) {
       const files = await fs.readdir(agentsDir);
       let removed = 0;
 
       for (const file of files) {
-        if (file.startsWith('bmd-') && file.endsWith('.agent.md')) {
+        // Remove old bmd-* files (typo fix) and current bmad-* files
+        if ((file.startsWith('bmd-') || file.startsWith('bmad-')) && file.endsWith('.agent.md')) {
           await fs.remove(path.join(agentsDir, file));
           removed++;
         }
@@ -301,6 +326,24 @@ ${cleanContent}
 
       if (removed > 0) {
         console.log(chalk.dim(`  Cleaned up ${removed} existing BMAD agents`));
+      }
+    }
+
+    // Clean up prompts directory
+    const promptsDir = path.join(projectDir, this.configDir, this.promptsDir);
+    if (await fs.pathExists(promptsDir)) {
+      const files = await fs.readdir(promptsDir);
+      let removed = 0;
+
+      for (const file of files) {
+        if (file.startsWith('bmad-') && file.endsWith('.md')) {
+          await fs.remove(path.join(promptsDir, file));
+          removed++;
+        }
+      }
+
+      if (removed > 0) {
+        console.log(chalk.dim(`  Cleaned up ${removed} existing BMAD prompts`));
       }
     }
   }
@@ -370,12 +413,12 @@ tools: ${JSON.stringify(copilotTools)}
 ${launcherContent}
 `;
 
-    const agentFilePath = path.join(agentsDir, `bmd-custom-${agentName}.agent.md`);
+    const agentFilePath = path.join(agentsDir, `bmad-${agentName}.agent.md`);
     await this.writeFile(agentFilePath, agentContent);
 
     return {
       path: agentFilePath,
-      command: `bmd-custom-${agentName}`,
+      command: `bmad-${agentName}`,
     };
   }
 }

@@ -40,6 +40,7 @@ const TemplateType = {
   WINDSURF: 'windsurf', // YAML with auto_execution_mode
   AUGMENT: 'augment', // YAML frontmatter
   GEMINI: 'gemini', // TOML frontmatter with description/prompt
+  COPILOT: 'copilot', // YAML with tools array for GitHub Copilot
 };
 
 /**
@@ -98,7 +99,15 @@ class UnifiedInstaller {
     // 1. Install Agents
     const agentGen = new AgentCommandGenerator(this.bmadFolderName);
     const { artifacts: agentArtifacts } = await agentGen.collectAgentArtifacts(bmadDir, selectedModules);
-    counts.agents = await this.writeArtifacts(agentArtifacts, targetDir, namingStyle, templateType, fileExtension, customTemplateFn, 'agent');
+    counts.agents = await this.writeArtifacts(
+      agentArtifacts,
+      targetDir,
+      namingStyle,
+      templateType,
+      fileExtension,
+      customTemplateFn,
+      'agent',
+    );
 
     // 2. Install Workflows (filter out README artifacts)
     const workflowGen = new WorkflowCommandGenerator(this.bmadFolderName);
@@ -170,7 +179,9 @@ class UnifiedInstaller {
    * @returns {Promise<number>} Number of artifacts written
    */
   async writeArtifacts(artifacts, targetDir, namingStyle, templateType, fileExtension, customTemplateFn, artifactType) {
-    console.log(`[DEBUG] writeArtifacts: artifactType=${artifactType}, count=${artifacts.length}, targetDir=${targetDir}, fileExtension=${fileExtension}`);
+    console.log(
+      `[DEBUG] writeArtifacts: artifactType=${artifactType}, count=${artifacts.length}, targetDir=${targetDir}, fileExtension=${fileExtension}`,
+    );
     let written = 0;
 
     for (const artifact of artifacts) {
@@ -236,6 +247,11 @@ class UnifiedInstaller {
       case TemplateType.GEMINI: {
         // Add Gemini TOML frontmatter
         return this.addGeminiFrontmatter(artifact, content);
+      }
+
+      case TemplateType.COPILOT: {
+        // Add Copilot frontmatter with tools array
+        return this.addCopilotFrontmatter(artifact, content);
       }
 
       default: {
@@ -305,13 +321,51 @@ description: ${name}
     }
 
     // Escape any triple quotes in content
-    const escapedContent = contentWithoutFrontmatter.replace(/"""/g, '\\"\\"\\"');
+    const escapedContent = contentWithoutFrontmatter.replaceAll('"""', String.raw`\"\"\"`);
 
     return `description = "${description}"
 prompt = """
 ${escapedContent}
 """
 `;
+  }
+
+  /**
+   * Add GitHub Copilot frontmatter with tools array
+   */
+  addCopilotFrontmatter(artifact, content) {
+    // Remove existing frontmatter if present
+    const frontmatterRegex = /^---\s*\n[\s\S]*?\n---\s*\n/;
+    const contentWithoutFrontmatter = content.replace(frontmatterRegex, '');
+
+    // GitHub Copilot tools array (as specified)
+    const tools = [
+      'changes',
+      'edit',
+      'fetch',
+      'githubRepo',
+      'problems',
+      'runCommands',
+      'runTasks',
+      'runTests',
+      'search',
+      'runSubagent',
+      'testFailure',
+      'todos',
+      'usages',
+    ];
+
+    const name = artifact.name || artifact.displayName || 'prompt';
+    const description = `Activates the ${name} ${artifact.type || 'workflow'}.`;
+
+    const frontmatter = `---
+description: "${description}"
+tools: ${JSON.stringify(tools)}
+---
+
+`;
+
+    return frontmatter + contentWithoutFrontmatter;
   }
 
   /**
