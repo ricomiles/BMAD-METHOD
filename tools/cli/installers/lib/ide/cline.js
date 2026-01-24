@@ -2,15 +2,14 @@ const path = require('node:path');
 const fs = require('fs-extra');
 const chalk = require('chalk');
 const { BaseIdeSetup } = require('./_base-ide');
-const { WorkflowCommandGenerator } = require('./shared/workflow-command-generator');
-const { AgentCommandGenerator } = require('./shared/agent-command-generator');
-const { TaskToolCommandGenerator } = require('./shared/task-tool-command-generator');
-const { getAgentsFromBmad, getTasksFromBmad } = require('./shared/bmad-artifacts');
-const { toDashPath, customAgentDashName } = require('./shared/path-utils');
+const { UnifiedInstaller, NamingStyle, TemplateType } = require('./shared/unified-installer');
+const { customAgentDashName } = require('./shared/path-utils');
 
 /**
  * Cline IDE setup handler
- * Installs BMAD artifacts to .clinerules/workflows with flattened naming
+ *
+ * Uses UnifiedInstaller for all artifact installation.
+ * Installs BMAD artifacts to .clinerules/workflows with flattened naming.
  */
 class ClineSetup extends BaseIdeSetup {
   constructor() {
@@ -32,41 +31,45 @@ class ClineSetup extends BaseIdeSetup {
     const clineDir = path.join(projectDir, this.configDir);
     const workflowsDir = path.join(clineDir, this.workflowsDir);
 
-    await this.ensureDir(workflowsDir);
+    await fs.ensureDir(workflowsDir);
 
     // Clear old BMAD files
     await this.clearOldBmadFiles(workflowsDir);
 
-    // Collect all artifacts
-    const { artifacts, counts } = await this.collectClineArtifacts(projectDir, bmadDir, options);
-
-    // Write flattened files
-    const written = await this.flattenAndWriteArtifacts(artifacts, workflowsDir);
+    // Use the unified installer - much simpler!
+    const installer = new UnifiedInstaller(this.bmadFolderName);
+    const counts = await installer.install(
+      projectDir,
+      bmadDir,
+      {
+        targetDir: workflowsDir,
+        namingStyle: NamingStyle.FLAT_DASH,
+        templateType: TemplateType.CLINE,
+      },
+      options.selectedModules || [],
+    );
 
     console.log(chalk.green(`✓ ${this.name} configured:`));
     console.log(chalk.dim(`  - ${counts.agents} agents installed`));
     console.log(chalk.dim(`  - ${counts.tasks} tasks installed`));
     console.log(chalk.dim(`  - ${counts.workflows} workflow commands installed`));
-    if (counts.workflowLaunchers > 0) {
-      console.log(chalk.dim(`  - ${counts.workflowLaunchers} workflow launchers installed`));
+    if (counts.tools > 0) {
+      console.log(chalk.dim(`  - ${counts.tools} tools installed`));
     }
-    console.log(chalk.dim(`  - ${written} files written to ${path.relative(projectDir, workflowsDir)}`));
+    console.log(chalk.dim(`  - ${counts.total} files written to ${path.relative(projectDir, workflowsDir)}`));
 
     // Usage instructions
     console.log(chalk.yellow('\n  ⚠️  How to Use Cline Workflows'));
     console.log(chalk.cyan('  BMAD workflows are available as slash commands in Cline'));
     console.log(chalk.dim('  Usage:'));
     console.log(chalk.dim('    - Type / to see available commands'));
-    console.log(chalk.dim('    - All BMAD items start with "bmad_"'));
-    console.log(chalk.dim('    - Example: /bmad_bmm_pm'));
+    console.log(chalk.dim('    - All BMAD items start with "bmad-"'));
+    console.log(chalk.dim('    - Example: /bmad-bmm-pm'));
 
     return {
       success: true,
-      agents: counts.agents,
-      tasks: counts.tasks,
-      workflows: counts.workflows,
-      workflowLaunchers: counts.workflowLaunchers,
-      written,
+      ...counts,
+      destination: workflowsDir,
     };
   }
 
@@ -82,92 +85,6 @@ class ClineSetup extends BaseIdeSetup {
 
     const entries = await fs.readdir(workflowsDir);
     return entries.some((entry) => entry.startsWith('bmad'));
-  }
-
-  /**
-   * Collect all artifacts for Cline export
-   */
-  async collectClineArtifacts(projectDir, bmadDir, options = {}) {
-    const selectedModules = options.selectedModules || [];
-    const artifacts = [];
-
-    // Generate agent launchers
-    const agentGen = new AgentCommandGenerator(this.bmadFolderName);
-    const { artifacts: agentArtifacts } = await agentGen.collectAgentArtifacts(bmadDir, selectedModules);
-
-    // Process agent launchers with project-specific paths
-    for (const agentArtifact of agentArtifacts) {
-      const content = agentArtifact.content;
-
-      artifacts.push({
-        type: 'agent',
-        module: agentArtifact.module,
-        sourcePath: agentArtifact.sourcePath,
-        relativePath: agentArtifact.relativePath,
-        content,
-      });
-    }
-
-    // Get tasks
-    const tasks = await getTasksFromBmad(bmadDir, selectedModules);
-    for (const task of tasks) {
-      const content = await this.readAndProcessWithProject(
-        task.path,
-        {
-          module: task.module,
-          name: task.name,
-        },
-        projectDir,
-      );
-
-      artifacts.push({
-        type: 'task',
-        module: task.module,
-        path: task.path,
-        sourcePath: task.path,
-        relativePath: path.join(task.module, 'tasks', `${task.name}.md`),
-        content,
-      });
-    }
-
-    // Get workflows
-    const workflowGenerator = new WorkflowCommandGenerator(this.bmadFolderName);
-    const { artifacts: workflowArtifacts, counts: workflowCounts } = await workflowGenerator.collectWorkflowArtifacts(bmadDir);
-    artifacts.push(...workflowArtifacts);
-
-    return {
-      artifacts,
-      counts: {
-        agents: agentArtifacts.length,
-        tasks: tasks.length,
-        workflows: workflowCounts.commands,
-        workflowLaunchers: workflowCounts.launchers,
-      },
-    };
-  }
-
-  /**
-   * Flatten file path to bmad_module_type_name.md format
-   * Uses shared toDashPath utility
-   */
-  flattenFilename(relativePath) {
-    return toDashPath(relativePath);
-  }
-
-  /**
-   * Write all artifacts with flattened names
-   */
-  async flattenAndWriteArtifacts(artifacts, destDir) {
-    let written = 0;
-
-    for (const artifact of artifacts) {
-      const flattenedName = this.flattenFilename(artifact.relativePath);
-      const targetPath = path.join(destDir, flattenedName);
-      await fs.writeFile(targetPath, artifact.content);
-      written++;
-    }
-
-    return written;
   }
 
   /**
@@ -193,14 +110,6 @@ class ClineSetup extends BaseIdeSetup {
         await fs.remove(entryPath);
       }
     }
-  }
-
-  /**
-   * Read and process file with project-specific paths
-   */
-  async readAndProcessWithProject(filePath, metadata, projectDir) {
-    const content = await fs.readFile(filePath, 'utf8');
-    return super.processContent(content, metadata, projectDir);
   }
 
   /**
@@ -260,13 +169,6 @@ The agent will follow the persona and instructions from the main agent file.
       command: fileName.replace('.md', ''),
       type: 'custom-agent-launcher',
     };
-  }
-
-  /**
-   * Utility: Ensure directory exists
-   */
-  async ensureDir(dirPath) {
-    await fs.ensureDir(dirPath);
   }
 }
 
