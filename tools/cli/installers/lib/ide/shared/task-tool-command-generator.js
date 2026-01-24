@@ -9,54 +9,10 @@ const { toColonName, toColonPath, toDashPath } = require('./path-utils');
  */
 class TaskToolCommandGenerator {
   /**
-   * Generate task and tool commands from manifest CSVs
-   * @param {string} projectDir - Project directory
-   * @param {string} bmadDir - BMAD installation directory
-   * @param {string} baseCommandsDir - Optional base commands directory (defaults to .claude/commands/bmad)
+   * REMOVED: Old generateTaskToolCommands method that created nested structure.
+   * This was causing bugs where files were written to wrong directories.
+   * Use generateColonTaskToolCommands() or generateDashTaskToolCommands() instead.
    */
-  async generateTaskToolCommands(projectDir, bmadDir, baseCommandsDir = null) {
-    const tasks = await this.loadTaskManifest(bmadDir);
-    const tools = await this.loadToolManifest(bmadDir);
-
-    // Filter to only standalone items
-    const standaloneTasks = tasks ? tasks.filter((t) => t.standalone === 'true' || t.standalone === true) : [];
-    const standaloneTools = tools ? tools.filter((t) => t.standalone === 'true' || t.standalone === true) : [];
-
-    // Base commands directory - use provided or default to Claude Code structure
-    const commandsDir = baseCommandsDir || path.join(projectDir, '.claude', 'commands', 'bmad');
-
-    let generatedCount = 0;
-
-    // Generate command files for tasks
-    for (const task of standaloneTasks) {
-      const moduleTasksDir = path.join(commandsDir, task.module, 'tasks');
-      await fs.ensureDir(moduleTasksDir);
-
-      const commandContent = this.generateCommandContent(task, 'task');
-      const commandPath = path.join(moduleTasksDir, `${task.name}.md`);
-
-      await fs.writeFile(commandPath, commandContent);
-      generatedCount++;
-    }
-
-    // Generate command files for tools
-    for (const tool of standaloneTools) {
-      const moduleToolsDir = path.join(commandsDir, tool.module, 'tools');
-      await fs.ensureDir(moduleToolsDir);
-
-      const commandContent = this.generateCommandContent(tool, 'tool');
-      const commandPath = path.join(moduleToolsDir, `${tool.name}.md`);
-
-      await fs.writeFile(commandPath, commandContent);
-      generatedCount++;
-    }
-
-    return {
-      generated: generatedCount,
-      tasks: standaloneTasks.length,
-      tools: standaloneTools.length,
-    };
-  }
 
   /**
    * Generate command content for a task or tool
@@ -93,9 +49,15 @@ Follow all instructions in the ${type} file exactly as written.
     }
 
     const csvContent = await fs.readFile(manifestPath, 'utf8');
-    return csv.parse(csvContent, {
+    const tasks = csv.parse(csvContent, {
       columns: true,
       skip_empty_lines: true,
+    });
+
+    // Filter out README files
+    return tasks.filter((task) => {
+      const nameLower = task.name.toLowerCase();
+      return !nameLower.includes('readme') && task.name !== 'README';
     });
   }
 
@@ -110,9 +72,15 @@ Follow all instructions in the ${type} file exactly as written.
     }
 
     const csvContent = await fs.readFile(manifestPath, 'utf8');
-    return csv.parse(csvContent, {
+    const tools = csv.parse(csvContent, {
       columns: true,
       skip_empty_lines: true,
+    });
+
+    // Filter out README files
+    return tools.filter((tool) => {
+      const nameLower = tool.name.toLowerCase();
+      return !nameLower.includes('readme') && tool.name !== 'README';
     });
   }
 
@@ -135,12 +103,16 @@ Follow all instructions in the ${type} file exactly as written.
 
     let generatedCount = 0;
 
+    // DEBUG: Log parameters
+    console.log(`[DEBUG generateColonTaskToolCommands] baseCommandsDir: ${baseCommandsDir}`);
+
     // Generate command files for tasks
     for (const task of standaloneTasks) {
       const commandContent = this.generateCommandContent(task, 'task');
       // Use underscore format: bmad_bmm_name.md
       const flatName = toColonName(task.module, 'tasks', task.name);
       const commandPath = path.join(baseCommandsDir, flatName);
+      console.log(`[DEBUG generateColonTaskToolCommands] Writing task ${task.name} to: ${commandPath}`);
       await fs.ensureDir(path.dirname(commandPath));
       await fs.writeFile(commandPath, commandContent);
       generatedCount++;
@@ -186,7 +158,7 @@ Follow all instructions in the ${type} file exactly as written.
     // Generate command files for tasks
     for (const task of standaloneTasks) {
       const commandContent = this.generateCommandContent(task, 'task');
-      // Use underscore format: bmad_bmm_name.md
+      // Use underscore format: bmad_bmm_name.md (toDashPath aliases toColonPath)
       const flatName = toDashPath(`${task.module}/tasks/${task.name}.md`);
       const commandPath = path.join(baseCommandsDir, flatName);
       await fs.ensureDir(path.dirname(commandPath));
@@ -197,7 +169,7 @@ Follow all instructions in the ${type} file exactly as written.
     // Generate command files for tools
     for (const tool of standaloneTools) {
       const commandContent = this.generateCommandContent(tool, 'tool');
-      // Use underscore format: bmad_bmm_name.md
+      // Use underscore format: bmad_bmm_name.md (toDashPath aliases toColonPath)
       const flatName = toDashPath(`${tool.module}/tools/${tool.name}.md`);
       const commandPath = path.join(baseCommandsDir, flatName);
       await fs.ensureDir(path.dirname(commandPath));

@@ -1,0 +1,329 @@
+/**
+ * Unified BMAD Installer for all IDEs
+ *
+ * Replaces the fractured, duplicated setup logic across all IDE handlers.
+ * All IDEs do the same thing:
+ *   1. Collect agents, workflows, tasks, tools from the same sources
+ *   2. Write them to a target directory
+ *   3. Use a naming convention (flat-colon, flat-dash, or nested)
+ *
+ * The only differences between IDEs are:
+ *   - target directory (e.g., .claude/commands/, .cursor/rules/)
+ *   - naming style (underscore vs dash vs nested)
+ *   - template/frontmatter (some need YAML, some need custom frontmatter)
+ */
+
+const path = require('node:path');
+const fs = require('fs-extra');
+const { AgentCommandGenerator } = require('./agent-command-generator');
+const { WorkflowCommandGenerator } = require('./workflow-command-generator');
+const { TaskToolCommandGenerator } = require('./task-tool-command-generator');
+const { toColonPath, toDashPath } = require('./path-utils');
+
+/**
+ * Naming styles
+ */
+const NamingStyle = {
+  FLAT_COLON: 'flat-colon', // bmad_bmm_agent_pm.md (Windows-compatible)
+  FLAT_DASH: 'flat-dash', // bmad-bmm-agent-pm.md
+  NESTED: 'nested', // bmad/bmm/agents/pm.md (OLD, deprecated)
+};
+
+/**
+ * Template types for different IDE frontmatter/formatting
+ */
+const TemplateType = {
+  CLAUDE: 'claude', // YAML frontmatter with name/description
+  CURSOR: 'cursor', // Same as Claude
+  CODEX: 'codex', // No frontmatter, direct content
+  CLINE: 'cline', // No frontmatter, direct content
+  WINDSURF: 'windsurf', // YAML with auto_execution_mode
+  AUGMENT: 'augment', // YAML frontmatter
+};
+
+/**
+ * Unified installer configuration
+ * @typedef {Object} UnifiedInstallConfig
+ * @property {string} targetDir - Full path to target directory
+ * @property {NamingStyle} namingStyle - How to name files
+ * @property {TemplateType} templateType - What template format to use
+ * @property {boolean} includeNestedStructure - For NESTED style, create subdirectories
+ * @property {Function} [customTemplateFn] - Optional custom template function
+ */
+
+/**
+ * Unified BMAD Installer
+ */
+class UnifiedInstaller {
+  constructor(bmadFolderName = 'bmad') {
+    this.bmadFolderName = bmadFolderName;
+  }
+
+  /**
+   * Install BMAD artifacts for an IDE
+   *
+   * @param {string} projectDir - Project root directory
+   * @param {string} bmadDir - BMAD installation directory (_bmad)
+   * @param {UnifiedInstallConfig} config - Installation configuration
+   * @param {Array<string>} selectedModules - Modules to install
+   * @returns {Promise<Object>} Installation result with counts
+   */
+  async install(projectDir, bmadDir, config, selectedModules = []) {
+    const {
+      targetDir,
+      namingStyle = NamingStyle.FLAT_COLON,
+      templateType = TemplateType.CLAUDE,
+      includeNestedStructure = false,
+      customTemplateFn = null,
+    } = config;
+
+    // Clean up any existing BMAD files in target directory
+    await this.cleanupBmadFiles(targetDir);
+
+    // Ensure target directory exists
+    await fs.ensureDir(targetDir);
+
+    // Count results
+    const counts = {
+      agents: 0,
+      workflows: 0,
+      tasks: 0,
+      tools: 0,
+      total: 0,
+    };
+
+    // 1. Install Agents
+    const agentGen = new AgentCommandGenerator(this.bmadFolderName);
+    const { artifacts: agentArtifacts } = await agentGen.collectAgentArtifacts(bmadDir, selectedModules);
+    counts.agents = await this.writeArtifacts(agentArtifacts, targetDir, namingStyle, templateType, customTemplateFn, 'agent');
+
+    // 2. Install Workflows (filter out README artifacts)
+    const workflowGen = new WorkflowCommandGenerator(this.bmadFolderName);
+    const { artifacts: workflowArtifacts } = await workflowGen.collectWorkflowArtifacts(bmadDir);
+    const workflowArtifactsFiltered = workflowArtifacts.filter((a) => {
+      const name = path.basename(a.relativePath || '');
+      return name.toLowerCase() !== 'readme.md' && !name.toLowerCase().startsWith('readme-');
+    });
+    counts.workflows = await this.writeArtifacts(
+      workflowArtifactsFiltered,
+      targetDir,
+      namingStyle,
+      templateType,
+      customTemplateFn,
+      'workflow',
+    );
+
+    // 3. Install Tasks and Tools from manifest CSV (standalone items)
+    const ttGen = new TaskToolCommandGenerator();
+    console.log(`[DEBUG] About to call TaskToolCommandGenerator, namingStyle=${namingStyle}, targetDir=${targetDir}`);
+
+    // For now, ALWAYS use flat structure - nested is deprecated
+    // TODO: Remove nested branch entirely after verification
+    const taskToolResult =
+      namingStyle === NamingStyle.FLAT_DASH
+        ? await ttGen.generateDashTaskToolCommands(projectDir, bmadDir, targetDir)
+        : await ttGen.generateColonTaskToolCommands(projectDir, bmadDir, targetDir);
+
+    counts.tasks = taskToolResult.tasks || 0;
+    counts.tools = taskToolResult.tools || 0;
+
+    counts.total = counts.agents + counts.workflows + counts.tasks + counts.tools;
+
+    return counts;
+  }
+
+  /**
+   * Clean up any existing BMAD files in target directory
+   */
+  async cleanupBmadFiles(targetDir) {
+    if (!(await fs.pathExists(targetDir))) {
+      return;
+    }
+
+    // Recursively find and remove any bmad* files or directories
+    const entries = await fs.readdir(targetDir, { withFileTypes: true });
+
+    for (const entry of entries) {
+      if (entry.name.startsWith('bmad')) {
+        const entryPath = path.join(targetDir, entry.name);
+        await fs.remove(entryPath);
+      }
+    }
+  }
+
+  /**
+   * Write artifacts with specified naming style and template
+   */
+  async writeArtifacts(artifacts, targetDir, namingStyle, templateType, customTemplateFn, artifactType) {
+    console.log(`[DEBUG] writeArtifacts: artifactType=${artifactType}, count=${artifacts.length}, targetDir=${targetDir}`);
+    let written = 0;
+
+    for (const artifact of artifacts) {
+      // Determine target path based on naming style
+      let targetPath;
+      let content = artifact.content;
+      console.log(`[DEBUG] writeArtifacts processing: relativePath=${artifact.relativePath}, name=${artifact.name}`);
+
+      if (namingStyle === NamingStyle.FLAT_COLON) {
+        const flatName = toColonPath(artifact.relativePath);
+        targetPath = path.join(targetDir, flatName);
+      } else if (namingStyle === NamingStyle.FLAT_DASH) {
+        const flatName = toDashPath(artifact.relativePath);
+        targetPath = path.join(targetDir, flatName);
+      } else {
+        // Fallback: treat as flat even if NESTED specified
+        const flatName = toColonPath(artifact.relativePath);
+        targetPath = path.join(targetDir, flatName);
+      }
+
+      // Apply template transformations if needed
+      if (customTemplateFn) {
+        content = customTemplateFn(artifact, content, templateType);
+      } else {
+        content = this.applyTemplate(artifact, content, templateType);
+      }
+
+      await fs.ensureDir(path.dirname(targetPath));
+      await fs.writeFile(targetPath, content, 'utf8');
+      written++;
+    }
+
+    return written;
+  }
+
+  /**
+   * Apply template/frontmatter based on type
+   */
+  applyTemplate(artifact, content, templateType) {
+    switch (templateType) {
+      case TemplateType.CLAUDE:
+      case TemplateType.CURSOR: {
+        // Already has YAML frontmatter from generator
+        return content;
+      }
+
+      case TemplateType.CODEX:
+      case TemplateType.CLINE: {
+        // No frontmatter needed, content as-is
+        return content;
+      }
+
+      case TemplateType.WINDSURF: {
+        // Add Windsurf-specific frontmatter
+        return this.addWindsurfFrontmatter(artifact, content);
+      }
+
+      case TemplateType.AUGMENT: {
+        // Add Augment frontmatter
+        return this.addAugmentFrontmatter(artifact, content);
+      }
+
+      default: {
+        return content;
+      }
+    }
+  }
+
+  /**
+   * Add Windsurf frontmatter with auto_execution_mode
+   */
+  addWindsurfFrontmatter(artifact, content) {
+    // Remove existing frontmatter if present
+    const frontmatterRegex = /^---\s*\n[\s\S]*?\n---\s*\n/;
+    const contentWithoutFrontmatter = content.replace(frontmatterRegex, '');
+
+    // Determine auto_execution_mode based on type
+    let autoExecMode = '1'; // default for workflows
+    if (artifact.type === 'agent') {
+      autoExecMode = '3';
+    } else if (artifact.type === 'task' || artifact.type === 'tool') {
+      autoExecMode = '2';
+    }
+
+    const name = artifact.name || artifact.displayName || 'workflow';
+    const frontmatter = `---
+description: ${name}
+auto_execution_mode: ${autoExecMode}
+---
+
+`;
+
+    return frontmatter + contentWithoutFrontmatter;
+  }
+
+  /**
+   * Add Augment frontmatter
+   */
+  addAugmentFrontmatter(artifact, content) {
+    // Augment uses simple YAML frontmatter
+    const name = artifact.name || artifact.displayName || 'workflow';
+    const frontmatter = `---
+description: ${name}
+---
+
+`;
+    // Only add if not already present
+    if (!content.startsWith('---')) {
+      return frontmatter + content;
+    }
+    return content;
+  }
+
+  /**
+   * Get tasks from manifest CSV
+   */
+  async getTasksFromManifest(bmadDir) {
+    const csv = require('csv-parse/sync');
+    const manifestPath = path.join(bmadDir, '_config', 'task-manifest.csv');
+
+    if (!(await fs.pathExists(manifestPath))) {
+      return [];
+    }
+
+    const csvContent = await fs.readFile(manifestPath, 'utf8');
+    const tasks = csv.parse(csvContent, {
+      columns: true,
+      skip_empty_lines: true,
+    });
+
+    // Filter for standalone only
+    return tasks
+      .filter((t) => t.standalone === 'true' || t.standalone === true)
+      .map((t) => ({
+        ...t,
+        content: null, // Will be read from path when writing
+      }));
+  }
+
+  /**
+   * Get tools from manifest CSV
+   */
+  async getToolsFromManifest(bmadDir) {
+    const csv = require('csv-parse/sync');
+    const manifestPath = path.join(bmadDir, '_config', 'tool-manifest.csv');
+
+    if (!(await fs.pathExists(manifestPath))) {
+      return [];
+    }
+
+    const csvContent = await fs.readFile(manifestPath, 'utf8');
+    const tools = csv.parse(csvContent, {
+      columns: true,
+      skip_empty_lines: true,
+    });
+
+    // Filter for standalone only
+    return tools
+      .filter((t) => t.standalone === 'true' || t.standalone === true)
+      .map((t) => ({
+        ...t,
+        content: null, // Will be read from path when writing
+      }));
+  }
+}
+
+module.exports = {
+  UnifiedInstaller,
+  NamingStyle,
+  TemplateType,
+};

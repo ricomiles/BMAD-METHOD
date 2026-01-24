@@ -150,9 +150,10 @@ class AntigravitySetup extends BaseIdeSetup {
     // Write workflow-command artifacts with FLATTENED naming using shared utility
     const workflowCommandCount = await workflowGen.writeDashArtifacts(bmadWorkflowsDir, workflowArtifacts);
 
-    // Generate task and tool commands from manifests (if they exist)
+    // Generate task and tool commands using FLAT naming (not nested!)
+    // Use the new generateDashTaskToolCommands method with explicit target directory
     const taskToolGen = new TaskToolCommandGenerator();
-    const taskToolResult = await taskToolGen.generateTaskToolCommands(projectDir, bmadDir);
+    const taskToolResult = await taskToolGen.generateDashTaskToolCommands(projectDir, bmadDir, bmadWorkflowsDir);
 
     console.log(chalk.green(`✓ ${this.name} configured:`));
     console.log(chalk.dim(`  - ${agentCount} agents installed`));

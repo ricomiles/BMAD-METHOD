@@ -123,6 +123,7 @@ class ClineSetup extends BaseIdeSetup {
       artifacts.push({
         type: 'task',
         module: task.module,
+        path: task.path,
         sourcePath: task.path,
         relativePath: path.join(task.module, 'tasks', `${task.name}.md`),
         content,
