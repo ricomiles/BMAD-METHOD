@@ -38,7 +38,7 @@ Follow all instructions in the ${type} file exactly as written.
 
     if (format === 'toml') {
       // Escape any triple quotes in content
-      const escapedContent = content.replace(/"""/g, '\\"\\"\\"');
+      const escapedContent = content.replaceAll('"""', String.raw`\"\"\"`);
       return `description = "${description}"
 prompt = """
 ${escapedContent}
