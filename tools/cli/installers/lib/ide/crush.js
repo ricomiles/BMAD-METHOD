@@ -2,14 +2,14 @@ const path = require('node:path');
 const fs = require('fs-extra');
 const { BaseIdeSetup } = require('./_base-ide');
 const chalk = require('chalk');
-const { AgentCommandGenerator } = require('./shared/agent-command-generator');
-const { WorkflowCommandGenerator } = require('./shared/workflow-command-generator');
-const { TaskToolCommandGenerator } = require('./shared/task-tool-command-generator');
+const { UnifiedInstaller, NamingStyle, TemplateType } = require('./shared/unified-installer');
 const { customAgentColonName } = require('./shared/path-utils');
 
 /**
  * Crush IDE setup handler
- * Creates commands in .crush/commands/ directory structure using flat colon naming
+ *
+ * Uses the UnifiedInstaller - all the complex artifact collection
+ * and writing logic is now centralized.
  */
 class CrushSetup extends BaseIdeSetup {
   constructor() {
@@ -31,47 +31,42 @@ class CrushSetup extends BaseIdeSetup {
     await this.cleanup(projectDir);
 
     // Create .crush/commands directory
-    const crushDir = path.join(projectDir, this.configDir);
-    const commandsDir = path.join(crushDir, this.commandsDir);
+    const commandsDir = path.join(projectDir, this.configDir, this.commandsDir);
     await this.ensureDir(commandsDir);
 
-    // Use underscore format: files written directly to commands dir (no bmad subfolder)
-    // Creates: .crush/commands/bmad_bmm_pm.md
-
-    // Generate agent launchers
-    const agentGen = new AgentCommandGenerator(this.bmadFolderName);
-    const { artifacts: agentArtifacts } = await agentGen.collectAgentArtifacts(bmadDir, options.selectedModules || []);
-
-    // Write agent launcher files using flat underscore naming
-    // Creates files like: bmad_bmm_pm.md
-    const agentCount = await agentGen.writeColonArtifacts(commandsDir, agentArtifacts);
-
-    // Get ALL workflows using the new workflow command generator
-    const workflowGenerator = new WorkflowCommandGenerator(this.bmadFolderName);
-    const { artifacts: workflowArtifacts } = await workflowGenerator.collectWorkflowArtifacts(bmadDir);
-
-    // Write workflow-command artifacts using flat underscore naming
-    // Creates files like: bmad_bmm_correct-course.md
-    const workflowCount = await workflowGenerator.writeColonArtifacts(commandsDir, workflowArtifacts);
-
-    // Generate task and tool commands using flat underscore naming
-    const taskToolGen = new TaskToolCommandGenerator();
-    const taskToolResult = await taskToolGen.generateColonTaskToolCommands(projectDir, bmadDir, commandsDir);
+    // Use the unified installer
+    // Crush uses flat colon naming (bmad_bmm_pm.md) with no frontmatter (like Codex)
+    const installer = new UnifiedInstaller(this.bmadFolderName);
+    const counts = await installer.install(
+      projectDir,
+      bmadDir,
+      {
+        targetDir: commandsDir,
+        namingStyle: NamingStyle.FLAT_COLON,
+        templateType: TemplateType.CODEX,
+      },
+      options.selectedModules || [],
+    );
 
     console.log(chalk.green(`✓ ${this.name} configured:`));
-    console.log(chalk.dim(`  - ${agentCount} agent commands created`));
-    console.log(chalk.dim(`  - ${taskToolResult.tasks} task commands created`));
-    console.log(chalk.dim(`  - ${taskToolResult.tools} tool commands created`));
-    console.log(chalk.dim(`  - ${workflowCount} workflow commands created`));
+    console.log(chalk.dim(`  - ${counts.agents} agents installed`));
+    if (counts.workflows > 0) {
+      console.log(chalk.dim(`  - ${counts.workflows} workflow commands generated`));
+    }
+    if (counts.tasks + counts.tools > 0) {
+      console.log(
+        chalk.dim(`  - ${counts.tasks + counts.tools} task/tool commands generated (${counts.tasks} tasks, ${counts.tools} tools)`),
+      );
+    }
     console.log(chalk.dim(`  - Commands directory: ${path.relative(projectDir, commandsDir)}`));
     console.log(chalk.dim('\n  Commands can be accessed via Crush command palette'));
 
     return {
       success: true,
-      agents: agentCount,
-      tasks: taskToolResult.tasks || 0,
-      tools: taskToolResult.tools || 0,
-      workflows: workflowCount,
+      agents: counts.agents,
+      tasks: counts.tasks,
+      tools: counts.tools,
+      workflows: counts.workflows,
     };
   }
 
