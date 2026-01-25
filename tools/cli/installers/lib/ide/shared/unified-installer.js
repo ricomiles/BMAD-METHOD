@@ -1,47 +1,27 @@
 /**
  * Unified BMAD Installer for all IDEs
  *
- * Replaces the fractured, duplicated setup logic across all IDE handlers.
- * All IDEs do the same thing:
- *   1. Collect agents, workflows, tasks, tools from the same sources
- *   2. Write them to a target directory
- *   3. Use a naming convention (flat-colon, flat-dash, or nested)
- *
- * The only differences between IDEs are:
- *   - target directory (e.g., .claude/commands/, .cursor/rules/)
- *   - naming style (underscore vs dash vs nested)
- *   - template/frontmatter (some need YAML, some need custom frontmatter)
+ * ALL IDE configuration comes from platform-codes.yaml
+ * NO IDE-specific code in this file - just loads and applies templates
  */
 
 const path = require('node:path');
 const fs = require('fs-extra');
+const chalk = require('chalk');
 const { AgentCommandGenerator } = require('./agent-command-generator');
 const { WorkflowCommandGenerator } = require('./workflow-command-generator');
 const { TaskToolCommandGenerator } = require('./task-tool-command-generator');
-const { toColonPath, toDashPath } = require('./path-utils');
+const { toColonPath, toDashPath, toSuffixBasedName, getArtifactSuffix } = require('./path-utils');
 
 /**
  * Naming styles
+ * @deprecated Use 'suffix-based' for all new installations
  */
 const NamingStyle = {
-  FLAT_COLON: 'flat-colon', // bmad_bmm_agent_pm.md (Windows-compatible)
-  FLAT_DASH: 'flat-dash', // bmad-bmm-agent-pm.md
-  NESTED: 'nested', // bmad/bmm/agents/pm.md (OLD, deprecated)
-};
-
-/**
- * Template types for different IDE frontmatter/formatting
- */
-const TemplateType = {
-  CLAUDE: 'claude', // YAML frontmatter with name/description
-  CURSOR: 'cursor', // Same as Claude
-  CODEX: 'codex', // No frontmatter, direct content
-  CLINE: 'cline', // No frontmatter, direct content
-  WINDSURF: 'windsurf', // YAML with auto_execution_mode
-  AUGMENT: 'augment', // YAML frontmatter
-  GEMINI: 'gemini', // TOML frontmatter with description/prompt
-  QWEN: 'qwen', // TOML frontmatter with description/prompt (same as Gemini)
-  COPILOT: 'copilot', // YAML with tools array for GitHub Copilot
+  FLAT_COLON: 'flat-colon',
+  FLAT_DASH: 'flat-dash',
+  NESTED: 'nested',
+  SUFFIX_BASED: 'suffix-based',
 };
 
 /**
@@ -49,18 +29,22 @@ const TemplateType = {
  * @typedef {Object} UnifiedInstallConfig
  * @property {string} targetDir - Full path to target directory
  * @property {NamingStyle} namingStyle - How to name files
- * @property {TemplateType} templateType - What template format to use
- * @property {string} [fileExtension='.md'] - File extension including dot (e.g., '.md', '.toml')
+ * @property {string} [frontmatterTemplate] - Frontmatter template filename (from platform-codes.yaml)
+ * @property {string} [fileExtension='.md'] - File extension including dot
  * @property {boolean} includeNestedStructure - For NESTED style, create subdirectories
  * @property {Function} [customTemplateFn] - Optional custom template function
  */
 
 /**
  * Unified BMAD Installer
+ *
+ * Driven entirely by platform-codes.yaml configuration
+ * Frontmatter templates are loaded from templates/frontmatter/ directory
  */
 class UnifiedInstaller {
   constructor(bmadFolderName = 'bmad') {
     this.bmadFolderName = bmadFolderName;
+    this.templateDir = path.join(__dirname, '../templates/frontmatter');
   }
 
   /**
@@ -75,15 +59,19 @@ class UnifiedInstaller {
   async install(projectDir, bmadDir, config, selectedModules = []) {
     const {
       targetDir,
-      namingStyle = NamingStyle.FLAT_COLON,
-      templateType = TemplateType.CLAUDE,
+      namingStyle = NamingStyle.SUFFIX_BASED,
+      frontmatterTemplate = 'common-yaml.md',
       fileExtension = '.md',
       includeNestedStructure = false,
       customTemplateFn = null,
+      skipExisting = false,
+      artifactTypes = null,
     } = config;
 
-    // Clean up any existing BMAD files in target directory
-    await this.cleanupBmadFiles(targetDir, fileExtension);
+    // Clean up any existing BMAD files in target directory (unless skipExisting)
+    if (!skipExisting) {
+      await this.cleanupBmadFiles(targetDir, fileExtension);
+    }
 
     // Ensure target directory exists
     await fs.ensureDir(targetDir);
@@ -97,49 +85,83 @@ class UnifiedInstaller {
       total: 0,
     };
 
+    // Check if we should install agents
+    const installAgents = !artifactTypes || artifactTypes.includes('agents');
+    const installWorkflows = !artifactTypes || artifactTypes.includes('workflows');
+    const installTasks = !artifactTypes || artifactTypes.includes('tasks');
+    const installTools = !artifactTypes || artifactTypes.includes('tools');
+
+    // Load frontmatter template once (if not 'none')
+    let templateContent = null;
+    if (frontmatterTemplate && frontmatterTemplate !== 'none') {
+      templateContent = await this.loadFrontmatterTemplate(frontmatterTemplate);
+    }
+
     // 1. Install Agents
-    const agentGen = new AgentCommandGenerator(this.bmadFolderName);
-    const { artifacts: agentArtifacts } = await agentGen.collectAgentArtifacts(bmadDir, selectedModules);
-    counts.agents = await this.writeArtifacts(
-      agentArtifacts,
-      targetDir,
-      namingStyle,
-      templateType,
-      fileExtension,
-      customTemplateFn,
-      'agent',
-    );
+    if (installAgents) {
+      const agentGen = new AgentCommandGenerator(this.bmadFolderName);
+      const { artifacts: agentArtifacts } = await agentGen.collectAgentArtifacts(bmadDir, selectedModules);
+      counts.agents = await this.writeArtifacts(
+        agentArtifacts,
+        targetDir,
+        namingStyle,
+        templateContent,
+        frontmatterTemplate,
+        fileExtension,
+        customTemplateFn,
+        'agent',
+        skipExisting,
+      );
+    }
 
     // 2. Install Workflows (filter out README artifacts)
-    const workflowGen = new WorkflowCommandGenerator(this.bmadFolderName);
-    const { artifacts: workflowArtifacts } = await workflowGen.collectWorkflowArtifacts(bmadDir);
-    const workflowArtifactsFiltered = workflowArtifacts.filter((a) => {
-      const name = path.basename(a.relativePath || '');
-      return name.toLowerCase() !== 'readme.md' && !name.toLowerCase().startsWith('readme-');
-    });
-    counts.workflows = await this.writeArtifacts(
-      workflowArtifactsFiltered,
-      targetDir,
-      namingStyle,
-      templateType,
-      fileExtension,
-      customTemplateFn,
-      'workflow',
-    );
+    if (installWorkflows) {
+      const workflowGen = new WorkflowCommandGenerator(this.bmadFolderName);
+      const { artifacts: workflowArtifacts } = await workflowGen.collectWorkflowArtifacts(bmadDir);
+      const workflowArtifactsFiltered = workflowArtifacts.filter((a) => {
+        const name = path.basename(a.relativePath || '');
+        return name.toLowerCase() !== 'readme.md' && !name.toLowerCase().startsWith('readme-');
+      });
+      counts.workflows = await this.writeArtifacts(
+        workflowArtifactsFiltered,
+        targetDir,
+        namingStyle,
+        templateContent,
+        frontmatterTemplate,
+        fileExtension,
+        customTemplateFn,
+        'workflow',
+        skipExisting,
+      );
+    }
 
-    // 3. Install Tasks and Tools from manifest CSV (standalone items)
-    const ttGen = new TaskToolCommandGenerator();
-    console.log(`[DEBUG] About to call TaskToolCommandGenerator, namingStyle=${namingStyle}, targetDir=${targetDir}`);
+    // 3. Install Tasks and Tools from manifest CSV
+    if (installTasks || installTools) {
+      const ttGen = new TaskToolCommandGenerator();
 
-    // For now, ALWAYS use flat structure - nested is deprecated
-    // TODO: Remove nested branch entirely after verification
-    const taskToolResult =
-      namingStyle === NamingStyle.FLAT_DASH
-        ? await ttGen.generateDashTaskToolCommands(projectDir, bmadDir, targetDir, fileExtension)
-        : await ttGen.generateColonTaskToolCommands(projectDir, bmadDir, targetDir, fileExtension);
-
-    counts.tasks = taskToolResult.tasks || 0;
-    counts.tools = taskToolResult.tools || 0;
+      // Use suffix-based naming if specified
+      if (namingStyle === NamingStyle.SUFFIX_BASED) {
+        const taskToolResult = await ttGen.generateSuffixBasedTaskToolCommands(
+          projectDir,
+          bmadDir,
+          targetDir,
+          fileExtension,
+          templateContent,
+          frontmatterTemplate,
+          skipExisting,
+        );
+        counts.tasks = taskToolResult.tasks || 0;
+        counts.tools = taskToolResult.tools || 0;
+      } else if (namingStyle === NamingStyle.FLAT_DASH) {
+        const taskToolResult = await ttGen.generateDashTaskToolCommands(projectDir, bmadDir, targetDir, fileExtension);
+        counts.tasks = taskToolResult.tasks || 0;
+        counts.tools = taskToolResult.tools || 0;
+      } else {
+        const taskToolResult = await ttGen.generateColonTaskToolCommands(projectDir, bmadDir, targetDir, fileExtension);
+        counts.tasks = taskToolResult.tasks || 0;
+        counts.tools = taskToolResult.tools || 0;
+      }
+    }
 
     counts.total = counts.agents + counts.workflows + counts.tasks + counts.tools;
 
@@ -147,206 +169,89 @@ class UnifiedInstaller {
   }
 
   /**
-   * Clean up any existing BMAD files in target directory
-   * @param {string} targetDir - Target directory to clean
-   * @param {string} [fileExtension='.md'] - File extension to match
+   * Load frontmatter template from file
+   * @param {string} templateFile - Template filename
+   * @returns {Promise<string|null>} Template content or null if not found
    */
-  async cleanupBmadFiles(targetDir, fileExtension = '.md') {
-    if (!(await fs.pathExists(targetDir))) {
-      return;
-    }
-
-    // Recursively find and remove any bmad* files or directories
-    const entries = await fs.readdir(targetDir, { withFileTypes: true });
-
-    for (const entry of entries) {
-      // Only remove files with the matching extension
-      if (entry.name.startsWith('bmad') && entry.name.endsWith(fileExtension)) {
-        const entryPath = path.join(targetDir, entry.name);
-        await fs.remove(entryPath);
-      }
+  async loadFrontmatterTemplate(templateFile) {
+    const templatePath = path.join(this.templateDir, templateFile);
+    try {
+      return await fs.readFile(templatePath, 'utf8');
+    } catch {
+      console.warn(chalk.yellow(`Warning: Could not load template ${templateFile}, using default`));
+      return null;
     }
   }
 
   /**
-   * Write artifacts with specified naming style and template
-   * @param {Array} artifacts - Artifacts to write
-   * @param {string} targetDir - Target directory
-   * @param {NamingStyle} namingStyle - Naming style to use
-   * @param {TemplateType} templateType - Template type to use
-   * @param {string} fileExtension - File extension including dot
-   * @param {Function} customTemplateFn - Optional custom template function
-   * @param {string} artifactType - Type of artifact for logging
-   * @returns {Promise<number>} Number of artifacts written
+   * Apply frontmatter template to content
+   * @param {Object} artifact - Artifact with metadata
+   * @param {string} content - Original content
+   * @param {string} templateContent - Template content
+   * @param {string} templateFile - Template filename (for special handling)
+   * @returns {string} Content with frontmatter applied
    */
-  async writeArtifacts(artifacts, targetDir, namingStyle, templateType, fileExtension, customTemplateFn, artifactType) {
-    console.log(
-      `[DEBUG] writeArtifacts: artifactType=${artifactType}, count=${artifacts.length}, targetDir=${targetDir}, fileExtension=${fileExtension}`,
-    );
-    let written = 0;
-
-    for (const artifact of artifacts) {
-      // Determine target path based on naming style
-      let targetPath;
-      let content = artifact.content;
-      console.log(`[DEBUG] writeArtifacts processing: relativePath=${artifact.relativePath}, name=${artifact.name}`);
-
-      if (namingStyle === NamingStyle.FLAT_COLON) {
-        const flatName = toColonPath(artifact.relativePath, fileExtension);
-        targetPath = path.join(targetDir, flatName);
-      } else if (namingStyle === NamingStyle.FLAT_DASH) {
-        const flatName = toDashPath(artifact.relativePath, fileExtension);
-        targetPath = path.join(targetDir, flatName);
-      } else {
-        // Fallback: treat as flat even if NESTED specified
-        const flatName = toColonPath(artifact.relativePath, fileExtension);
-        targetPath = path.join(targetDir, flatName);
-      }
-
-      // Apply template transformations if needed
-      if (customTemplateFn) {
-        content = customTemplateFn(artifact, content, templateType);
-      } else {
-        content = this.applyTemplate(artifact, content, templateType);
-      }
-
-      // For flat files, just ensure targetDir exists (no nested dirs needed)
-      await fs.ensureDir(targetDir);
-      await fs.writeFile(targetPath, content, 'utf8');
-      written++;
+  applyFrontmatterTemplate(artifact, content, templateContent, templateFile) {
+    if (!templateContent) {
+      return content;
     }
 
-    return written;
-  }
-
-  /**
-   * Apply template/frontmatter based on type
-   */
-  applyTemplate(artifact, content, templateType) {
-    switch (templateType) {
-      case TemplateType.CLAUDE:
-      case TemplateType.CURSOR: {
-        // Already has YAML frontmatter from generator
-        return content;
-      }
-
-      case TemplateType.CODEX:
-      case TemplateType.CLINE: {
-        // No frontmatter needed, content as-is
-        return content;
-      }
-
-      case TemplateType.WINDSURF: {
-        // Add Windsurf-specific frontmatter
-        return this.addWindsurfFrontmatter(artifact, content);
-      }
-
-      case TemplateType.AUGMENT: {
-        // Add Augment frontmatter
-        return this.addAugmentFrontmatter(artifact, content);
-      }
-
-      case TemplateType.GEMINI: {
-        // Add Gemini TOML frontmatter
-        return this.addGeminiFrontmatter(artifact, content);
-      }
-
-      case TemplateType.COPILOT: {
-        // Add Copilot frontmatter with tools array
-        return this.addCopilotFrontmatter(artifact, content);
-      }
-
-      case TemplateType.QWEN: {
-        // Add Qwen TOML frontmatter (same as Gemini)
-        return this.addGeminiFrontmatter(artifact, content);
-      }
-
-      default: {
-        return content;
-      }
-    }
-  }
-
-  /**
-   * Add Windsurf frontmatter with auto_execution_mode
-   */
-  addWindsurfFrontmatter(artifact, content) {
-    // Remove existing frontmatter if present
-    const frontmatterRegex = /^---\s*\n[\s\S]*?\n---\s*\n/;
-    const contentWithoutFrontmatter = content.replace(frontmatterRegex, '');
-
-    // Determine auto_execution_mode based on type
-    let autoExecMode = '1'; // default for workflows
-    if (artifact.type === 'agent') {
-      autoExecMode = '3';
-    } else if (artifact.type === 'task' || artifact.type === 'tool') {
-      autoExecMode = '2';
-    }
-
-    const name = artifact.name || artifact.displayName || 'workflow';
-    const frontmatter = `---
-description: ${name}
-auto_execution_mode: ${autoExecMode}
----
-
-`;
-
-    return frontmatter + contentWithoutFrontmatter;
-  }
-
-  /**
-   * Add Augment frontmatter
-   */
-  addAugmentFrontmatter(artifact, content) {
-    // Augment uses simple YAML frontmatter
-    const name = artifact.name || artifact.displayName || 'workflow';
-    const frontmatter = `---
-description: ${name}
----
-
-`;
-    // Only add if not already present
-    if (!content.startsWith('---')) {
-      return frontmatter + content;
-    }
-    return content;
-  }
-
-  /**
-   * Add Gemini TOML frontmatter
-   * Converts content to TOML format with description and prompt fields
-   */
-  addGeminiFrontmatter(artifact, content) {
-    // Remove existing YAML frontmatter if present
+    // Extract existing frontmatter if present
     const frontmatterRegex = /^---\s*\n[\s\S]*?\n---\s*\n/;
     const contentWithoutFrontmatter = content.replace(frontmatterRegex, '').trim();
 
-    // Extract description from artifact or content
-    let description = artifact.name || artifact.displayName || 'BMAD Command';
-    if (artifact.module) {
-      description = `BMAD ${artifact.module.toUpperCase()} ${artifact.type || 'Command'}: ${description}`;
+    // Get artifact metadata for template substitution
+    const name = artifact.name || artifact.displayName || 'workflow';
+    const title = this.formatTitle(name);
+    const iconMatch = content.match(/icon="([^"]+)"/);
+    const icon = iconMatch ? iconMatch[1] : '🤖';
+
+    // Use artifact's description if available, otherwise generate fallback
+    const description = artifact.description || `Activates the ${name} ${artifact.type || 'workflow'}.`;
+
+    // Template variables
+    const variables = {
+      name,
+      title,
+      displayName: name,
+      description,
+      icon,
+      content: contentWithoutFrontmatter,
+
+      // Special variables for certain templates
+      autoExecMode: this.getAutoExecMode(artifact),
+      tools: JSON.stringify(this.getCopilotTools()),
+    };
+
+    // Apply template substitutions
+    let result = templateContent;
+    for (const [key, value] of Object.entries(variables)) {
+      result = result.replaceAll(`{{${key}}}`, value);
     }
 
-    // Escape any triple quotes in content
-    const escapedContent = contentWithoutFrontmatter.replaceAll('"""', String.raw`\"\"\"`);
+    // Append content after frontmatter (for TOML templates with prompt field)
+    if (templateFile.includes('toml') && !result.includes('{{content}}')) {
+      const escapedContent = contentWithoutFrontmatter.replaceAll('"""', String.raw`\"\"\"`);
+      result = result.replace(/prompt = """/, `prompt = """\n${escapedContent}`);
+    }
 
-    return `description = "${description}"
-prompt = """
-${escapedContent}
-"""
-`;
+    return result.trim() + '\n\n' + contentWithoutFrontmatter;
   }
 
   /**
-   * Add GitHub Copilot frontmatter with tools array
+   * Get auto_execution_mode for Windsurf based on artifact type
    */
-  addCopilotFrontmatter(artifact, content) {
-    // Remove existing frontmatter if present
-    const frontmatterRegex = /^---\s*\n[\s\S]*?\n---\s*\n/;
-    const contentWithoutFrontmatter = content.replace(frontmatterRegex, '');
+  getAutoExecMode(artifact) {
+    if (artifact.type === 'agent') return '3';
+    if (artifact.type === 'task' || artifact.type === 'tool') return '2';
+    return '1'; // default for workflows
+  }
 
-    // GitHub Copilot tools array (as specified)
-    const tools = [
+  /**
+   * Get GitHub Copilot tools array
+   */
+  getCopilotTools() {
+    return [
       'changes',
       'edit',
       'fetch',
@@ -361,75 +266,110 @@ ${escapedContent}
       'todos',
       'usages',
     ];
-
-    const name = artifact.name || artifact.displayName || 'prompt';
-    const description = `Activates the ${name} ${artifact.type || 'workflow'}.`;
-
-    const frontmatter = `---
-description: "${description}"
-tools: ${JSON.stringify(tools)}
----
-
-`;
-
-    return frontmatter + contentWithoutFrontmatter;
   }
 
   /**
-   * Get tasks from manifest CSV
+   * Clean up any existing BMAD files in target directory
    */
-  async getTasksFromManifest(bmadDir) {
-    const csv = require('csv-parse/sync');
-    const manifestPath = path.join(bmadDir, '_config', 'task-manifest.csv');
-
-    if (!(await fs.pathExists(manifestPath))) {
-      return [];
+  async cleanupBmadFiles(targetDir, fileExtension = '.md') {
+    if (!(await fs.pathExists(targetDir))) {
+      return;
     }
 
-    const csvContent = await fs.readFile(manifestPath, 'utf8');
-    const tasks = csv.parse(csvContent, {
-      columns: true,
-      skip_empty_lines: true,
-    });
+    const entries = await fs.readdir(targetDir, { withFileTypes: true });
 
-    // Filter for standalone only
-    return tasks
-      .filter((t) => t.standalone === 'true' || t.standalone === true)
-      .map((t) => ({
-        ...t,
-        content: null, // Will be read from path when writing
-      }));
+    for (const entry of entries) {
+      if (entry.name.startsWith('bmad') && entry.name.endsWith(fileExtension)) {
+        const entryPath = path.join(targetDir, entry.name);
+        await fs.remove(entryPath);
+      }
+    }
   }
 
   /**
-   * Get tools from manifest CSV
+   * Write artifacts with specified naming style and template
    */
-  async getToolsFromManifest(bmadDir) {
-    const csv = require('csv-parse/sync');
-    const manifestPath = path.join(bmadDir, '_config', 'tool-manifest.csv');
+  async writeArtifacts(
+    artifacts,
+    targetDir,
+    namingStyle,
+    templateContent,
+    templateFile,
+    fileExtension,
+    customTemplateFn,
+    artifactType,
+    skipExisting = false,
+  ) {
+    let written = 0;
+    let skipped = 0;
 
-    if (!(await fs.pathExists(manifestPath))) {
-      return [];
+    for (const artifact of artifacts) {
+      // Determine target path based on naming style
+      let targetPath;
+      let content = artifact.content;
+
+      switch (namingStyle) {
+        case NamingStyle.SUFFIX_BASED: {
+          const suffixName = toSuffixBasedName(artifact.relativePath, artifactType, fileExtension);
+          targetPath = path.join(targetDir, suffixName);
+
+          break;
+        }
+        case NamingStyle.FLAT_COLON: {
+          const flatName = toColonPath(artifact.relativePath, fileExtension);
+          targetPath = path.join(targetDir, flatName);
+
+          break;
+        }
+        case NamingStyle.FLAT_DASH: {
+          const flatName = toDashPath(artifact.relativePath, fileExtension);
+          targetPath = path.join(targetDir, flatName);
+
+          break;
+        }
+        default: {
+          const flatName = toColonPath(artifact.relativePath, fileExtension);
+          targetPath = path.join(targetDir, flatName);
+        }
+      }
+
+      // Skip if file already exists
+      if (skipExisting && (await fs.pathExists(targetPath))) {
+        skipped++;
+        continue;
+      }
+
+      // Apply template transformations
+      if (customTemplateFn) {
+        content = customTemplateFn(artifact, content, templateFile);
+      } else if (templateFile !== 'none') {
+        content = this.applyFrontmatterTemplate(artifact, content, templateContent, templateFile);
+      }
+
+      await fs.ensureDir(targetDir);
+      await fs.writeFile(targetPath, content, 'utf8');
+      written++;
     }
 
-    const csvContent = await fs.readFile(manifestPath, 'utf8');
-    const tools = csv.parse(csvContent, {
-      columns: true,
-      skip_empty_lines: true,
-    });
+    if (skipped > 0) {
+      console.log(chalk.dim(`  Skipped ${skipped} existing files`));
+    }
 
-    // Filter for standalone only
-    return tools
-      .filter((t) => t.standalone === 'true' || t.standalone === true)
-      .map((t) => ({
-        ...t,
-        content: null, // Will be read from path when writing
-      }));
+    return written;
+  }
+
+  /**
+   * Format name as title
+   */
+  formatTitle(name) {
+    return name
+      .split('-')
+      .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(' ');
   }
 }
 
 module.exports = {
   UnifiedInstaller,
   NamingStyle,
-  TemplateType,
 };

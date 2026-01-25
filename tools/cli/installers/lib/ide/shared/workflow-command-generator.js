@@ -35,6 +35,9 @@ class WorkflowCommandGenerator {
       const commandContent = await this.generateCommandContent(workflow, bmadDir);
       artifacts.push({
         type: 'workflow-command',
+        name: workflow.name,
+        displayName: workflow.displayName || workflow.name,
+        description: workflow.description,
         module: workflow.module,
         relativePath: path.join(workflow.module, 'workflows', `${workflow.name}.md`),
         content: commandContent,

@@ -32,8 +32,10 @@ class AgentCommandGenerator {
       const agentPathInModule = agent.relativePath || `${agent.name}.md`;
       artifacts.push({
         type: 'agent-launcher',
-        module: agent.module,
         name: agent.name,
+        displayName: agent.displayName || agent.name,
+        description: agent.description,
+        module: agent.module,
         relativePath: path.join(agent.module, 'agents', agentPathInModule),
         content: launcherContent,
         sourcePath: agent.path,

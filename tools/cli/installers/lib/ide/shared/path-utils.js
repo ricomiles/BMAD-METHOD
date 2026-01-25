@@ -3,6 +3,7 @@
  *
  * Provides utilities to convert hierarchical paths to flat naming conventions.
  * - Underscore format (bmad_module_name.md) - Windows-compatible universal format
+ * - Suffix-based format (bmad-module-name.agent.md) - New universal standard
  */
 
 // Default file extension for backward compatibility
@@ -11,6 +12,17 @@ const DEFAULT_FILE_EXTENSION = '.md';
 // Type segments - agents are included in naming, others are filtered out
 const TYPE_SEGMENTS = ['workflows', 'tasks', 'tools'];
 const AGENT_SEGMENT = 'agents';
+
+/**
+ * Artifact type to suffix mapping
+ * Used for new suffix-based naming convention
+ */
+const ARTIFACT_SUFFIXES = {
+  agent: '.agent',
+  workflow: '.workflow',
+  task: '.task',
+  tool: '.tool',
+};
 
 /**
  * Convert hierarchical path to flat underscore-separated name
@@ -193,12 +205,86 @@ function toDashPath(relativePath, fileExtension = DEFAULT_FILE_EXTENSION) {
 
   // Use dash naming style
   const isAgent = type === AGENT_SEGMENT;
+  // For core module, skip the module prefix
   if (module === 'core') {
     return isAgent ? `bmad-agent-${name}${fileExtension}` : `bmad-${name}${fileExtension}`;
   }
   // If module already starts with 'bmad-', don't add another prefix
   const prefix = module.startsWith('bmad-') ? '' : 'bmad-';
   return isAgent ? `${prefix}${module}-agent-${name}${fileExtension}` : `${prefix}${module}-${name}${fileExtension}`;
+}
+
+/**
+ * Convert relative path to suffix-based name (NEW UNIVERSAL STANDARD)
+ * Converts: 'cis/agents/storymaster.md' → 'bmad-cis-storymaster.agent.md'
+ * Converts: 'bmm/workflows/plan-project.md' → 'bmad-bmm-plan-project.workflow.md'
+ * Converts: 'bmm/tasks/create-story.md' → 'bmad-bmm-create-story.task.md'
+ * Converts: 'bmm/tools/file-ops.md' → 'bmad-bmm-file-ops.tool.md'
+ * Converts: 'core/agents/brainstorming.md' → 'bmad-brainstorming.agent.md' (core items skip module prefix)
+ *
+ * @param {string} relativePath - Path like 'cis/agents/storymaster.md'
+ * @param {string} artifactType - Type of artifact: 'agent', 'workflow', 'task', 'tool'
+ * @param {string} [fileExtension='.md'] - File extension including dot (e.g., '.md', '.toml')
+ * @returns {string} Suffix-based filename like 'bmad-cis-storymaster.agent.md'
+ */
+function toSuffixBasedName(relativePath, artifactType, fileExtension = DEFAULT_FILE_EXTENSION) {
+  const extMatch = relativePath.match(/\.[^.]+$/);
+  const originalExt = extMatch ? extMatch[0] : '';
+  const withoutExt = relativePath.replace(originalExt, '');
+  const parts = withoutExt.split(/[/\\]/);
+
+  const module = parts[0];
+  const type = parts[1]; // agents, workflows, tasks, tools
+  const name = parts.slice(2).join('-');
+
+  const suffix = ARTIFACT_SUFFIXES[artifactType] || '';
+
+  // For core module, skip the module prefix (use 'bmad-name.suffix.md')
+  if (module === 'core') {
+    return `bmad-${name}${suffix}.${fileExtension.replace('.', '')}`;
+  }
+
+  // If module already starts with 'bmad-', don't add another prefix
+  const prefix = module.startsWith('bmad-') ? '' : 'bmad-';
+  return `${prefix}${module}-${name}${suffix}.${fileExtension.replace('.', '')}`;
+}
+
+/**
+ * Get suffix for artifact type
+ * @param {string} artifactType - Type of artifact: 'agent', 'workflow', 'task', 'tool'
+ * @returns {string} Suffix like '.agent', '.workflow', etc.
+ */
+function getArtifactSuffix(artifactType) {
+  return ARTIFACT_SUFFIXES[artifactType] || '';
+}
+
+/**
+ * Parse artifact type from suffix-based filename
+ * Parses: 'bmad-cis-storymaster.agent.md' → 'agent'
+ * Parses: 'bmad-bmm-plan-project.workflow.md' → 'workflow'
+ *
+ * @param {string} filename - Suffix-based filename
+ * @returns {string|null} Artifact type or null if not found
+ */
+function parseArtifactTypeFromFilename(filename) {
+  for (const [type, suffix] of Object.entries(ARTIFACT_SUFFIXES)) {
+    if (filename.includes(`${suffix}.`)) {
+      return type;
+    }
+  }
+  return null;
+}
+
+/**
+ * Create custom agent suffix-based name
+ * Creates: 'bmad-custom-fred-commit-poet.agent.md'
+ *
+ * @param {string} agentName - Custom agent name
+ * @param {string} [fileExtension='.md'] - File extension including dot
+ * @returns {string} Suffix-based filename like 'bmad-custom-fred-commit-poet.agent.md'
+ */
+function customAgentSuffixName(agentName, fileExtension = DEFAULT_FILE_EXTENSION) {
+  return `bmad-custom-${agentName}.agent.${fileExtension.replace('.', '')}`;
 }
 
 module.exports = {
@@ -221,4 +307,10 @@ module.exports = {
   parseDashName,
   TYPE_SEGMENTS,
   AGENT_SEGMENT,
+  // New suffix-based naming functions (UNIVERSAL STANDARD)
+  ARTIFACT_SUFFIXES,
+  toSuffixBasedName,
+  getArtifactSuffix,
+  parseArtifactTypeFromFilename,
+  customAgentSuffixName,
 };
