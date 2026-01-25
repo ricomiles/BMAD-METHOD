@@ -91,10 +91,13 @@ class AntigravitySetup extends BaseIdeSetup {
    * @param {string} projectDir - Project directory
    */
   async cleanup(projectDir) {
-    const bmadWorkflowsDir = path.join(projectDir, this.configDir, this.workflowsDir, 'bmad');
+    const workflowsDir = path.join(projectDir, this.configDir, this.workflowsDir);
 
-    if (await fs.pathExists(bmadWorkflowsDir)) {
-      await fs.remove(bmadWorkflowsDir);
+    if (await fs.pathExists(workflowsDir)) {
+      const bmadFiles = (await fs.readdir(workflowsDir)).filter((f) => f.startsWith('bmad'));
+      for (const f of bmadFiles) {
+        await fs.remove(path.join(workflowsDir, f));
+      }
       console.log(chalk.dim(`  Removed old BMAD workflows from ${this.name}`));
     }
   }
@@ -115,11 +118,9 @@ class AntigravitySetup extends BaseIdeSetup {
     await this.cleanup(projectDir);
 
     // Create .agent/workflows directory structure
-    const agentDir = path.join(projectDir, this.configDir);
-    const workflowsDir = path.join(agentDir, this.workflowsDir);
-    const bmadWorkflowsDir = path.join(workflowsDir, 'bmad');
+    const workflowsDir = path.join(projectDir, this.configDir, this.workflowsDir);
 
-    await this.ensureDir(bmadWorkflowsDir);
+    await this.ensureDir(workflowsDir);
 
     // Generate agent launchers using AgentCommandGenerator
     // This creates small launcher files that reference the actual agents in _bmad/
@@ -129,7 +130,7 @@ class AntigravitySetup extends BaseIdeSetup {
     // Write agent launcher files with FLATTENED naming using shared utility
     // Antigravity ignores directory structure, so we flatten to: bmad_module_name.md
     // This creates slash commands like /bmad_bmm_dev instead of /dev
-    const agentCount = await agentGen.writeDashArtifacts(bmadWorkflowsDir, agentArtifacts);
+    const agentCount = await agentGen.writeDashArtifacts(workflowsDir, agentArtifacts);
 
     // Process Antigravity specific injections for installed modules
     // Use pre-collected configuration if available, or skip if already configured
@@ -148,12 +149,12 @@ class AntigravitySetup extends BaseIdeSetup {
     const { artifacts: workflowArtifacts } = await workflowGen.collectWorkflowArtifacts(bmadDir);
 
     // Write workflow-command artifacts with FLATTENED naming using shared utility
-    const workflowCommandCount = await workflowGen.writeDashArtifacts(bmadWorkflowsDir, workflowArtifacts);
+    const workflowCommandCount = await workflowGen.writeDashArtifacts(workflowsDir, workflowArtifacts);
 
     // Generate task and tool commands using FLAT naming (not nested!)
     // Use the new generateDashTaskToolCommands method with explicit target directory
     const taskToolGen = new TaskToolCommandGenerator();
-    const taskToolResult = await taskToolGen.generateDashTaskToolCommands(projectDir, bmadDir, bmadWorkflowsDir);
+    const taskToolResult = await taskToolGen.generateDashTaskToolCommands(projectDir, bmadDir, workflowsDir);
 
     console.log(chalk.green(`✓ ${this.name} configured:`));
     console.log(chalk.dim(`  - ${agentCount} agents installed`));
@@ -167,7 +168,7 @@ class AntigravitySetup extends BaseIdeSetup {
         ),
       );
     }
-    console.log(chalk.dim(`  - Workflows directory: ${path.relative(projectDir, bmadWorkflowsDir)}`));
+    console.log(chalk.dim(`  - Workflows directory: ${path.relative(projectDir, workflowsDir)}`));
     console.log(chalk.yellow(`\n  Note: Antigravity uses flattened slash commands (e.g., /bmad_module_agents_name)`));
 
     return {
@@ -430,12 +431,10 @@ class AntigravitySetup extends BaseIdeSetup {
    * @returns {Object} Installation result
    */
   async installCustomAgentLauncher(projectDir, agentName, agentPath, metadata) {
-    // Create .agent/workflows/bmad directory structure (same as regular agents)
-    const agentDir = path.join(projectDir, this.configDir);
-    const workflowsDir = path.join(agentDir, this.workflowsDir);
-    const bmadWorkflowsDir = path.join(workflowsDir, 'bmad');
+    // Create .agent/workflows directory structure
+    const workflowsDir = path.join(projectDir, this.configDir, this.workflowsDir);
 
-    await fs.ensureDir(bmadWorkflowsDir);
+    await fs.ensureDir(workflowsDir);
 
     // Create custom agent launcher with same pattern as regular agents
     const launcherContent = `name: '${agentName}'
@@ -458,7 +457,7 @@ usage: |
 
     // Use underscore format: bmad_custom_fred-commit-poet.md
     const fileName = customAgentDashName(agentName);
-    const launcherPath = path.join(bmadWorkflowsDir, fileName);
+    const launcherPath = path.join(workflowsDir, fileName);
 
     // Write the launcher file
     await fs.writeFile(launcherPath, launcherContent, 'utf8');

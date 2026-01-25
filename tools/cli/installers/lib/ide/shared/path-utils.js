@@ -37,6 +37,7 @@ function toUnderscoreName(module, type, name, fileExtension = DEFAULT_FILE_EXTEN
  * Convert relative path to flat underscore-separated name
  * Converts: 'bmm/agents/pm.md' → 'bmad_bmm_agent_pm.md'
  * Converts: 'bmm/workflows/correct-course.md' → 'bmad_bmm_correct-course.md'
+ * Converts: 'bmad_bmb/agents/agent-builder.md' → 'bmad_bmb_agent_agent-builder.md' (bmad prefix already in module)
  * Converts: 'core/agents/brainstorming.md' → 'bmad_agent_brainstorming.md' (core items skip module prefix)
  *
  * @param {string} relativePath - Path like 'bmm/agents/pm.md'
@@ -54,8 +55,14 @@ function toUnderscorePath(relativePath, fileExtension = DEFAULT_FILE_EXTENSION) 
   const type = parts[1];
   const name = parts.slice(2).join('_');
 
-  // Use toUnderscoreName for consistency
-  return toUnderscoreName(module, type, name, fileExtension);
+  const isAgent = type === AGENT_SEGMENT;
+  // For core module, skip the module prefix: use 'bmad_name.md' instead of 'bmad_core_name.md'
+  if (module === 'core') {
+    return isAgent ? `bmad_agent_${name}${fileExtension}` : `bmad_${name}${fileExtension}`;
+  }
+  // If module already starts with 'bmad_', don't add another prefix
+  const prefix = module.startsWith('bmad_') ? '' : 'bmad_';
+  return isAgent ? `${prefix}${module}_agent_${name}${fileExtension}` : `${prefix}${module}_${name}${fileExtension}`;
 }
 
 /**
@@ -168,6 +175,7 @@ function toColonPath(relativePath, fileExtension = DEFAULT_FILE_EXTENSION) {
  * Convert relative path to flat dash-separated name
  * Converts: 'bmm/agents/pm.md' → 'bmad-bmm-agent-pm.md'
  * Converts: 'bmm/workflows/correct-course' → 'bmad-bmm-correct-course.md'
+ * Converts: 'bmad-bmb/agents/agent-builder.md' → 'bmad-bmb-agent-agent-builder.md' (bmad prefix already in module)
  * @param {string} relativePath - Path like 'bmm/agents/pm.md'
  * @param {string} [fileExtension=DEFAULT_FILE_EXTENSION] - File extension including dot
  * @returns {string} Flat filename like 'bmad-bmm-agent-pm.md'
@@ -188,7 +196,9 @@ function toDashPath(relativePath, fileExtension = DEFAULT_FILE_EXTENSION) {
   if (module === 'core') {
     return isAgent ? `bmad-agent-${name}${fileExtension}` : `bmad-${name}${fileExtension}`;
   }
-  return isAgent ? `bmad-${module}-agent-${name}${fileExtension}` : `bmad-${module}-${name}${fileExtension}`;
+  // If module already starts with 'bmad-', don't add another prefix
+  const prefix = module.startsWith('bmad-') ? '' : 'bmad-';
+  return isAgent ? `${prefix}${module}-agent-${name}${fileExtension}` : `${prefix}${module}-${name}${fileExtension}`;
 }
 
 module.exports = {

@@ -40,6 +40,7 @@ const TemplateType = {
   WINDSURF: 'windsurf', // YAML with auto_execution_mode
   AUGMENT: 'augment', // YAML frontmatter
   GEMINI: 'gemini', // TOML frontmatter with description/prompt
+  QWEN: 'qwen', // TOML frontmatter with description/prompt (same as Gemini)
   COPILOT: 'copilot', // YAML with tools array for GitHub Copilot
 };
 
@@ -209,7 +210,8 @@ class UnifiedInstaller {
         content = this.applyTemplate(artifact, content, templateType);
       }
 
-      await fs.ensureDir(path.dirname(targetPath));
+      // For flat files, just ensure targetDir exists (no nested dirs needed)
+      await fs.ensureDir(targetDir);
       await fs.writeFile(targetPath, content, 'utf8');
       written++;
     }
@@ -252,6 +254,11 @@ class UnifiedInstaller {
       case TemplateType.COPILOT: {
         // Add Copilot frontmatter with tools array
         return this.addCopilotFrontmatter(artifact, content);
+      }
+
+      case TemplateType.QWEN: {
+        // Add Qwen TOML frontmatter (same as Gemini)
+        return this.addGeminiFrontmatter(artifact, content);
       }
 
       default: {
