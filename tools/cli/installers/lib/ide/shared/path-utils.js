@@ -15,13 +15,10 @@ const AGENT_SEGMENT = 'agents';
 
 /**
  * Artifact type to suffix mapping
- * Used for new suffix-based naming convention
+ * Only agents get the .agent suffix; workflows/tasks/tools use standard .md extension
  */
 const ARTIFACT_SUFFIXES = {
   agent: '.agent',
-  workflow: '.workflow',
-  task: '.task',
-  tool: '.tool',
 };
 
 /**
@@ -216,10 +213,11 @@ function toDashPath(relativePath, fileExtension = DEFAULT_FILE_EXTENSION) {
 
 /**
  * Convert relative path to suffix-based name (NEW UNIVERSAL STANDARD)
+ * Only applies .agent suffix to agents; workflows/tasks/tools get standard .md extension.
  * Converts: 'cis/agents/storymaster.md' → 'bmad-cis-storymaster.agent.md'
- * Converts: 'bmm/workflows/plan-project.md' → 'bmad-bmm-plan-project.workflow.md'
- * Converts: 'bmm/tasks/create-story.md' → 'bmad-bmm-create-story.task.md'
- * Converts: 'bmm/tools/file-ops.md' → 'bmad-bmm-file-ops.tool.md'
+ * Converts: 'bmm/workflows/plan-project.md' → 'bmad-bmm-plan-project.md'
+ * Converts: 'bmm/tasks/create-story.md' → 'bmad-bmm-create-story.md'
+ * Converts: 'bmm/tools/file-ops.md' → 'bmad-bmm-file-ops.md'
  * Converts: 'core/agents/brainstorming.md' → 'bmad-brainstorming.agent.md' (core items skip module prefix)
  *
  * @param {string} relativePath - Path like 'cis/agents/storymaster.md'
@@ -237,7 +235,8 @@ function toSuffixBasedName(relativePath, artifactType, fileExtension = DEFAULT_F
   const type = parts[1]; // agents, workflows, tasks, tools
   const name = parts.slice(2).join('-');
 
-  const suffix = ARTIFACT_SUFFIXES[artifactType] || '';
+  // Only add .agent suffix for agents; workflows/tasks/tools use standard extension
+  const suffix = artifactType === 'agent' ? ARTIFACT_SUFFIXES.agent : '';
 
   // For core module, skip the module prefix (use 'bmad-name.suffix.md')
   if (module === 'core') {
@@ -261,7 +260,7 @@ function getArtifactSuffix(artifactType) {
 /**
  * Parse artifact type from suffix-based filename
  * Parses: 'bmad-cis-storymaster.agent.md' → 'agent'
- * Parses: 'bmad-bmm-plan-project.workflow.md' → 'workflow'
+ * Returns null for workflows/tasks/tools (no suffix)
  *
  * @param {string} filename - Suffix-based filename
  * @returns {string|null} Artifact type or null if not found
