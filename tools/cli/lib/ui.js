@@ -81,7 +81,7 @@ class UI {
       hasLegacyCfg = bmadResult.hasLegacyCfg;
     }
 
-    // Handle legacy .bmad or _cfg folder - these are very old (more than 2 versions behind)
+    // Handle legacy .bmad or _cfg folder - these are very old (v4 or alpha)
     // Show version warning instead of offering conversion
     if (hasLegacyBmadFolder || hasLegacyCfg) {
       console.log('');
@@ -92,9 +92,8 @@ class UI {
           'Found a ".bmad"/"bmad" folder, or a legacy "_cfg" folder under the bmad folder - this is from a old BMAD version that is out of date for automatic upgrade, manual intervention required.',
         ),
       );
-      console.log(chalk.yellow('This version is more than 2 alpha versions behind current.'));
+      console.log(chalk.yellow('You have a legacy version installed (v4 or alpha).'));
       console.log('');
-      console.log(chalk.dim('For stability, we only support updates from the previous 2 alpha versions.'));
       console.log(chalk.dim('Legacy installations may have compatibility issues.'));
       console.log('');
       console.log(chalk.dim('For the best experience, we strongly recommend:'));
@@ -188,8 +187,8 @@ class UI {
       const currentVersion = require(packageJsonPath).version;
       const installedVersion = existingInstall.version || 'unknown';
 
-      // Check if version is too old and warn user
-      const shouldProceed = await this.showOldAlphaVersionWarning(installedVersion, currentVersion, path.basename(bmadDir));
+      // Check if version is pre beta
+      const shouldProceed = await this.showLegacyVersionWarning(installedVersion, currentVersion, path.basename(bmadDir));
 
       // If user chose to cancel, exit the installer
       if (!shouldProceed) {
@@ -1457,96 +1456,40 @@ class UI {
   }
 
   /**
-   * Parse alpha version string (e.g., "6.0.0-Alpha.20")
-   * @param {string} version - Version string
-   * @returns {Object|null} Object with alphaNumber and fullVersion, or null if invalid
-   */
-  parseAlphaVersion(version) {
-    if (!version || version === 'unknown') {
-      return null;
-    }
-
-    // Remove 'v' prefix if present
-    const cleanVersion = version.toString().replace(/^v/i, '');
-
-    // Match alpha version pattern: X.Y.Z-Alpha.N (case-insensitive)
-    const match = cleanVersion.match(/[\d.]+-Alpha\.(\d+)/i);
-
-    if (!match) {
-      return null;
-    }
-
-    return {
-      alphaNumber: parseInt(match[1], 10),
-      fullVersion: cleanVersion,
-    };
-  }
-
-  /**
-   * Check if installed version is more than 2 alpha versions behind current
+   * Check if installed version is a legacy version that needs fresh install
    * @param {string} installedVersion - The installed version
-   * @param {string} currentVersion - The current version
-   * @returns {Object} Object with { isOldVersion, versionDiff, shouldWarn, installed, current }
+   * @returns {boolean} True if legacy (v4 or any alpha)
    */
-  checkAlphaVersionAge(installedVersion, currentVersion) {
-    const installed = this.parseAlphaVersion(installedVersion);
-    const current = this.parseAlphaVersion(currentVersion);
-
-    // If we can't parse either version, don't warn
-    if (!installed || !current) {
-      return { isOldVersion: false, versionDiff: 0, shouldWarn: false };
+  isLegacyVersion(installedVersion) {
+    if (!installedVersion || installedVersion === 'unknown') {
+      return true; // Treat unknown as legacy for safety
     }
-
-    // Calculate alpha version difference
-    const versionDiff = current.alphaNumber - installed.alphaNumber;
-
-    // Consider it old if more than 2 versions behind
-    const isOldVersion = versionDiff > 2;
-
-    return {
-      isOldVersion,
-      versionDiff,
-      shouldWarn: isOldVersion,
-      installed: installed.fullVersion,
-      current: current.fullVersion,
-      installedAlpha: installed.alphaNumber,
-      currentAlpha: current.alphaNumber,
-    };
+    // Check if version string contains -alpha or -Alpha (any v6 alpha)
+    return /-alpha\./i.test(installedVersion);
   }
 
   /**
-   * Show warning for old alpha version and ask if user wants to proceed
+   * Show warning for legacy version (v4 or alpha) and ask if user wants to proceed
    * @param {string} installedVersion - The installed version
    * @param {string} currentVersion - The current version
    * @param {string} bmadFolderName - Name of the BMAD folder
    * @returns {Promise<boolean>} True if user wants to proceed, false if they cancel
    */
-  async showOldAlphaVersionWarning(installedVersion, currentVersion, bmadFolderName) {
-    const versionInfo = this.checkAlphaVersionAge(installedVersion, currentVersion);
-
-    // Also warn if version is unknown or can't be parsed (legacy/unsupported)
-    const isUnknownVersion = installedVersion === 'unknown' || !versionInfo.installed;
-
-    if (!versionInfo.shouldWarn && !isUnknownVersion) {
-      return true; // Not old, proceed
+  async showLegacyVersionWarning(installedVersion, currentVersion, bmadFolderName) {
+    if (!this.isLegacyVersion(installedVersion)) {
+      return true; // Not legacy, proceed
     }
 
     console.log('');
     console.log(chalk.yellow.bold('⚠️  VERSION WARNING'));
     console.log(chalk.yellow('─'.repeat(80)));
 
-    if (isUnknownVersion) {
+    if (installedVersion === 'unknown') {
       console.log(chalk.yellow('Unable to detect your installed BMAD version.'));
       console.log(chalk.yellow('This appears to be a legacy or unsupported installation.'));
-      console.log('');
-      console.log(chalk.dim('For stability, we only support updates from the previous 2 alpha versions.'));
-      console.log(chalk.dim('Legacy installations may have compatibility issues.'));
     } else {
-      console.log(chalk.yellow(`You are updating from ${versionInfo.installed} to ${versionInfo.current}.`));
-      console.log(chalk.yellow(`This is ${versionInfo.versionDiff} alpha versions behind.`));
-      console.log('');
-      console.log(chalk.dim(`For stability, we only support updates from the previous 2 alpha versions`));
-      console.log(chalk.dim(`(Alpha.${versionInfo.currentAlpha - 2} through Alpha.${versionInfo.currentAlpha - 1}).`));
+      console.log(chalk.yellow(`You are updating from ${installedVersion} to ${currentVersion}.`));
+      console.log(chalk.yellow('You have a legacy version installed (v4 or alpha).'));
     }
 
     console.log('');

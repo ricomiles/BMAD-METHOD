@@ -999,6 +999,9 @@ class Installer {
 
       // Configure IDEs and copy documentation
       if (!config.skipIde && config.ides && config.ides.length > 0) {
+        // Ensure IDE manager is initialized (handlers may not be loaded in quick update flow)
+        await this.ideManager.ensureInitialized();
+
         // Filter out any undefined/null values from the IDE list
         const validIdes = config.ides.filter((ide) => ide && typeof ide === 'string');
 

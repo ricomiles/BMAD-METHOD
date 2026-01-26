@@ -76,7 +76,7 @@ description: '${description.replaceAll("'", "''")}'
 
 # ${item.displayName || item.name}
 
-LOAD and execute the ${type} at: ${itemPath}
+Read the entire ${type} file at: ${itemPath}
 
 Follow all instructions in the ${type} file exactly as written.
 `;
