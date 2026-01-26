@@ -6,18 +6,20 @@
 startMessage: |
   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-  ⭐ IMPORTANT: Version Alpha.23 Changes
+  🎉 BETA IS HERE! Welcome to BMad Method Beta.0!
 
-  If your current version is older than Alpha.21, you'll need a fresh install:
-    - Remove .bmad folder and reinstall
-    - Only needed during final push to beta (ETA January 18th)
+  We've officially graduated from Alpha! This milestone represents:
+    - 21+ production-ready agents
+    - 50+ workflows covering the full development lifecycle
+    - Windows compatibility (via @clack/prompts)
+    - Module ecosystem with separate repos for focused development
+
+  If upgrading from Alpha: Remove .bmad folder for a fresh start.
 
   📚 New Docs Site: http://docs.bmad-method.org/
     - Tons of guides and articles coming soon!
     - Everything is free. No paywalls. No gated content.
     - Knowledge should be shared, not sold.
-
-  📺 YouTube Master Class & Podcast launching February 1st!
 
   💡 Love BMad? Please star us on GitHub & subscribe on YouTube!
     - GitHub: https://github.com/bmad-code-org/BMAD-METHOD/
@@ -31,7 +33,7 @@ startMessage: |
 endMessage: |
   ════════════════════════════════════════════════════════════════════════════════
 
-  ✨ BMAD IS READY! Beta is just days away! Thank you for your support!
+  ✨ BMAD BETA IS READY! Thank you for being part of this journey!
 
   🌟 BMad is 100% free and open source.
     - No gated Discord. No paywalls.
