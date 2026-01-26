@@ -1,6 +1,13 @@
 # Changelog
 
-## [6.0.0-Beta.0]
+## [6.0.0-Beta.2]
+
+- Fix installer so commands match what is installed, centralize most ide into a central file instead of separate files for each ide.
+- Specific IDEs may still need udpates, but all is config driven now and should be easier to maintain
+- Kiro still needs updates, but its been in this state since contributed, will investigate soon
+- Any version older than Beta.0 will recommend removal and reinstall to project. From later alphas though its sufficient to quick update if still desired, but best is just start fresh with Beta.
+
+## [6.0.0-Beta.1]
 
 **Release: January 2026 - Alpha to Beta Transition**
 
