@@ -154,17 +154,25 @@ class CodexSetup extends BaseIdeSetup {
 
     // Check global location
     if (await fs.pathExists(globalDir)) {
-      const entries = await fs.readdir(globalDir);
-      if (entries.some((entry) => entry.startsWith('bmad'))) {
-        return true;
+      try {
+        const entries = await fs.readdir(globalDir);
+        if (entries && entries.some((entry) => entry && typeof entry === 'string' && entry.startsWith('bmad'))) {
+          return true;
+        }
+      } catch {
+        // Ignore errors
       }
     }
 
     // Check project-specific location
     if (await fs.pathExists(projectSpecificDir)) {
-      const entries = await fs.readdir(projectSpecificDir);
-      if (entries.some((entry) => entry.startsWith('bmad'))) {
-        return true;
+      try {
+        const entries = await fs.readdir(projectSpecificDir);
+        if (entries && entries.some((entry) => entry && typeof entry === 'string' && entry.startsWith('bmad'))) {
+          return true;
+        }
+      } catch {
+        // Ignore errors
       }
     }
 
@@ -253,19 +261,39 @@ class CodexSetup extends BaseIdeSetup {
       return;
     }
 
-    const entries = await fs.readdir(destDir);
+    let entries;
+    try {
+      entries = await fs.readdir(destDir);
+    } catch (error) {
+      // Directory exists but can't be read - skip cleanup
+      console.warn(chalk.yellow(`Warning: Could not read directory ${destDir}: ${error.message}`));
+      return;
+    }
+
+    if (!entries || !Array.isArray(entries)) {
+      return;
+    }
 
     for (const entry of entries) {
+      // Skip non-strings or undefined entries
+      if (!entry || typeof entry !== 'string') {
+        continue;
+      }
       if (!entry.startsWith('bmad')) {
         continue;
       }
 
       const entryPath = path.join(destDir, entry);
-      const stat = await fs.stat(entryPath);
-      if (stat.isFile()) {
-        await fs.remove(entryPath);
-      } else if (stat.isDirectory()) {
-        await fs.remove(entryPath);
+      try {
+        const stat = await fs.stat(entryPath);
+        if (stat.isFile()) {
+          await fs.remove(entryPath);
+        } else if (stat.isDirectory()) {
+          await fs.remove(entryPath);
+        }
+      } catch (error) {
+        // Skip files that can't be processed
+        console.warn(chalk.dim(`  Skipping ${entry}: ${error.message}`));
       }
     }
   }

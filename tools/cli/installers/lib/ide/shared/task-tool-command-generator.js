@@ -66,7 +66,7 @@ class TaskToolCommandGenerator {
 
     // Convert path to use {project-root} placeholder
     let itemPath = item.path;
-    if (itemPath.startsWith('bmad/')) {
+    if (itemPath && typeof itemPath === 'string' && itemPath.startsWith('bmad/')) {
       itemPath = `{project-root}/${itemPath}`;
     }
 
@@ -239,8 +239,10 @@ Follow all instructions in the ${type} file exactly as written.
   }
 
   /**
-   * Write task/tool artifacts using underscore format (Windows-compatible)
-   * Creates flat files like: bmad_bmm_bmad-help.md
+   * Write task/tool artifacts using dash format (NEW STANDARD)
+   * Creates flat files like: bmad-bmm-bmad-help.md
+   *
+   * Note: Tasks/tools do NOT have .agent.md suffix - only agents do.
    *
    * @param {string} baseCommandsDir - Base commands directory for the IDE
    * @param {Array} artifacts - Task/tool artifacts with relativePath
@@ -252,7 +254,7 @@ Follow all instructions in the ${type} file exactly as written.
     for (const artifact of artifacts) {
       if (artifact.type === 'task' || artifact.type === 'tool') {
         const commandContent = this.generateCommandContent(artifact, artifact.type);
-        // Use underscore format: bmad_module_name.md
+        // Use dash format: bmad-module-name.md
         const flatName = toDashPath(artifact.relativePath);
         const commandPath = path.join(baseCommandsDir, flatName);
         await fs.ensureDir(path.dirname(commandPath));

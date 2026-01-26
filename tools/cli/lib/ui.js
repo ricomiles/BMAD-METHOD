@@ -362,6 +362,7 @@ class UI {
     // Get IDE manager to fetch available IDEs dynamically
     const { IdeManager } = require('../installers/lib/ide/manager');
     const ideManager = new IdeManager();
+    await ideManager.ensureInitialized(); // IMPORTANT: Must initialize before getting IDEs
 
     const preferredIdes = ideManager.getPreferredIdes();
     const otherIdes = ideManager.getOtherIdes();
