@@ -11,7 +11,9 @@ If at anytime you are unsure what to do, the `/bmad-help` command will help you 
 
 Final important note: Every workflow below can be run directly with your tool of choice via slash command or by loading an agent first and using the entry from the agents menu.
 
-![BMad Method Workflow Map](/img/workflow-map.png)
+<iframe src="/workflow-map-diagram.html" width="100%" height="900" frameborder="0" style="border-radius: 8px; border: 1px solid #334155;"></iframe>
+
+*[Interactive diagram - hover over outputs to see artifact flows]*
 
 ## Phase 1: Analysis (Optional)
 
