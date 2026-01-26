@@ -4,289 +4,91 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>BMad Method Workflow Map</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
         :root {
-            --analysis-primary: #0ea5e9;
-            --planning-primary: #22c55e;
-            --solutioning-primary: #eab308;
-            --implementation-primary: #ef4444;
-            --quickflow-primary: #64748b;
-            --bg-primary: #0f172a;
-            --bg-secondary: #1e293b;
-            --bg-card: #1e293b;
-            --text-primary: #f8fafc;
-            --text-secondary: #94a3b8;
-            --text-muted: #64748b;
-            --border-color: #334155;
+            --analysis: #0ea5e9;
+            --planning: #22c55e;
+            --solutioning: #eab308;
+            --implementation: #ef4444;
+            --quickflow: #64748b;
+            --bg: #0f172a;
+            --card: #1e293b;
+            --text: #f8fafc;
+            --text-muted: #94a3b8;
+            --border: #334155;
             --success: #10b981;
-            --arrow-color: #f59e0b;
+            --arrow: #f59e0b;
         }
-
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
+        * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-            background: var(--bg-primary);
-            min-height: 100vh;
-            color: var(--text-primary);
-            line-height: 1.5;
-            padding: 20px;
-        }
-
-        .container {
-            max-width: 1600px;
-            margin: 0 auto;
-        }
-
-        /* Header */
-        .header {
-            text-align: center;
-            margin-bottom: 30px;
-        }
-
-        .header-badge {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            background: linear-gradient(135deg, var(--analysis-primary), var(--planning-primary));
-            padding: 6px 16px;
-            border-radius: 24px;
-            font-size: 0.85rem;
-            font-weight: 600;
-            margin-bottom: 15px;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-
-        h1 {
-            font-size: 2.5rem;
-            font-weight: 700;
-            background: linear-gradient(135deg, #f8fafc 0%, #94a3b8 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-            margin-bottom: 8px;
-        }
-
-        .subtitle {
-            color: var(--text-secondary);
-            font-size: 1rem;
-        }
-
-        /* Flow Legend */
-        .flow-legend {
-            background: rgba(245, 158, 11, 0.1);
-            border: 1px solid rgba(245, 158, 11, 0.3);
-            border-radius: 12px;
-            padding: 12px 20px;
-            margin-bottom: 30px;
-            text-align: center;
-        }
-
-        .flow-legend-title {
-            font-weight: 600;
-            color: var(--arrow-color);
-            margin-bottom: 6px;
-            font-size: 0.85rem;
-        }
-
-        .flow-legend-items {
-            display: flex;
-            justify-content: center;
-            gap: 20px;
-            flex-wrap: wrap;
-            font-size: 0.75rem;
-            color: var(--text-secondary);
-        }
-
-        .flow-legend-items code {
-            color: var(--success);
-            background: rgba(16, 185, 129, 0.1);
-            padding: 2px 6px;
-            border-radius: 4px;
-        }
-
-        /* Main Flow Container */
-        .flow-container {
-            display: flex;
-            gap: 16px;
-            margin-bottom: 30px;
-            overflow-x: auto;
-            padding-bottom: 10px;
-        }
-
-        /* Phase Column */
-        .phase {
-            min-width: 300px;
-            width: 300px;
-            background: var(--bg-card);
-            border-radius: 16px;
-            border: 1px solid var(--border-color);
-            flex-shrink: 0;
-        }
-
-        .phase.analysis { border-top: 4px solid var(--analysis-primary); }
-        .phase.planning { border-top: 4px solid var(--planning-primary); }
-        .phase.solutioning { border-top: 4px solid var(--solutioning-primary); }
-        .phase.implementation { border-top: 4px solid var(--implementation-primary); }
-
-        .phase-header {
-            padding: 16px 16px 12px;
-            border-bottom: 1px solid var(--border-color);
-        }
-
-        .phase-number-row {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            margin-bottom: 6px;
-        }
-
-        .phase-number {
-            width: 28px;
-            height: 28px;
-            border-radius: 8px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: 700;
-            font-size: 0.9rem;
-        }
-
-        .analysis .phase-number { background: var(--analysis-primary); color: #fff; }
-        .planning .phase-number { background: var(--planning-primary); color: #fff; }
-        .solutioning .phase-number { background: var(--solutioning-primary); color: #000; }
-        .implementation .phase-number { background: var(--implementation-primary); color: #fff; }
-
-        .phase-badge {
-            font-size: 0.65rem;
-            font-weight: 600;
-            padding: 3px 8px;
-            border-radius: 4px;
-            text-transform: uppercase;
-        }
-
-        .analysis .phase-badge { background: rgba(14, 165, 233, 0.2); color: #7dd3fc; }
-        .planning .phase-badge { background: rgba(34, 197, 94, 0.2); color: #86efac; }
-        .solutioning .phase-badge { background: rgba(234, 179, 8, 0.2); color: #fde047; }
-        .implementation .phase-badge { background: rgba(239, 68, 68, 0.2); color: #fca5a5; }
-
-        .phase-title {
-            font-size: 1.1rem;
-            font-weight: 700;
-        }
-
-        .phase-description {
-            padding: 10px 16px;
-            color: var(--text-secondary);
-            font-size: 0.8rem;
-            border-bottom: 1px solid var(--border-color);
-            background: rgba(0, 0, 0, 0.2);
-        }
-
-        .workflows {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.4;
             padding: 12px;
         }
+        .header { text-align: center; margin-bottom: 16px; }
+        .header-badge {
+            display: inline-flex; align-items: center; gap: 6px;
+            background: linear-gradient(135deg, var(--analysis), var(--planning));
+            padding: 4px 12px; border-radius: 20px;
+            font-size: 0.75rem; font-weight: 600; margin-bottom: 8px;
+        }
+        h1 { font-size: 1.5rem; font-weight: 700; }
+        .subtitle { color: var(--text-muted); font-size: 0.8rem; }
 
-        /* Workflow Item */
-        .workflow {
-            background: rgba(255, 255, 255, 0.03);
-            border-radius: 10px;
-            padding: 10px 10px 8px;
-            margin-bottom: 8px;
-            border: 1px solid transparent;
-            transition: all 0.2s ease;
+        .flow-legend {
+            background: rgba(245, 158, 11, 0.1); border: 1px solid rgba(245, 158, 11, 0.3);
+            border-radius: 8px; padding: 8px 12px; margin-bottom: 16px; text-align: center;
+            font-size: 0.7rem; color: var(--arrow);
         }
 
-        .workflow:last-child {
-            margin-bottom: 0;
-        }
-
-        .workflow:hover {
-            background: rgba(255, 255, 255, 0.06);
-        }
-
-        .workflow-header {
-            display: flex;
-            align-items: flex-start;
-            justify-content: space-between;
+        .flow-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
             gap: 8px;
-            margin-bottom: 4px;
+            margin-bottom: 16px;
         }
 
-        .workflow-name {
-            font-family: 'SF Mono', 'Monaco', 'Consolas', monospace;
-            font-size: 0.75rem;
-            font-weight: 600;
-            color: var(--success);
-            background: rgba(16, 185, 129, 0.1);
-            padding: 3px 8px;
-            border-radius: 4px;
+        .phase {
+            background: var(--card);
+            border-radius: 10px;
+            border: 1px solid var(--border);
+            border-top: 3px solid;
         }
+        .phase.analysis { border-top-color: var(--analysis); }
+        .phase.planning { border-top-color: var(--planning); }
+        .phase.solutioning { border-top-color: var(--solutioning); }
+        .phase.implementation { border-top-color: var(--implementation); }
 
-        .badge {
-            font-size: 0.55rem;
-            font-weight: 600;
-            padding: 2px 6px;
-            border-radius: 3px;
-            text-transform: uppercase;
-        }
+        .phase-header { padding: 10px 12px 8px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 8px; }
+        .phase-num { width: 22px; height: 22px; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: 700; }
+        .analysis .phase-num { background: var(--analysis); }
+        .planning .phase-num { background: var(--planning); }
+        .solutioning .phase-num { background: var(--solutioning); color: #000; }
+        .implementation .phase-num { background: var(--implementation); }
+        .phase-title { font-size: 0.95rem; font-weight: 700; }
+        .phase-opt { font-size: 0.6rem; padding: 2px 6px; border-radius: 4px; background: rgba(14, 165, 233, 0.2); color: #7dd3fc; }
 
-        .badge.optional {
-            background: rgba(251, 191, 36, 0.15);
-            color: #fbbf24;
-        }
+        .workflows { padding: 8px 10px; }
 
-        .badge.conditional {
-            background: rgba(168, 85, 247, 0.15);
-            color: #a855f7;
-        }
-
-        .badge.adhoc {
-            background: rgba(59, 130, 246, 0.15);
-            color: #3b82f6;
-        }
-
-        .workflow-purpose {
-            font-size: 0.75rem;
-            color: var(--text-secondary);
-            margin-bottom: 6px;
-            line-height: 1.3;
-        }
-
-        .workflow-footer {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 6px;
-        }
-
-        .agent-tag {
-            display: inline-flex;
-            align-items: center;
-            gap: 5px;
-            background: var(--bg-secondary);
-            padding: 4px 8px;
-            border-radius: 6px;
+        .workflow {
+            background: rgba(255,255,255,0.03); border-radius: 6px;
+            padding: 8px; margin-bottom: 6px;
             font-size: 0.7rem;
         }
-
-        .agent-icon {
-            width: 18px;
-            height: 18px;
-            border-radius: 4px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 0.6rem;
-            font-weight: 700;
+        .workflow-header {
+            display: flex; justify-content: space-between; align-items: center;
+            margin-bottom: 4px;
         }
-
+        .workflow-name {
+            font-family: monospace; color: var(--success);
+            background: rgba(16, 185, 129, 0.1); padding: 2px 6px;
+            border-radius: 3px; font-size: 0.65rem;
+        }
+        .workflow-meta { display: flex; justify-content: space-between; align-items: center; }
+        .agent { display: flex; align-items: center; gap: 4px; }
+        .agent-icon { width: 14px; height: 14px; border-radius: 3px; display: flex; align-items: center; justify-content: center; font-size: 0.55rem; font-weight: 700; }
         .agent-icon.mary { background: linear-gradient(135deg, #f472b6, #ec4899); }
         .agent-icon.john { background: linear-gradient(135deg, #60a5fa, #3b82f6); }
         .agent-icon.sally { background: linear-gradient(135deg, #fbbf24, #f59e0b); color: #000; }
@@ -294,691 +96,266 @@
         .agent-icon.bob { background: linear-gradient(135deg, #34d399, #10b981); color: #000; }
         .agent-icon.amelia { background: linear-gradient(135deg, #fb7185, #ef4444); }
         .agent-icon.barry { background: linear-gradient(135deg, #94a3b8, #64748b); }
+        .agent-name { font-size: 0.65rem; }
+        .output { color: var(--success); font-family: monospace; font-size: 0.6rem; }
+        .badge { font-size: 0.55rem; padding: 1px 4px; border-radius: 3px; }
+        .badge.opt { background: rgba(251,191,36,0.15); color: #fbbf24; }
+        .badge.iffy { background: rgba(168,85,247,0.15); color: #a855f7; }
+        .badge.adhoc { background: rgba(59,130,246,0.15); color: #3b82f6; }
 
-        .agent-name {
-            font-weight: 600;
-            font-size: 0.7rem;
-        }
+        .arrow { display: flex; align-items: center; justify-content: center; color: var(--arrow); font-size: 0.9rem; margin: 6px 0; }
 
-        .workflow-output {
-            font-size: 0.65rem;
-            color: var(--success);
-            font-family: 'SF Mono', 'Monaco', 'Consolas', monospace;
-        }
+        .decision { background: linear-gradient(135deg, #a855f7, #9333ea); padding: 4px 8px; border-radius: 4px; text-align: center; font-size: 0.65rem; font-weight: 600; margin: 6px 0; }
 
-        .workflow-output span {
-            color: var(--text-muted);
+        .quickflow {
+            background: rgba(100, 116, 139, 0.2); border: 2px dashed var(--quickflow);
+            border-radius: 10px; padding: 12px; margin-bottom: 16px;
         }
+        .quickflow-header { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+        .quickflow-header h2 { font-size: 0.95rem; }
+        .quickflow-header span { font-size: 0.7rem; color: var(--text-muted); }
+        .quickflow-body { display: flex; align-items: center; gap: 12px; }
+        .quickflow-item { flex: 1; background: rgba(255,255,255,0.03); border-radius: 8px; padding: 10px; }
+        .quickflow-item code { font-family: monospace; color: var(--success); background: rgba(16, 185, 129, 0.1); padding: 2px 6px; border-radius: 3px; font-size: 0.7rem; }
 
-        /* Arrow Connector */
-        .arrow-connector {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            min-width: 80px;
-            padding: 0 10px;
-        }
+        .context { background: rgba(14, 165, 233, 0.08); border-radius: 10px; padding: 12px; font-size: 0.75rem; }
+        .context-header { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; font-weight: 600; }
+        .context-items { display: flex; flex-wrap: wrap; gap: 6px; }
+        .context-items code { font-family: monospace; color: var(--success); background: rgba(16, 185, 129, 0.1); padding: 2px 5px; border-radius: 3px; font-size: 0.65rem; }
+        .context-items span { color: var(--text-muted); }
 
-        .arrow-connector-top {
-            font-size: 0.65rem;
-            color: var(--arrow-color);
-            font-family: 'SF Mono', 'Monaco', 'Consolas', monospace;
-            background: rgba(245, 158, 11, 0.1);
-            padding: 4px 8px;
-            border-radius: 6px;
-            border: 1px solid rgba(245, 158, 11, 0.3);
-            text-align: center;
-            margin-bottom: 8px;
-            white-space: nowrap;
-        }
-
-        .arrow-connector-arrow {
-            font-size: 2rem;
-            color: var(--arrow-color);
-            line-height: 1;
-        }
-
-        /* Decision Diamond */
-        .decision {
-            background: linear-gradient(135deg, #a855f7, #9333ea);
-            padding: 8px;
-            border-radius: 8px;
-            text-align: center;
-            font-size: 0.75rem;
-            font-weight: 600;
-            margin: 8px 0;
-        }
-
-        /* Quick Flow Section */
-        .quick-flow-section {
-            background: var(--bg-secondary);
-            border-radius: 16px;
-            padding: 20px;
-            border: 2px dashed var(--quickflow-primary);
-            margin-bottom: 30px;
-        }
-
-        .quick-flow-header {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            margin-bottom: 16px;
-        }
-
-        .quick-flow-icon {
-            width: 40px;
-            height: 40px;
-            background: var(--quickflow-primary);
-            border-radius: 10px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.2rem;
-        }
-
-        .quick-flow-title h2 {
-            font-size: 1.2rem;
-            font-weight: 700;
-        }
-
-        .quick-flow-title p {
-            color: var(--text-secondary);
-            font-size: 0.85rem;
-        }
-
-        .quick-flow-workflows {
-            display: flex;
-            align-items: center;
-            gap: 16px;
-        }
-
-        .quick-flow-workflow {
-            flex: 1;
-            background: rgba(255, 255, 255, 0.03);
-            border-radius: 12px;
-            padding: 16px;
-            border: 1px solid var(--border-color);
-        }
-
-        .quick-flow-workflow .agent-tag {
-            margin-bottom: 8px;
-        }
-
-        .quick-flow-workflow code {
-            font-family: 'SF Mono', 'Monaco', 'Consolas', monospace;
-            font-size: 0.85rem;
-            color: var(--success);
-            background: rgba(16, 185, 129, 0.1);
-            padding: 4px 8px;
-            border-radius: 4px;
-        }
-
-        .quick-flow-workflow .purpose {
-            color: var(--text-secondary);
-            font-size: 0.8rem;
-            margin-top: 6px;
-        }
-
-        .quick-flow-workflow .output {
-            color: var(--text-muted);
-            font-size: 0.75rem;
-            margin-top: 4px;
-        }
-
-        .quick-flow-arrow {
-            font-size: 2rem;
-            color: var(--arrow-color);
-        }
-
-        /* Context Section */
-        .context-section {
-            background: rgba(14, 165, 233, 0.1);
-            border-radius: 16px;
-            padding: 20px;
-            border: 1px solid rgba(14, 165, 233, 0.2);
-            margin-bottom: 30px;
-        }
-
-        .context-header {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            margin-bottom: 12px;
-        }
-
-        .context-icon {
-            width: 36px;
-            height: 36px;
-            background: var(--analysis-primary);
-            border-radius: 10px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.2rem;
-        }
-
-        .context-title {
-            font-size: 1.1rem;
-            font-weight: 700;
-        }
-
-        .context-text {
-            color: var(--text-secondary);
-            line-height: 1.6;
-            margin-bottom: 12px;
-            font-size: 0.9rem;
-        }
-
-        .brownfield {
-            background: rgba(251, 146, 60, 0.1);
-            border-left: 3px solid #fb923c;
-            padding: 10px 14px;
-            border-radius: 0 8px 8px 0;
-            margin-bottom: 12px;
-            font-size: 0.85rem;
-        }
-
-        .brownfield code {
-            font-family: 'SF Mono', 'Monaco', 'Consolas', monospace;
-            background: rgba(0, 0, 0, 0.3);
-            padding: 2px 6px;
-            border-radius: 4px;
-            color: #fdba74;
-        }
-
-        .context-workflows {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 8px;
-        }
-
-        .context-workflow {
-            background: var(--bg-secondary);
-            padding: 6px 12px;
-            border-radius: 8px;
-            font-size: 0.75rem;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-
-        .context-workflow code {
-            font-family: 'SF Mono', 'Monaco', 'Consolas', monospace;
-            color: var(--success);
-        }
-
-        .context-workflow span {
-            color: var(--text-muted);
-        }
-
-        /* Legend */
-        .legend {
-            display: flex;
-            justify-content: center;
-            gap: 20px;
-            flex-wrap: wrap;
-            padding: 16px 20px;
-            background: var(--bg-secondary);
-            border-radius: 12px;
-            margin-bottom: 20px;
-        }
-
-        .legend-item {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .legend-color {
-            width: 30px;
-            height: 4px;
-            border-radius: 2px;
-        }
-
-        .legend-text {
-            font-size: 0.75rem;
-            color: var(--text-secondary);
-        }
-
-        .legend-arrow {
-            font-size: 0.75rem;
-            color: var(--arrow-color);
-        }
-
-        .agent-legend {
-            display: flex;
-            justify-content: center;
-            gap: 10px;
-            flex-wrap: wrap;
-        }
-
-        .agent-legend-item {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            background: var(--bg-card);
-            padding: 6px 12px;
-            border-radius: 8px;
-            border: 1px solid var(--border-color);
-        }
-
-        .agent-legend-item .agent-icon {
-            width: 22px;
-            height: 22px;
-            font-size: 0.65rem;
-        }
-
-        .agent-legend-item span {
-            font-size: 0.75rem;
-        }
+        .legend { display: flex; justify-content: center; gap: 12px; flex-wrap: wrap; font-size: 0.7rem; margin-top: 12px; }
+        .legend-item { display: flex; align-items: center; gap: 4px; }
+        .legend-dot { width: 12px; height: 3px; border-radius: 2px; }
     </style>
 </head>
 <body>
-    <div class="container">
-        <!-- Header -->
-        <header class="header">
-            <div class="header-badge">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M12 2L2 7l10 5 10-5-10-5z"/>
-                    <path d="M2 17l10 5 10-5"/>
-                    <path d="M2 12l10 5 10-5"/>
-                </svg>
-                Workflow Map V6
-            </div>
-            <h1>BMad Method</h1>
-            <p class="subtitle">Context engineering and planning for AI-powered software development</p>
-        </header>
+    <div class="header">
+        <div class="header-badge">⚡ Workflow Map V6</div>
+        <h1>BMad Method</h1>
+        <p class="subtitle">Context engineering for AI-powered development</p>
+    </div>
 
-        <!-- Flow Legend -->
-        <div class="flow-legend">
-            <div class="flow-legend-title">Artifact Flow → (arrows show which documents feed into the next workflow)</div>
-            <div class="flow-legend-items">
-                <span><code>product-brief.md</code> → <code>PRD.md</code> → <code>architecture.md</code> → Stories</span>
-                <span><code>story file</code> → dev → code-review</span>
-                <span><code>tech-spec.md</code> → quick-dev</span>
+    <div class="flow-legend">→ arrows show artifact flow between workflows</div>
+
+    <div class="flow-grid">
+        <!-- Phase 1: Analysis -->
+        <div class="phase analysis">
+            <div class="phase-header">
+                <div class="phase-num">1</div>
+                <div class="phase-title">Analysis</div>
+                <span class="phase-opt">Optional</span>
             </div>
+            <div class="workflows">
+                <div class="workflow">
+                    <div class="workflow-header">
+                        <span class="workflow-name">brainstorm</span>
+                        <span class="badge opt">opt</span>
+                    </div>
+                    <div class="workflow-meta">
+                        <div class="agent"><div class="agent-icon mary">M</div><span class="agent-name">Mary</span></div>
+                        <span class="output">brainstorming-report.md</span>
+                    </div>
+                </div>
+                <div class="workflow">
+                    <div class="workflow-header">
+                        <span class="workflow-name">research</span>
+                        <span class="badge opt">opt</span>
+                    </div>
+                    <div class="workflow-meta">
+                        <div class="agent"><div class="agent-icon mary">M</div><span class="agent-name">Mary</span></div>
+                        <span class="output">findings</span>
+                    </div>
+                </div>
+                <div class="workflow">
+                    <div class="workflow-header">
+                        <span class="workflow-name">create-product-brief</span>
+                    </div>
+                    <div class="workflow-meta">
+                        <div class="agent"><div class="agent-icon mary">M</div><span class="agent-name">Mary</span></div>
+                        <span class="output">product-brief.md →</span>
+                    </div>
+                </div>
+            </div>
+            <div class="arrow">→</div>
         </div>
 
-        <!-- Main Flow: Phases with Arrow Connectors -->
-        <div class="flow-container">
-            <!-- Phase 1: Analysis -->
-            <div class="phase analysis">
-                <div class="phase-header">
-                    <div class="phase-number-row">
-                        <div class="phase-number">1</div>
-                        <span class="phase-badge">Optional</span>
+        <!-- Phase 2: Planning -->
+        <div class="phase planning">
+            <div class="phase-header">
+                <div class="phase-num">2</div>
+                <div class="phase-title">Planning</div>
+            </div>
+            <div class="workflows">
+                <div class="workflow">
+                    <div class="workflow-header">
+                        <span class="workflow-name">create-prd</span>
                     </div>
-                    <div class="phase-title">Analysis</div>
+                    <div class="workflow-meta">
+                        <div class="agent"><div class="agent-icon john">J</div><span class="agent-name">John</span></div>
+                        <span class="output">PRD.md →</span>
+                    </div>
                 </div>
-                <div class="phase-description">
-                    Explore the problem space and validate ideas.
-                </div>
-                <div class="workflows">
-                    <div class="workflow">
-                        <div class="workflow-header">
-                            <code class="workflow-name">brainstorm</code>
-                            <span class="badge optional">Opt</span>
-                        </div>
-                        <p class="workflow-purpose">Brainstorm project ideas</p>
-                        <div class="workflow-footer">
-                            <div class="agent-tag">
-                                <div class="agent-icon mary">M</div>
-                                <span class="agent-name">Mary</span>
-                            </div>
-                            <div class="workflow-output">brainstorming-report.md</div>
-                        </div>
+                <div class="decision">Has UI?</div>
+                <div class="workflow">
+                    <div class="workflow-header">
+                        <span class="workflow-name">create-ux-design</span>
+                        <span class="badge iffy">if yes</span>
                     </div>
-                    <div class="workflow">
-                        <div class="workflow-header">
-                            <code class="workflow-name">research</code>
-                            <span class="badge optional">Opt</span>
-                        </div>
-                        <p class="workflow-purpose">Validate assumptions</p>
-                        <div class="workflow-footer">
-                            <div class="agent-tag">
-                                <div class="agent-icon mary">M</div>
-                                <span class="agent-name">Mary</span>
-                            </div>
-                            <div class="workflow-output">Research findings</div>
-                        </div>
-                    </div>
-                    <div class="workflow">
-                        <div class="workflow-header">
-                            <code class="workflow-name">create-product-brief</code>
-                        </div>
-                        <p class="workflow-purpose">Capture strategic vision</p>
-                        <div class="workflow-footer">
-                            <div class="agent-tag">
-                                <div class="agent-icon mary">M</div>
-                                <span class="agent-name">Mary</span>
-                            </div>
-                            <div class="workflow-output">product-brief.md →</div>
-                        </div>
+                    <div class="workflow-meta">
+                        <div class="agent"><div class="agent-icon sally">S</div><span class="agent-name">Sally</span></div>
+                        <span class="output">ux-spec.md →</span>
                     </div>
                 </div>
             </div>
+            <div class="arrow">→</div>
+        </div>
 
-            <!-- Arrow Connector 1-2 -->
-            <div class="arrow-connector">
-                <div class="arrow-connector-top">product-brief.md</div>
-                <div class="arrow-connector-arrow">→</div>
+        <!-- Phase 3: Solutioning -->
+        <div class="phase solutioning">
+            <div class="phase-header">
+                <div class="phase-num">3</div>
+                <div class="phase-title">Solutioning</div>
             </div>
-
-            <!-- Phase 2: Planning -->
-            <div class="phase planning">
-                <div class="phase-header">
-                    <div class="phase-number-row">
-                        <div class="phase-number">2</div>
+            <div class="workflows">
+                <div class="workflow">
+                    <div class="workflow-header">
+                        <span class="workflow-name">create-architecture</span>
                     </div>
-                    <div class="phase-title">Planning</div>
-                </div>
-                <div class="phase-description">
-                    Define requirements and user experience.
-                </div>
-                <div class="workflows">
-                    <div class="workflow">
-                        <div class="workflow-header">
-                            <code class="workflow-name">create-prd</code>
-                        </div>
-                        <p class="workflow-purpose">Define requirements (FRs/NFRs)</p>
-                        <div class="workflow-footer">
-                            <div class="agent-tag">
-                                <div class="agent-icon john">J</div>
-                                <span class="agent-name">John</span>
-                            </div>
-                            <div class="workflow-output">PRD.md →</div>
-                        </div>
+                    <div class="workflow-meta">
+                        <div class="agent"><div class="agent-icon winston">W</div><span class="agent-name">Winston</span></div>
+                        <span class="output">architecture.md →</span>
                     </div>
-                    <div class="decision">Has UI?</div>
-                    <div class="workflow">
-                        <div class="workflow-header">
-                            <code class="workflow-name">create-ux-design</code>
-                            <span class="badge conditional">If Yes</span>
-                        </div>
-                        <p class="workflow-purpose">Design user experience</p>
-                        <div class="workflow-footer">
-                            <div class="agent-tag">
-                                <div class="agent-icon sally">S</div>
-                                <span class="agent-name">Sally</span>
-                            </div>
-                            <div class="workflow-output">ux-spec.md →</div>
-                        </div>
+                </div>
+                <div class="workflow">
+                    <div class="workflow-header">
+                        <span class="workflow-name">create-epics-and-stories</span>
+                    </div>
+                    <div class="workflow-meta">
+                        <div class="agent"><div class="agent-icon john">J</div><span class="agent-name">John</span></div>
+                        <span class="output">epics.md →</span>
+                    </div>
+                </div>
+                <div class="workflow">
+                    <div class="workflow-header">
+                        <span class="workflow-name">check-implementation-readiness</span>
+                    </div>
+                    <div class="workflow-meta">
+                        <div class="agent"><div class="agent-icon john">J</div><span class="agent-name">John</span></div>
+                        <span class="output">gate check</span>
                     </div>
                 </div>
             </div>
+            <div class="arrow">→</div>
+        </div>
 
-            <!-- Arrow Connector 2-3 -->
-            <div class="arrow-connector">
-                <div class="arrow-connector-top">PRD + UX</div>
-                <div class="arrow-connector-arrow">→</div>
+        <!-- Phase 4: Implementation -->
+        <div class="phase implementation">
+            <div class="phase-header">
+                <div class="phase-num">4</div>
+                <div class="phase-title">Implementation</div>
             </div>
-
-            <!-- Phase 3: Solutioning -->
-            <div class="phase solutioning">
-                <div class="phase-header">
-                    <div class="phase-number-row">
-                        <div class="phase-number">3</div>
+            <div class="workflows">
+                <div class="workflow">
+                    <div class="workflow-header">
+                        <span class="workflow-name">sprint-planning</span>
                     </div>
-                    <div class="phase-title">Solutioning</div>
-                </div>
-                <div class="phase-description">
-                    Design architecture and break into stories.
-                </div>
-                <div class="workflows">
-                    <div class="workflow">
-                        <div class="workflow-header">
-                            <code class="workflow-name">create-architecture</code>
-                        </div>
-                        <p class="workflow-purpose">Make technical decisions explicit</p>
-                        <div class="workflow-footer">
-                            <div class="agent-tag">
-                                <div class="agent-icon winston">W</div>
-                                <span class="agent-name">Winston</span>
-                            </div>
-                            <div class="workflow-output">architecture.md →</div>
-                        </div>
-                    </div>
-                    <div class="workflow">
-                        <div class="workflow-header">
-                            <code class="workflow-name">create-epics-and-stories</code>
-                        </div>
-                        <p class="workflow-purpose">Break into implementable work</p>
-                        <div class="workflow-footer">
-                            <div class="agent-tag">
-                                <div class="agent-icon john">J</div>
-                                <span class="agent-name">John</span>
-                            </div>
-                            <div class="workflow-output">Epic files →</div>
-                        </div>
-                    </div>
-                    <div class="workflow">
-                        <div class="workflow-header">
-                            <code class="workflow-name">check-implementation-readiness</code>
-                        </div>
-                        <p class="workflow-purpose">Gate check before implementation</p>
-                        <div class="workflow-footer">
-                            <div class="agent-tag">
-                                <div class="agent-icon john">J</div>
-                                <span class="agent-name">John</span>
-                            </div>
-                            <div class="workflow-output">PASS/CONCERNS/FAIL</div>
-                        </div>
+                    <div class="workflow-meta">
+                        <div class="agent"><div class="agent-icon bob">B</div><span class="agent-name">Bob</span></div>
+                        <span class="output">sprint-status.yaml →</span>
                     </div>
                 </div>
-            </div>
-
-            <!-- Arrow Connector 3-4 -->
-            <div class="arrow-connector">
-                <div class="arrow-connector-top">arch + epics</div>
-                <div class="arrow-connector-arrow">→</div>
-            </div>
-
-            <!-- Phase 4: Implementation -->
-            <div class="phase implementation">
-                <div class="phase-header">
-                    <div class="phase-number-row">
-                        <div class="phase-number">4</div>
+                <div class="workflow">
+                    <div class="workflow-header">
+                        <span class="workflow-name">create-story</span>
                     </div>
-                    <div class="phase-title">Implementation</div>
+                    <div class="workflow-meta">
+                        <div class="agent"><div class="agent-icon bob">B</div><span class="agent-name">Bob</span></div>
+                        <span class="output">story-[slug].md →</span>
+                    </div>
                 </div>
-                <div class="phase-description">
-                    Build it, one story at a time.
+                <div class="workflow">
+                    <div class="workflow-header">
+                        <span class="workflow-name">dev-story</span>
+                    </div>
+                    <div class="workflow-meta">
+                        <div class="agent"><div class="agent-icon amelia">A</div><span class="agent-name">Amelia</span></div>
+                        <span class="output">code →</span>
+                    </div>
                 </div>
-                <div class="workflows">
-                    <div class="workflow">
-                        <div class="workflow-header">
-                            <code class="workflow-name">sprint-planning</code>
-                        </div>
-                        <p class="workflow-purpose">Initialize tracking</p>
-                        <div class="workflow-footer">
-                            <div class="agent-tag">
-                                <div class="agent-icon bob">B</div>
-                                <span class="agent-name">Bob</span>
-                            </div>
-                            <div class="workflow-output">sprint-status.yaml →</div>
-                        </div>
+                <div class="workflow">
+                    <div class="workflow-header">
+                        <span class="workflow-name">code-review</span>
                     </div>
-                    <div class="workflow">
-                        <div class="workflow-header">
-                            <code class="workflow-name">create-story</code>
-                        </div>
-                        <p class="workflow-purpose">Prepare story for implementation</p>
-                        <div class="workflow-footer">
-                            <div class="agent-tag">
-                                <div class="agent-icon bob">B</div>
-                                <span class="agent-name">Bob</span>
-                            </div>
-                            <div class="workflow-output">story-[slug].md →</div>
-                        </div>
+                    <div class="workflow-meta">
+                        <div class="agent"><div class="agent-icon amelia">A</div><span class="agent-name">Amelia</span></div>
+                        <span class="output">approve</span>
                     </div>
-                    <div class="workflow">
-                        <div class="workflow-header">
-                            <code class="workflow-name">dev-story</code>
-                        </div>
-                        <p class="workflow-purpose">Implement the story</p>
-                        <div class="workflow-footer">
-                            <div class="agent-tag">
-                                <div class="agent-icon amelia">A</div>
-                                <span class="agent-name">Amelia</span>
-                            </div>
-                            <div class="workflow-output">code →</div>
-                        </div>
+                </div>
+                <div class="workflow">
+                    <div class="workflow-header">
+                        <span class="workflow-name">correct-course</span>
+                        <span class="badge adhoc">ad-hoc</span>
                     </div>
-                    <div class="workflow">
-                        <div class="workflow-header">
-                            <code class="workflow-name">code-review</code>
-                        </div>
-                        <p class="workflow-purpose">Validate implementation</p>
-                        <div class="workflow-footer">
-                            <div class="agent-tag">
-                                <div class="agent-icon amelia">A</div>
-                                <span class="agent-name">Amelia</span>
-                            </div>
-                            <div class="workflow-output">Approved</div>
-                        </div>
+                    <div class="workflow-meta">
+                        <div class="agent"><div class="agent-icon john">J</div><span class="agent-name">John</span></div>
+                        <span class="output">updated plan</span>
                     </div>
-                    <div class="workflow">
-                        <div class="workflow-header">
-                            <code class="workflow-name">correct-course</code>
-                            <span class="badge adhoc">Ad-Hoc</span>
-                        </div>
-                        <p class="workflow-purpose">Handle mid-sprint changes</p>
-                        <div class="workflow-footer">
-                            <div class="agent-tag">
-                                <div class="agent-icon john">J</div>
-                                <span class="agent-name">John</span>
-                            </div>
-                            <div class="workflow-output">Updated plan</div>
-                        </div>
+                </div>
+                <div class="workflow">
+                    <div class="workflow-header">
+                        <span class="workflow-name">retrospective</span>
+                        <span class="badge adhoc">per epic</span>
                     </div>
-                    <div class="workflow">
-                        <div class="workflow-header">
-                            <code class="workflow-name">retrospective</code>
-                            <span class="badge adhoc">Per Epic</span>
-                        </div>
-                        <p class="workflow-purpose">Review lessons learned</p>
-                        <div class="workflow-footer">
-                            <div class="agent-tag">
-                                <div class="agent-icon bob">B</div>
-                                <span class="agent-name">Bob</span>
-                            </div>
-                            <div class="workflow-output">Lessons</div>
-                        </div>
+                    <div class="workflow-meta">
+                        <div class="agent"><div class="agent-icon bob">B</div><span class="agent-name">Bob</span></div>
+                        <span class="output">lessons</span>
                     </div>
                 </div>
             </div>
         </div>
+    </div>
 
-        <!-- Quick Flow Section -->
-        <div class="quick-flow-section">
-            <div class="quick-flow-header">
-                <div class="quick-flow-icon">⚡</div>
-                <div class="quick-flow-title">
-                    <h2>Quick Flow (Parallel Track)</h2>
-                    <p>For small, well-understood changes — skip phases 1-3</p>
-                </div>
-            </div>
-            <div class="quick-flow-workflows">
-                <div class="quick-flow-workflow">
-                    <div class="agent-tag">
-                        <div class="agent-icon barry">B</div>
-                        <span class="agent-name">Barry</span>
-                    </div>
-                    <code>quick-spec</code>
-                    <div class="purpose">Define an ad-hoc change</div>
-                    <div class="output">tech-spec.md</div>
-                </div>
-                <div class="quick-flow-arrow">→</div>
-                <div class="quick-flow-workflow">
-                    <div class="agent-tag">
-                        <div class="agent-icon barry">B</div>
-                        <span class="agent-name">Barry</span>
-                    </div>
-                    <code>quick-dev</code>
-                    <div class="purpose">Implement from spec</div>
-                    <div class="output">Working code + tests</div>
-                </div>
+    <div class="quickflow">
+        <div class="quickflow-header">
+            <span>⚡</span>
+            <div>
+                <h2>Quick Flow (Parallel Track)</h2>
+                <span>For small, well-understood changes — skip phases 1-3</span>
             </div>
         </div>
-
-        <!-- Context Management Section -->
-        <div class="context-section">
-            <div class="context-header">
-                <div class="context-icon">📚</div>
-                <h2 class="context-title">Context Management</h2>
+        <div class="quickflow-body">
+            <div class="quickflow-item">
+                <div class="agent"><div class="agent-icon barry">B</div><span class="agent-name">Barry</span></div>
+                <code>quick-spec</code>
+                <div style="font-size: 0.65rem; color: var(--text-muted); margin-top: 4px;">→ tech-spec.md</div>
             </div>
-            <p class="context-text">
-                Each document becomes context for the next phase. PRD → Architecture, Architecture → Dev, Story → Implementation.
-                Without this structure, agents make inconsistent decisions.
-            </p>
-            <div class="brownfield">
-                <strong>Brownfield:</strong> Use <code>document-project</code> to create <code>project-context.md</code> before Phase 4.
-                <span style="color: #94a3b8; font-size: 0.75rem; margin-left: 8px;">(Mary / Paige)</span>
-            </div>
-            <p style="color: var(--text-secondary); font-size: 0.8rem; margin-bottom: 8px;">Context loaded per workflow:</p>
-            <div class="context-workflows">
-                <div class="context-workflow"><code>create-story</code> <span>epics, PRD, arch, UX</span></div>
-                <div class="context-workflow"><code>dev-story</code> <span>story file</span></div>
-                <div class="context-workflow"><code>code-review</code> <span>arch, story</span></div>
-                <div class="context-workflow"><code>quick-dev</code> <span>tech-spec</span></div>
+            <span style="color: var(--arrow); font-size: 1.2rem;">→</span>
+            <div class="quickflow-item">
+                <div class="agent"><div class="agent-icon barry">B</div><span class="agent-name">Barry</span></div>
+                <code>quick-dev</code>
+                <div style="font-size: 0.65rem; color: var(--text-muted); margin-top: 4px;">→ working code</div>
             </div>
         </div>
+    </div>
 
-        <!-- Legend -->
-        <div class="legend">
-            <div class="legend-item">
-                <div class="legend-color" style="background: var(--analysis-primary);"></div>
-                <span class="legend-text">Phase 1: Analysis</span>
-            </div>
-            <div class="legend-item">
-                <div class="legend-color" style="background: var(--planning-primary);"></div>
-                <span class="legend-text">Phase 2: Planning</span>
-            </div>
-            <div class="legend-item">
-                <div class="legend-color" style="background: var(--solutioning-primary);"></div>
-                <span class="legend-text">Phase 3: Solutioning</span>
-            </div>
-            <div class="legend-item">
-                <div class="legend-color" style="background: var(--implementation-primary);"></div>
-                <span class="legend-text">Phase 4: Implementation</span>
-            </div>
-            <div class="legend-arrow">
-                → = Artifact flows to next phase
-            </div>
+    <div class="context">
+        <div class="context-header">📚 Context Flow</div>
+        <p style="margin-bottom: 8px; color: var(--text-muted);">Each document becomes context for the next phase.</p>
+        <div class="context-items">
+            <span><code>create-story</code> <span>loads epics, PRD, architecture, UX</span></span>
+            <span><code>dev-story</code> <span>loads story file</span></span>
+            <span><code>code-review</code> <span>loads architecture, story</span></span>
+            <span><code>quick-dev</code> <span>loads tech-spec</span></span>
         </div>
+    </div>
 
-        <!-- Agent Legend -->
-        <div class="agent-legend">
-            <div class="agent-legend-item">
-                <div class="agent-icon mary">M</div>
-                <span>Mary</span>
-            </div>
-            <div class="agent-legend-item">
-                <div class="agent-icon john">J</div>
-                <span>John</span>
-            </div>
-            <div class="agent-legend-item">
-                <div class="agent-icon sally">S</div>
-                <span>Sally</span>
-            </div>
-            <div class="agent-legend-item">
-                <div class="agent-icon winston">W</div>
-                <span>Winston</span>
-            </div>
-            <div class="agent-legend-item">
-                <div class="agent-icon bob">B</div>
-                <span>Bob</span>
-            </div>
-            <div class="agent-legend-item">
-                <div class="agent-icon amelia">A</div>
-                <span>Amelia</span>
-            </div>
-            <div class="agent-legend-item">
-                <div class="agent-icon barry">B</div>
-                <span>Barry</span>
-            </div>
-        </div>
+    <div class="legend">
+        <div class="legend-item"><div class="legend-dot" style="background: var(--analysis);"></div>Analysis</div>
+        <div class="legend-item"><div class="legend-dot" style="background: var(--planning);"></div>Planning</div>
+        <div class="legend-item"><div class="legend-dot" style="background: var(--solutioning);"></div>Solutioning</div>
+        <div class="legend-item"><div class="legend-dot" style="background: var(--implementation);"></div>Implementation</div>
+        <div class="legend-item"><div class="legend-dot" style="background: var(--quickflow);"></div>Quick Flow</div>
     </div>
 </body>
 </html>
