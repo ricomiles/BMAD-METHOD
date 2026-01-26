@@ -11,7 +11,6 @@ Quick answers to common questions about brownfield (existing codebase) developme
   - [Do I have to run document-project for brownfield?](#do-i-have-to-run-document-project-for-brownfield)
   - [What if I forget to run document-project?](#what-if-i-forget-to-run-document-project)
   - [Can I use Quick Spec Flow for brownfield projects?](#can-i-use-quick-spec-flow-for-brownfield-projects)
-  - [How does workflow-init handle old planning docs?](#how-does-workflow-init-handle-old-planning-docs)
   - [What if my existing code doesn't follow best practices?](#what-if-my-existing-code-doesnt-follow-best-practices)
 
 ### What is brownfield vs greenfield?
@@ -43,17 +42,6 @@ Yes! Quick Spec Flow works great for brownfield. It will:
 - Generate context-rich tech-spec that respects existing code
 
 Perfect for bug fixes and small features in existing codebases.
-
-### How does workflow-init handle old planning docs?
-
-workflow-init asks about YOUR current work first, then uses old artifacts as context:
-
-1. Shows what it found (old PRD, epics, etc.)
-2. Asks: "Is this work in progress, previous effort, or proposed work?"
-3. If previous effort: Asks you to describe your NEW work
-4. Determines level based on YOUR work, not old artifacts
-
-This prevents old Level 3 PRDs from forcing Level 3 workflow for a new Level 0 bug fix.
 
 ### What if my existing code doesn't follow best practices?
 

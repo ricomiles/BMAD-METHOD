@@ -36,9 +36,11 @@ Your `docs/` folder should contain succinct, well-organized documentation that a
 
 For complex projects, consider using the `document-project` workflow. It offers runtime variants that will scan your entire project and document its actual current state.
 
-## Step 3: Initialize for Brownfield Work
+## Step 3: Get Help
 
-Run `workflow-init`. It should recognize you are in an existing project. If not, explicitly clarify that this is brownfield development for a new feature.
+Get help to know what to do next based on your unique needs
+
+Run `bmad-help` to get guidance when you are not sure what to do next.
 
 ### Choosing Your Approach
 
