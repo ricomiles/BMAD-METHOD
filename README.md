@@ -59,7 +59,7 @@ Products, platforms, complex features — structured planning then build:
 5. `/sprint-planning` — initialize sprint tracking
 6. **Repeat per story:** `/create-story` → `/dev-story` → `/code-review`
 
-Every step tells you what's next. Optional phases (brainstorming, research, UX design) are available when you need them — ask `/bmad-help` anytime. For a detailed walkthrough, see the [Getting Started Tutorial](http://docs.bmad-method.org/tutorials/getting-started/getting-started-bmadv6/).
+Every step tells you what's next. Optional phases (brainstorming, research, UX design) are available when you need them — ask `/bmad-help` anytime. For a detailed walkthrough, see the [Getting Started Tutorial](http://docs.bmad-method.org/tutorials/getting-started/).
 
 ## Modules
 
@@ -78,8 +78,8 @@ BMad Method extends with official modules for specialized domains. Modules are a
 
 **[Full Documentation](http://docs.bmad-method.org)** — Tutorials, how-to guides, concepts, and reference
 
-- [Getting Started Tutorial](http://docs.bmad-method.org/tutorials/getting-started/getting-started-bmadv6/)
-- [Upgrading from Previous Versions](http://docs.bmad-method.org/how-to/installation/upgrade-to-v6/)
+- [Getting Started Tutorial](http://docs.bmad-method.org/tutorials/getting-started/)
+- [Upgrading from Previous Versions](http://docs.bmad-method.org/how-to/upgrade-to-v6/)
 
 ### For v4 Users
 
