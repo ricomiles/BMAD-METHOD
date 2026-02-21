@@ -8,5 +8,5 @@ CODE_OF_CONDUCT.md
 _bmad/
 _bmad*/
 
-# IDE/tool-specific directories
+# IDE integration folders (user-specific, not in repo)
 .junie/
