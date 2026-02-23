@@ -1,5 +1,13 @@
 # Changelog
 
+## [6.0.3]
+
+### 🐛 Bug Fixes
+
+* Fix workflow descriptions to use proper quotes so they format better in skill conversion and don't break yaml front matter
+
+---
+
 ## [6.0.2]
 
 ### 🎁 Features
