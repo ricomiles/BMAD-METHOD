@@ -2,9 +2,26 @@
 
 ## [6.0.3]
 
+### 🎁 Features
+
+* Add bmad-os-root-cause-analysis skill for analyzing bug-fix commits and producing structured root cause analysis reports with pyramid communication format (#1741)
+
 ### 🐛 Bug Fixes
 
+* Fix installer to refuse installation when ancestor directory has BMAD commands, preventing duplicate command autocompletion in nested directories (#1735)
+* Fix OpenCode integration by replacing unsupported `name` frontmatter with `mode: all` and update directory names to plural form (#1764)
+* Fix CSV manifest pipeline double-escaping of quotes that was corrupting output files; switch Gemini templates to single quotes (#1746)
 * Fix workflow descriptions to use proper quotes so they format better in skill conversion and don't break yaml front matter
+* Fix workflow help task chaining by removing ambiguous "with-argument" clause that caused LLMs to misinterpret help.md as skill calls (#1740)
+
+### ♻️ Refactoring
+
+* Standardize all workflow descriptions to use proper quotes to prevent breaking command or skill front matter during skill conversion
+
+### 📚 Documentation
+
+* Fix broken TEA hyperlinks to point to new repository URL (#1772)
+* Rebrand BMAD acronym to "Build More Architect Dreams" across documentation (#1765)
 
 ---
 
