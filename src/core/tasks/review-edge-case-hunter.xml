@@ -57,7 +57,6 @@ No extra text, no explanations, no markdown wrapping.</output-format>
   </flow>
 
   <halt-conditions>
-    <condition>HALT if zero findings - this is suspicious, re-analyze or ask for guidance</condition>
     <condition>HALT if content is empty or unreadable</condition>
   </halt-conditions>
 
