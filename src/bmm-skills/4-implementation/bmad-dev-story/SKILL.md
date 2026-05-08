@@ -25,6 +25,17 @@ description: 'Execute story implementation following a context filled story spec
 
 ## On Activation
 
+### Autonomous Pipeline Mode
+
+> **Activated when `[PIPELINE_MODE: autonomous]` is present in the prompt context.**
+>
+> Skip all activation steps (config loading, script execution, greeting, menu
+> presentation). Go directly to **Execution** using the inputs provided in the
+> prompt as context. Never pause for user input — treat every "wait for [C]",
+> "halt", and menu instruction as auto-proceed. The story file path is given by
+> `[STORY_PATH: <path>]` in the prompt — use it directly, skipping sprint-status
+> discovery. Complete the full workflow in a single response.
+
 ### Step 1: Resolve the Workflow Block
 
 Run: `python3 {project-root}/_bmad/scripts/resolve_customization.py --skill {skill-root} --key workflow`
