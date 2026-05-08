@@ -1,16 +1,16 @@
 {
   "$schema": "https://json.schemastore.org/package.json",
-  "name": "bmad-method",
-  "version": "6.6.0",
-  "description": "Breakthrough Method of Agile AI-driven Development",
+  "name": "headless-bmad",
+  "version": "1.0.0",
+  "description": "Fully autonomous BMAD-v6 pipeline for Claude Code — zero human-in-the-loop after ideation",
   "keywords": [
-    "agile",
-    "ai",
-    "orchestrator",
-    "development",
-    "methodology",
-    "agents",
-    "bmad"
+    "claude",
+    "claude-code",
+    "bmad",
+    "ai-agent",
+    "autonomous",
+    "pipeline",
+    "software-development"
   ],
   "repository": {
     "type": "git",
