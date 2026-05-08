@@ -51,6 +51,15 @@ resolve_bmad_skill() {
     fi
   fi
 
+  # Project-local install (.claude/skills/ sibling — bmad project install)
+  # SCRIPT_DIR/../.. resolves to the .claude/skills/ directory
+  local project_skills
+  project_skills="$(cd "$SCRIPT_DIR/../.." && pwd 2>/dev/null)" || true
+  if [[ -n "$project_skills" && -d "$project_skills/$skill_name" ]]; then
+    echo "$project_skills/$skill_name"
+    return 0
+  fi
+
   # Fallback: global install
   if [[ -d "$HOME/.claude/skills/$skill_name" ]]; then
     echo "$HOME/.claude/skills/$skill_name"

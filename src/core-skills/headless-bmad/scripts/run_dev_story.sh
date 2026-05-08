@@ -34,6 +34,12 @@ resolve_bmad_skill() {
         echo "$bmad_src/$phase/$skill_name" && return 0
     done
   fi
+  # Project-local install (.claude/skills/ sibling — bmad project install)
+  local project_skills
+  project_skills="$(cd "$SCRIPT_DIR/../.." && pwd 2>/dev/null)" || true
+  [[ -n "$project_skills" && -d "$project_skills/$skill_name" ]] && \
+    echo "$project_skills/$skill_name" && return 0
+
   # Fallback: global install
   [[ -d "$HOME/.claude/skills/$skill_name" ]] && \
     echo "$HOME/.claude/skills/$skill_name" && return 0
