@@ -1,12 +1,11 @@
 ---
-name: headless-bmad
+name: bmad-headless
 description: >
   Fully autonomous BMAD-v6 pipeline with zero human-in-the-loop after ideation.
-  Use this skill whenever the user wants to run multiple BMAD stages automatically,
-  says "run headless", "run autopilot", "start the pipeline", "automate this", or
-  hands you a PROJECT_BRIEF.md and wants it executed end-to-end. Also triggers for
-  "chain the BMAD skills", "run without me", or "just build it".
-  This skill replaces every human approval node with a self-correcting quality gate.
+  Use when the user wants to run multiple BMAD stages automatically, says "run headless",
+  "run autopilot", "start the pipeline", "automate this", or hands you a PROJECT_BRIEF.md
+  and wants it executed end-to-end. Also triggers for "chain the BMAD skills", "run without me",
+  or "just build it". This skill replaces every human approval node with a self-correcting quality gate.
 ---
 
 # BMAD Autopilot

@@ -26,9 +26,9 @@ mkdir -p "$OUTPUT_DIR"
 resolve_bmad_skill() {
   local skill_name="$1"
 
-  # Primary: repo-relative lookup (src/core-skills/headless-bmad/scripts/ → src/bmm-skills/)
+  # Primary: repo-relative lookup (src/core-skills/bmad-headless/scripts/ → src/bmm-skills/)
   local skill_root bmad_src
-  skill_root="$(cd "$SCRIPT_DIR/.." && pwd)"  # src/core-skills/headless-bmad/
+  skill_root="$(cd "$SCRIPT_DIR/.." && pwd)"  # src/core-skills/bmad-headless/
   bmad_src="$(cd "$skill_root/../../bmm-skills" && pwd 2>/dev/null)" || true
 
   if [[ -n "$bmad_src" && -d "$bmad_src" ]]; then

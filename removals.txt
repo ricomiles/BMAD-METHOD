@@ -52,3 +52,6 @@ bmad-bmm-sprint-planning
 bmad-bmm-sprint-status
 bmad-bmm-technical-research
 bmad-bmm-validate-prd
+
+# headless-bmad renamed to bmad-headless to comply with bmad-* naming convention
+headless-bmad
