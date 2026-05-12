@@ -9,12 +9,23 @@
 
 set -euo pipefail
 
-STAGE="${1:?Usage: run_stage.sh <stage_name>}"
+STAGE="${1:?Usage: run_stage.sh <stage_name> [ticket_id]}"
+TICKET_ID="${2:-}"
+if [[ -n "$TICKET_ID" && ! "$TICKET_ID" =~ ^[A-Z]+-[0-9]+$ ]]; then
+  echo "ERROR: invalid TICKET_ID: $TICKET_ID (expected format: TASK-NNN)" >&2
+  exit 1
+fi
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 AUTOPILOT_DIR=".autopilot"
 STATE_FILE="$AUTOPILOT_DIR/PIPELINE_STATE.json"
 OUTPUT_DIR="$AUTOPILOT_DIR/stages/$STAGE"
 AUTOPILOT_OUTPUT="$OUTPUT_DIR/output.md"   # always written (stdout capture)
+
+# Per-ticket output path for manifest-scoped developer invocation
+if [[ -n "$TICKET_ID" && "$STAGE" == "developer" ]]; then
+  OUTPUT_DIR="$AUTOPILOT_DIR/stages/$STAGE/$TICKET_ID"
+  AUTOPILOT_OUTPUT="$OUTPUT_DIR/output.md"
+fi
 
 mkdir -p "$OUTPUT_DIR"
 
@@ -257,6 +268,19 @@ case "$STAGE" in
     fi
     mkdir -p "$AUTOPILOT_DIR/stages/task-breakdown/manifests"
     ;;
+  developer)
+    if [[ -n "$TICKET_ID" ]]; then
+      MANIFEST_PATH="$AUTOPILOT_DIR/stages/task-breakdown/manifests/$TICKET_ID.json"
+      if [[ -f "$MANIFEST_PATH" ]]; then
+        PRIOR_CONTEXT=$(python3 "$SCRIPT_DIR/assemble_context.py" --manifest "$MANIFEST_PATH") || {
+          echo "  [run_stage] ERROR: assemble_context.py failed for $TICKET_ID" >&2
+          exit 1
+        }
+      else
+        echo "  [run_stage] WARNING: Manifest not found: $MANIFEST_PATH — context will be empty" >&2
+      fi
+    fi
+    ;;
   reviewer)
     gather_prior "analyst"
     gather_prior "architect"
@@ -447,6 +471,15 @@ case "$STAGE" in
   context-ingestion)
     FULL_PROMPT+="[TASK: Produce the project context document]
 "
+    ;;
+  developer)
+    if [[ -n "$TICKET_ID" ]]; then
+      FULL_PROMPT+="[TASK: Implement ticket $TICKET_ID using the manifest-assembled context provided]
+"
+    else
+      FULL_PROMPT+="[TASK: Execute the developer stage]
+"
+    fi
     ;;
 esac
 

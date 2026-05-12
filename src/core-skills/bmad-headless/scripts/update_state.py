@@ -5,11 +5,13 @@ Usage:
   python3 update_state.py init <brief_path>
   python3 update_state.py start <stage>
   python3 update_state.py gate <stage> <PASS|FAIL> <score> [critique] [bc_score] [ech_score] [contested_count]
-  python3 update_state.py ticket <ticket_id> <PASS|FAIL> <score> [critique]
+  python3 update_state.py ticket <ticket_id> <PASS|FAIL> <score> [critique] [manifest_path]
   python3 update_state.py escalate <stage>
   python3 update_state.py complete
   python3 update_state.py status
   python3 update_state.py get <json_path>   # e.g. "stages.analyst.status"
+  python3 update_state.py repair_cycle reviewer
+  python3 update_state.py repair_cycle ticket <ticket_id>
 """
 
 import sys
@@ -55,7 +57,16 @@ def migrate_v1_to_v2(state):
         if not isinstance(stage_data, dict):
             continue
         if stage_key == "developer":
+            for ticket_data in stage_data.get("tickets", {}).values():
+                if not isinstance(ticket_data, dict):
+                    continue
+                if "manifest_path" not in ticket_data:
+                    ticket_data["manifest_path"] = None
+                if "repair_cycles" not in ticket_data:
+                    ticket_data["repair_cycles"] = 0
             continue
+        if stage_key == "reviewer" and "repair_cycles" not in stage_data:
+            stage_data["repair_cycles"] = 0
         if "gate_consensus" not in stage_data:
             stage_data["gate_consensus"] = dict(default_gc)
         if "critiques" not in stage_data:
@@ -100,6 +111,8 @@ def make_stage_entry(stage):
         base["adr_dir"] = f"{AUTOPILOT_DIR}/stages/architect/ADRs/"
     if stage == "task-breakdown":
         base["ticket_count"] = None
+    if stage == "reviewer":
+        base["repair_cycles"] = 0
     if stage == "developer":
         base["tickets"] = {}
         del base["gate_consensus"]  # developer uses ticket-level gating
@@ -208,7 +221,7 @@ def cmd_escalate(stage):
     save_state(state)
     print(f"Stage {stage} escalated.")
 
-def cmd_ticket(ticket_id, verdict, score, critique=""):
+def cmd_ticket(ticket_id, verdict, score, critique="", manifest_path=None):
     state = load_state()
     dev = state["stages"]["developer"]
     score = int(score)
@@ -218,6 +231,8 @@ def cmd_ticket(ticket_id, verdict, score, critique=""):
             "status": "pending",
             "attempts": 0,
             "score": None,
+            "manifest_path": manifest_path,
+            "repair_cycles": 0,
             "critiques": []
         }
 
@@ -234,6 +249,33 @@ def cmd_ticket(ticket_id, verdict, score, critique=""):
             t["critiques"].append(critique)
 
     save_state(state)
+
+def cmd_repair_cycle(target, ticket_id=None):
+    state = load_state()
+    if target == "reviewer":
+        if "reviewer" not in state["stages"]:
+            print("ERROR: reviewer stage not found in state")
+            sys.exit(1)
+        s = state["stages"]["reviewer"]
+        s["repair_cycles"] = s.get("repair_cycles", 0) + 1
+        save_state(state)
+        print(f"repair_cycles: reviewer → {s['repair_cycles']}")
+    elif target == "ticket" and ticket_id:
+        if "developer" not in state["stages"]:
+            print("ERROR: developer stage not found in state")
+            sys.exit(1)
+        dev = state["stages"]["developer"]
+        if ticket_id not in dev["tickets"]:
+            print(f"ERROR: ticket {ticket_id} not found in developer stage state")
+            sys.exit(1)
+        t = dev["tickets"][ticket_id]
+        t["repair_cycles"] = t.get("repair_cycles", 0) + 1
+        save_state(state)
+        print(f"repair_cycles: {ticket_id} → {t['repair_cycles']}")
+    else:
+        print(f"ERROR: usage: repair_cycle reviewer | repair_cycle ticket <ticket_id>")
+        sys.exit(1)
+
 
 def cmd_complete():
     state = load_state()
@@ -325,7 +367,8 @@ def main():
         cmd_gate(sys.argv[2], sys.argv[3], sys.argv[4], critique, bc_score, ech_score, contested)
     elif cmd == "ticket":
         critique = sys.argv[5] if len(sys.argv) > 5 else ""
-        cmd_ticket(sys.argv[2], sys.argv[3], sys.argv[4], critique)
+        manifest_path = sys.argv[6] if len(sys.argv) > 6 else None
+        cmd_ticket(sys.argv[2], sys.argv[3], sys.argv[4], critique, manifest_path)
     elif cmd == "escalate":
         cmd_escalate(sys.argv[2])
     elif cmd == "complete":
@@ -334,6 +377,8 @@ def main():
         cmd_status()
     elif cmd == "get":
         cmd_get(sys.argv[2])
+    elif cmd == "repair_cycle":
+        cmd_repair_cycle(sys.argv[2], sys.argv[3] if len(sys.argv) > 3 else None)
     else:
         print(f"Unknown command: {cmd}")
         print(__doc__)
