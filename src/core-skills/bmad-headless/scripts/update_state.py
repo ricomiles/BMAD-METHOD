@@ -4,7 +4,7 @@ update_state.py — PIPELINE_STATE.json management
 Usage:
   python3 update_state.py init <brief_path>
   python3 update_state.py start <stage>
-  python3 update_state.py gate <stage> <PASS|FAIL> <score> [critique]
+  python3 update_state.py gate <stage> <PASS|FAIL> <score> [critique] [bc_score] [ech_score] [contested_count]
   python3 update_state.py ticket <ticket_id> <PASS|FAIL> <score> [critique]
   python3 update_state.py escalate <stage>
   python3 update_state.py complete
@@ -41,9 +41,35 @@ def get_stages(mode):
 def now():
     return datetime.now(timezone.utc).isoformat()
 
+def migrate_v1_to_v2(state):
+    """Add gate_consensus to stage entries missing it; bump version to 2."""
+    if state.get("version") == "2":
+        return state
+    default_gc = {
+        "blind_critic_score": None,
+        "edge_case_score": None,
+        "adjudicator_score": None,
+        "contested_decisions_flagged": None
+    }
+    for stage_key, stage_data in state.get("stages", {}).items():
+        if not isinstance(stage_data, dict):
+            continue
+        if stage_key == "developer":
+            continue
+        if "gate_consensus" not in stage_data:
+            stage_data["gate_consensus"] = dict(default_gc)
+        if "critiques" not in stage_data:
+            stage_data["critiques"] = []
+    state["version"] = "2"
+    return state
+
 def load_state():
     with open(STATE_FILE) as f:
-        return json.load(f)
+        state = json.load(f)
+    if state.get("version") != "2":
+        state = migrate_v1_to_v2(state)
+        save_state(state)
+    return state
 
 def save_state(state):
     os.makedirs(AUTOPILOT_DIR, exist_ok=True)
@@ -62,6 +88,12 @@ def make_stage_entry(stage):
         "score": None,
         "passed_at": None,
         "output_path": f"{AUTOPILOT_DIR}/stages/{stage}/output.md",
+        "gate_consensus": {
+            "blind_critic_score": None,
+            "edge_case_score": None,
+            "adjudicator_score": None,
+            "contested_decisions_flagged": None
+        },
         "critiques": []
     }
     if stage == "architect":
@@ -70,6 +102,7 @@ def make_stage_entry(stage):
         base["ticket_count"] = None
     if stage == "developer":
         base["tickets"] = {}
+        del base["gate_consensus"]  # developer uses ticket-level gating
     return base
 
 # ─── Commands ─────────────────────────────────────────────────────────────────
@@ -92,7 +125,7 @@ def cmd_init(brief_path):
 
     first_stage = stages[0]
     state = {
-        "version": "1",
+        "version": "2",
         "mode": mode,
         "project": project_name,
         "brief_path": brief_path,
@@ -120,11 +153,24 @@ def cmd_start(stage):
     state["current_stage"] = stage
     save_state(state)
 
-def cmd_gate(stage, verdict, score, critique=""):
+def cmd_gate(stage, verdict, score, critique="", bc_score=None, ech_score=None, contested_count=0):
     state = load_state()
     stages = get_stages(state.get("mode", "greenfield"))
     s = state["stages"][stage]
-    score = int(score)
+    score_int = int(score)
+    bc = int(bc_score) if bc_score and bc_score != "null" else None
+    ech = int(ech_score) if ech_score and ech_score != "null" else None
+    contested = int(contested_count) if contested_count else 0
+
+    if "gate_consensus" not in s:
+        s["gate_consensus"] = {"blind_critic_score": None, "edge_case_score": None,
+                               "adjudicator_score": None, "contested_decisions_flagged": 0}
+    s["gate_consensus"]["blind_critic_score"] = bc
+    s["gate_consensus"]["edge_case_score"] = ech
+    s["gate_consensus"]["adjudicator_score"] = score_int
+    s["gate_consensus"]["contested_decisions_flagged"] = contested
+
+    score = score_int
 
     if verdict == "PASS":
         s["status"] = "passed"
@@ -273,7 +319,10 @@ def main():
         cmd_start(sys.argv[2])
     elif cmd == "gate":
         critique = sys.argv[5] if len(sys.argv) > 5 else ""
-        cmd_gate(sys.argv[2], sys.argv[3], sys.argv[4], critique)
+        bc_score = sys.argv[6] if len(sys.argv) > 6 else None
+        ech_score = sys.argv[7] if len(sys.argv) > 7 else None
+        contested = sys.argv[8] if len(sys.argv) > 8 else 0
+        cmd_gate(sys.argv[2], sys.argv[3], sys.argv[4], critique, bc_score, ech_score, contested)
     elif cmd == "ticket":
         critique = sys.argv[5] if len(sys.argv) > 5 else ""
         cmd_ticket(sys.argv[2], sys.argv[3], sys.argv[4], critique)

@@ -74,7 +74,7 @@ get_stage_skill() {
   case "$1" in
     analyst)           echo "bmad-create-prd" ;;
     architect)         echo "bmad-create-architecture" ;;
-    task-breakdown)    echo "bmad-create-epics-and-stories" ;;
+    task-breakdown)    echo "" ;;                              # use hardcoded v2 prompt
     developer)         echo "bmad-dev-story" ;;           # per-story, called from run_dev_story.sh
     context-ingestion) echo "bmad-document-project" ;;
     reviewer)          echo "" ;;                          # keeps hardcoded prompt (runs bash tests)
@@ -87,7 +87,7 @@ get_bmad_output_path() {
   case "$1" in
     analyst)           echo "docs/prd.md" ;;
     architect)         echo "docs/architecture.md" ;;
-    task-breakdown)    echo "docs/epics.md" ;;
+    task-breakdown)    echo "$AUTOPILOT_DIR/stages/task-breakdown/output.md" ;;
     context-ingestion) echo "docs/project-context.md" ;;
     *)                 echo "$AUTOPILOT_OUTPUT" ;;
   esac
@@ -255,6 +255,7 @@ case "$STAGE" in
 "
       done
     fi
+    mkdir -p "$AUTOPILOT_DIR/stages/task-breakdown/manifests"
     ;;
   reviewer)
     gather_prior "analyst"
@@ -354,45 +355,29 @@ EOF
     task-breakdown)
       SYSTEM_PROMPT=$(cat <<'EOF'
 You are a senior engineering lead running in fully automated mode.
-You will receive a PRD and architecture document. Break the work into implementable
-epics and user stories ordered by dependency, in BMAD-v6 epics format.
-
-Output format (REQUIRED — must match exactly for pipeline compatibility):
-
----
-stepsCompleted: []
-inputDocuments: []
----
-
-# <project_name> - Epic Breakdown
-
-## Epic List
-- Epic 1: <title>
-
-## Epic 1: <title>
-
-<one sentence goal>
-
-### Story 1.1: <title>
-
-As a <user>,
-I want <capability>,
-So that <value>.
-
-**Acceptance Criteria:**
-
-**Given** <precondition>
-**When** <action>
-**Then** <outcome>
-
-[repeat for all stories]
+You will receive a PRD and architecture document. Break the work into
+implementable tickets ordered by dependency.
 
 Rules:
-- Story IDs follow N.M format (Epic.Story), title uses kebab-case in sprint tracking
-- Setup/foundation stories come first in Epic 1
-- Stories must be ordered by dependency — no story depends on a later story
-- Each story is implementable as a single focused dev session
-- Output ONLY the epics document. No preamble.
+- Each ticket must be implementable by a single focused claude -p call
+  (estimate: a ticket that would take a human dev 30min to 2hrs)
+- Tickets must be ordered so no ticket depends on an unbuilt ticket above it
+- Mark tickets as "parallelizable: yes" only if they truly share no state
+- Every ticket must reference specific files from the architecture's file/folder
+  structure
+- Setup tickets (project init, package.json, tsconfig) come first
+- Test tickets come after the implementation tickets they test
+- For every ticket, write a context manifest JSON file to
+  .autopilot/stages/task-breakdown/manifests/TASK-NNN.json using
+  your file-write capability (you have dangerously-skip-permissions)
+- Verify that every path in requires.existing_files exists before listing it
+- Verify that every ADR in requires.adrs exists before listing it
+- Ensure provides.exports declares every symbol that downstream tickets'
+  downstream_contracts will reference — verify cross-ticket consistency
+- No circular manifest dependencies: if TASK-A requires TASK-B's output files,
+  TASK-B must not also require TASK-A's output files
+- Output ONLY the TASKS.md to .autopilot/stages/task-breakdown/output.md.
+  Manifests are written as separate JSON files (not embedded in TASKS.md).
 EOF
 )
       ;;
@@ -448,7 +433,7 @@ FULL_PROMPT+="[PIPELINE_MODE: autonomous]
 # Stage-specific routing hints for the skill
 case "$STAGE" in
   task-breakdown)
-    FULL_PROMPT+="[TASK: Produce the epics and stories breakdown document]
+    FULL_PROMPT+="[TASK: Produce the TASKS.md ticket breakdown and emit one TASK-NNN.json context manifest per ticket to .autopilot/stages/task-breakdown/manifests/]
 "
     ;;
   analyst)

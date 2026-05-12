@@ -214,6 +214,10 @@ Summary of hard blockers per stage:
 - Any FR not mapped to a ticket
 - Circular dependencies
 - Parallelizable tickets that write the same file
+- Missing manifest file for any ticket (TASK-NNN.json not present in manifests directory)
+- Non-existent path listed in requires.existing_files of any manifest
+- Non-existent ADR listed in requires.adrs of any manifest
+- Circular manifest dependencies detected between tickets
 
 ### developer gate blockers (per ticket)
 - Acceptance criteria not met

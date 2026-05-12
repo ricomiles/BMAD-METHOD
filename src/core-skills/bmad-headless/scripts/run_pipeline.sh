@@ -58,21 +58,24 @@ run_gate() {
   local gate_output
   gate_output=$(bash "$SCRIPT_DIR/gate.sh" "$stage")
 
-  local verdict score critique
+  local verdict score critique blind_critic_score edge_case_score contested_count
   verdict=$(echo "$gate_output" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d['verdict'])")
   score=$(echo "$gate_output"   | python3 -c "import sys,json; d=json.load(sys.stdin); print(d['score'])")
   critique=$(echo "$gate_output" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('critique',''))")
+  blind_critic_score=$(printf '%s\n' "$gate_output" | python3 -c "import sys,json; d=json.load(sys.stdin); v=d.get('blind_critic_score'); print(v if v is not None else 'null')")
+  edge_case_score=$(printf '%s\n' "$gate_output" | python3 -c "import sys,json; d=json.load(sys.stdin); v=d.get('edge_case_score'); print(v if v is not None else 'null')")
+  contested_count=$(printf '%s\n' "$gate_output" | python3 -c "import sys,json; d=json.load(sys.stdin); print(len(d.get('contested_decisions') or []))")
 
   if [[ "$verdict" == "PASS" ]]; then
     log "✓ $stage passed (score $score/10)"
-    python3 "$SCRIPT_DIR/update_state.py" gate "$stage" PASS "$score"
+    python3 "$SCRIPT_DIR/update_state.py" gate "$stage" PASS "$score" "" "$blind_critic_score" "$edge_case_score" "$contested_count"
     return 0
   else
     log "✗ $stage failed (score $score/10)"
     if [[ -n "$critique" ]]; then
       log "  Critique: ${critique:0:120}..."
     fi
-    python3 "$SCRIPT_DIR/update_state.py" gate "$stage" FAIL "$score" "$critique"
+    python3 "$SCRIPT_DIR/update_state.py" gate "$stage" FAIL "$score" "$critique" "$blind_critic_score" "$edge_case_score" "$contested_count"
 
     # Save critique file for retry context
     mkdir -p "$AUTOPILOT_DIR/stages/$stage"

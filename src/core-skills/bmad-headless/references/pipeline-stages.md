@@ -192,6 +192,7 @@ each small enough to be built in a single `claude -p` call.
 
 **Outputs produced:**
 - `.autopilot/stages/task-breakdown/output.md` (TASKS.md)
+- `.autopilot/stages/task-breakdown/manifests/TASK-NNN.json` (one per ticket)
 
 Structure:
 ```markdown
@@ -221,6 +222,53 @@ Parallelizable: yes | no
 <any ADR decisions that affect this ticket, relevant file structure conventions>
 ```
 
+**Manifest schema** (TASK-NNN.json):
+```json
+{
+  "ticket_id": "TASK-001",
+  "ticket_title": "Implement InvoiceService",
+  "requires": {
+    "adrs": ["ADR-002", "ADR-005"],
+    "existing_files": [
+      "src/services/base.ts",
+      "src/models/invoice.ts"
+    ],
+    "interfaces": [
+      {
+        "name": "IInvoiceRepository",
+        "defined_in": "src/interfaces/invoice-repo.ts",
+        "why": "InvoiceService depends on this for persistence"
+      }
+    ],
+    "env_vars": ["DATABASE_URL", "PDF_RENDERER_URL"],
+    "brief_sections": ["functional-requirements", "non-functional-requirements"],
+    "architecture_sections": ["component: InvoiceService", "data-model: Invoice entity"]
+  },
+  "provides": {
+    "new_files": [
+      "src/services/invoice.service.ts",
+      "tests/services/invoice.service.test.ts"
+    ],
+    "modified_files": [],
+    "exports": [
+      {
+        "name": "InvoiceService",
+        "type": "class",
+        "signature": "class InvoiceService implements IInvoiceService"
+      },
+      {
+        "name": "generatePDF",
+        "type": "method",
+        "signature": "async generatePDF(invoice: Invoice): Promise<Buffer>"
+      }
+    ]
+  },
+  "downstream_contracts": {
+    "TASK-008": "expects InvoiceService.generatePDF(invoice: Invoice): Promise<Buffer>"
+  }
+}
+```
+
 **System prompt for `claude -p`:**
 ```
 You are a senior engineering lead running in fully automated mode.
@@ -236,7 +284,15 @@ Rules:
   structure
 - Setup tickets (project init, package.json, tsconfig) come first
 - Test tickets come after the implementation tickets they test
-- Output ONLY the TASKS.md. No preamble.
+- For every ticket, write a context manifest JSON file to
+  .autopilot/stages/task-breakdown/manifests/TASK-NNN.json using
+  your file-write capability (you have dangerously-skip-permissions)
+- Verify that every path in requires.existing_files exists before listing it
+- Verify that every ADR in requires.adrs exists before listing it
+- Ensure provides.exports declares every symbol that downstream tickets'
+  downstream_contracts will reference — verify cross-ticket consistency
+- Output ONLY the TASKS.md to .autopilot/stages/task-breakdown/output.md.
+  Manifests are written as separate JSON files (not embedded in TASKS.md).
 ```
 
 **Quality gate checklist (task-breakdown):**
@@ -246,6 +302,11 @@ Rules:
 - [ ] Setup tickets are first
 - [ ] Parallelizable tickets have no shared file writes
 - [ ] Total ticket count is reasonable (for a small project: 5-20, medium: 20-60)
+- [ ] Every ticket has a manifest file at .autopilot/stages/task-breakdown/manifests/TASK-NNN.json — BLOCKER if any ticket is missing one
+- [ ] All paths in requires.existing_files of every manifest exist in the repository — BLOCKER if any path is absent
+- [ ] All ADRs in requires.adrs of every manifest exist in the ADR directory — BLOCKER if any ADR is missing
+- [ ] No circular manifest dependencies (TASK-A's requires references TASK-B's provides.new_files and TASK-B's requires references TASK-A's provides.new_files) — BLOCKER if circular dependency found
+- [ ] provides.exports for each ticket is sufficient to satisfy all downstream_contracts that reference that ticket — BLOCKER if signature mismatch found
 
 ---
 

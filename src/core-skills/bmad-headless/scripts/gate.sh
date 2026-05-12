@@ -66,6 +66,11 @@ EOF
 - Parallelizable tickets do not write the same file
 - Ticket count is reasonable for project scope
 - Each ticket has explicit acceptance criteria
+- Every ticket has a manifest file at .autopilot/stages/task-breakdown/manifests/TASK-NNN.json — BLOCKER if any ticket is missing one
+- All paths in requires.existing_files of every manifest exist in the repository — BLOCKER if any path is absent
+- All ADRs in requires.adrs of every manifest exist in the ADR directory — BLOCKER if any ADR is missing
+- No circular manifest dependencies (TASK-A's requires references TASK-B's provides.new_files and TASK-B's requires references TASK-A's provides.new_files) — BLOCKER if circular dependency found
+- provides.exports for each ticket is sufficient to satisfy all downstream_contracts that reference that ticket — BLOCKER if signature mismatch found
 EOF
       ;;
     developer)
@@ -102,6 +107,41 @@ if [[ ! -f "PROJECT_BRIEF.md" ]]; then
 fi
 BRIEF=$(cat PROJECT_BRIEF.md)
 OUTPUT=$(cat "$OUTPUT_FILE")
+
+# ─── For task-breakdown: append manifest contents to output for Adjudicator ───
+
+if [[ "$CHECKLIST_STAGE" == "task-breakdown" ]]; then
+  MANIFEST_DIR="$AUTOPILOT_DIR/stages/task-breakdown/manifests"
+  MANIFEST_CONTEXT=""
+  MANIFEST_COUNT=0
+  MANIFEST_CAP=30
+  if [[ -d "$MANIFEST_DIR" ]]; then
+    for manifest_file in "$MANIFEST_DIR"/TASK-*.json; do
+      [[ -f "$manifest_file" ]] || continue
+      if [[ $MANIFEST_COUNT -ge $MANIFEST_CAP ]]; then
+        printf 'gate.sh: WARNING: manifest count exceeds cap (%d); remaining manifests omitted from gate context\n' "$MANIFEST_CAP" >&2
+        break
+      fi
+      if ! python3 -c "import sys,json; json.load(open(sys.argv[1]))" "$manifest_file" 2>/dev/null; then
+        printf 'gate.sh: WARNING: skipping malformed manifest %s (invalid JSON)\n' "$(basename "$manifest_file")" >&2
+        continue
+      fi
+      MANIFEST_CONTEXT+="=== MANIFEST: $(basename "$manifest_file") ===
+$(cat "$manifest_file")
+
+"
+      MANIFEST_COUNT=$(( MANIFEST_COUNT + 1 ))
+    done
+  fi
+  if [[ -n "$MANIFEST_CONTEXT" ]]; then
+    OUTPUT="$OUTPUT
+
+=== CONTEXT MANIFESTS ===
+$MANIFEST_CONTEXT"
+  else
+    printf 'gate.sh: WARNING: no valid manifest files found in %s — manifest BLOCKER checks rely on LLM inference only\n' "$MANIFEST_DIR" >&2
+  fi
+fi
 
 # ─── Agent system prompts ─────────────────────────────────────────────────────
 
@@ -255,5 +295,28 @@ if ! printf '%s\n' "$RESULT" | python3 -c "import sys,json; json.load(sys.stdin)
   echo '{"verdict":"FAIL","score":1,"checklist":[],"blockers":["Gate returned invalid JSON — model response was malformed"],"critique":"The quality gate itself produced a non-JSON response. This is a transient error. Retry the gate run.","suggestions":[],"contested_decisions":[]}'
   exit 0
 fi
+
+# ─── Compute BC/ECH issue counts and merge into result ───────────────────────
+
+if [[ -z "$BC_REPORT" || "$BC_REPORT" == \[BLIND_CRITIC_UNAVAILABLE* ]]; then
+  BC_SCORE="null"
+else
+  BC_SCORE=$(printf '%s\n' "$BC_REPORT" | grep -cE '^[0-9]+\. ' || true)
+fi
+
+if [[ -z "$ECH_REPORT" || "$ECH_REPORT" == \[EDGE_CASE_HUNTER_UNAVAILABLE* ]]; then
+  ECH_SCORE="null"
+else
+  ECH_SCORE=$(printf '%s\n' "$ECH_REPORT" | grep -cE '^[0-9]+\. ' || true)
+fi
+
+RESULT=$(printf '%s\n' "$RESULT" | python3 -c "
+import sys, json
+bc = sys.argv[1]; ech = sys.argv[2]
+d = json.load(sys.stdin)
+d['blind_critic_score'] = int(bc) if bc != 'null' else None
+d['edge_case_score'] = int(ech) if ech != 'null' else None
+print(json.dumps(d))
+" "$BC_SCORE" "$ECH_SCORE") || { printf '%s\n' '{"verdict":"FAIL","score":1,"checklist":[],"blockers":["Gate score merge failed"],"critique":"Internal error merging BC/ECH scores into result JSON.","suggestions":[],"contested_decisions":[]}'; exit 0; }
 
 printf '%s\n' "$RESULT"
