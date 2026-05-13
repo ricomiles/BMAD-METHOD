@@ -18,13 +18,40 @@ import sys
 import json
 import hashlib
 import os
+import re
 from datetime import datetime, timezone
 
 AUTOPILOT_DIR = ".autopilot"
 STATE_FILE = f"{AUTOPILOT_DIR}/PIPELINE_STATE.json"
+REGISTRY_FILE = os.path.normpath(
+    os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'references', 'stage-registry.yaml')
+)
 
 GREENFIELD_STAGES = ["analyst", "architect", "task-breakdown", "developer", "reviewer"]
 BROWNFIELD_STAGES = ["context-ingestion", "analyst", "architect", "task-breakdown", "developer", "reviewer"]
+
+def _load_registry_stages():
+    """Parse stage-registry.yaml, return list of {id, mode} dicts. Returns None if file absent."""
+    if not os.path.exists(REGISTRY_FILE):
+        return None
+    stages = []
+    current = None
+    with open(REGISTRY_FILE) as f:
+        for line in f:
+            m = re.match(r'^\s+-\s+id:\s+(\S+)', line)
+            if m:
+                if current is not None:
+                    stages.append(current)
+                current = {'id': m.group(1), 'mode': []}
+                continue
+            if current is None:
+                continue
+            m = re.match(r'^\s+mode:\s+\[([^\]]+)\]', line)
+            if m:
+                current['mode'] = [v.strip() for v in m.group(1).split(',')]
+    if current is not None:
+        stages.append(current)
+    return stages or None
 
 def detect_mode(brief_path):
     """Read mode from brief. Defaults to greenfield."""
@@ -38,7 +65,10 @@ def detect_mode(brief_path):
     return "greenfield"
 
 def get_stages(mode):
-    return BROWNFIELD_STAGES if mode == "brownfield" else GREENFIELD_STAGES
+    registry = _load_registry_stages()
+    if registry is None:
+        return BROWNFIELD_STAGES if mode == "brownfield" else GREENFIELD_STAGES
+    return [s['id'] for s in registry if mode in s['mode']]
 
 def now():
     return datetime.now(timezone.utc).isoformat()

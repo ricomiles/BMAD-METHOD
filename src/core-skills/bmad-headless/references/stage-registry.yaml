@@ -1,0 +1,82 @@
+# references/stage-registry.yaml
+# Single source of truth for the pipeline stage graph.
+# To add a stage: add one entry here. See references/pipeline-stages.md for stage definitions.
+# run_pipeline.sh reads this file starting in Story 3.3 (generic runner rewrite).
+
+version: 2
+
+stages:
+  - id: context-ingestion
+    mode: [brownfield]
+    depends_on: []
+    prompt_file: references/pipeline-stages.md#context-ingestion
+    gate_checklist: context-ingestion
+    max_retries: 3
+
+  - id: context-validator
+    mode: [brownfield]
+    depends_on: [context-ingestion]
+    prompt_file: references/pipeline-stages.md#context-validator
+    gate_checklist: context-validator
+    max_retries: 2
+    produces: conflict-report
+
+  - id: analyst
+    mode: [greenfield, brownfield]
+    depends_on: []
+    brownfield_depends_on: [context-validator]
+    prompt_file: references/pipeline-stages.md#analyst
+    gate_checklist: analyst
+    max_retries: 3
+    decision_engine: false
+
+  - id: architect
+    mode: [greenfield, brownfield]
+    depends_on: [analyst]
+    prompt_file: references/pipeline-stages.md#architect
+    gate_checklist: architect
+    max_retries: 3
+    decision_engine: true
+
+  - id: security-scan
+    mode: [greenfield, brownfield]
+    depends_on: [architect]
+    prompt_file: references/pipeline-stages.md#security-scan
+    gate_checklist: security-scan
+    max_retries: 2
+    optional: false
+    severity_threshold: HIGH
+
+  - id: task-breakdown
+    mode: [greenfield, brownfield]
+    depends_on: [architect, security-scan]
+    prompt_file: references/pipeline-stages.md#task-breakdown
+    gate_checklist: task-breakdown
+    max_retries: 3
+    emits_manifests: true
+
+  - id: developer
+    mode: [greenfield, brownfield]
+    depends_on: [task-breakdown]
+    prompt_file: references/pipeline-stages.md#developer
+    gate_checklist: developer
+    max_retries: 3
+    parallelizable: true
+    manifest_scoped: true
+
+  - id: integration-validator
+    mode: [greenfield, brownfield]
+    depends_on: [developer]
+    prompt_file: references/pipeline-stages.md#integration-validator
+    gate_checklist: integration-validator
+    max_retries: 2
+
+  - id: reviewer
+    mode: [greenfield, brownfield]
+    depends_on: [integration-validator]
+    prompt_file: references/pipeline-stages.md#reviewer
+    gate_checklist: reviewer
+    max_retries: 1
+    repair_loop: true
+    repair_loop_max_cycles: 2
+    repair_targets: [developer]

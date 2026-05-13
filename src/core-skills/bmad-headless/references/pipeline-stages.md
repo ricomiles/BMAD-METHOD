@@ -7,19 +7,68 @@ the system prompt used to invoke it via `claude -p`.
 
 ## Stage sequence
 
+### Greenfield (v2)
+
 ```
-analyst → architect → task-breakdown → developer (parallel) → reviewer
+analyst → architect → [security-scan] → task-breakdown → developer (parallel) → [integration-validator] → reviewer
 ```
 
-Each stage's output becomes part of the context for all subsequent stages.
+### Brownfield (v2)
 
----
+```
+context-ingestion → [context-validator] → analyst → architect → [security-scan] → task-breakdown → developer (parallel) → [integration-validator] → reviewer
+```
+
+Stages in `[brackets]` are defined in the registry but implemented in later epics (5, 6, 7).
+The stage graph is the authoritative source: `references/stage-registry.yaml`.
 
 ## Stage definitions
 
 ---
 
-### Stage: analyst
+### context-ingestion
+
+**Mode:** brownfield only
+
+**Purpose:** Ingest the existing codebase, ADRs, do-not-touch zones, and sprint board into a
+unified `CONTEXT.md` that downstream stages use as their codebase snapshot.
+
+**Inputs consumed:**
+- `PROJECT_BRIEF.md` (sprint scope, do-not-touch zones, sprint board entries)
+- Existing codebase files (read directly by the agent)
+
+**Outputs produced:**
+- `.autopilot/stages/context-ingestion/output.md` (CONTEXT.md)
+
+**System prompt for `claude -p`:**
+```
+You are a codebase analyst running in fully automated brownfield mode.
+You will receive a PROJECT_BRIEF.md containing a sprint scope and do-not-touch zones.
+
+Your job: produce a CONTEXT.md that captures everything downstream stages need to know
+about the existing codebase relevant to this sprint.
+
+Sections required:
+1. Sprint scope: what this sprint will build (from brief)
+2. Do-not-touch zones: files/directories that must not be modified
+3. Relevant existing files: files that sprint tickets will read or extend
+4. Existing ADRs: architectural decisions already in force
+5. Sprint board: status of recent tickets (done/in-progress/blocked)
+6. Patterns: code patterns the sprint should follow (naming, structure, error handling)
+
+Output ONLY the CONTEXT.md in markdown. No preamble.
+```
+
+**Quality gate checklist (context-ingestion):**
+- [ ] CONTEXT.md present and non-empty
+- [ ] Do-not-touch zones section present and matches brief
+- [ ] Existing ADRs documented (or explicitly noted as absent)
+- [ ] Sprint scope captured from brief
+- [ ] No invented content not derivable from brief or codebase
+
+---
+
+### analyst
 
 **Purpose:** Turn the project brief into a full PRD that the architect can build
 from without any additional input.
@@ -88,7 +137,7 @@ Rules:
 
 ---
 
-### Stage: architect
+### architect
 
 **Purpose:** Produce a system design document and ADRs that a developer can
 implement from directly — no further design decisions needed.
@@ -180,7 +229,7 @@ Rules:
 
 ---
 
-### Stage: task-breakdown
+### task-breakdown
 
 **Purpose:** Convert the architecture into an ordered list of implementable tickets,
 each small enough to be built in a single `claude -p` call.
@@ -310,7 +359,7 @@ Rules:
 
 ---
 
-### Stage: developer
+### developer
 
 **Purpose:** Implement each ticket. This stage runs tickets in parallel where marked
 parallelizable.
@@ -357,7 +406,7 @@ ticket's retry.
 
 ---
 
-### Stage: reviewer
+### reviewer
 
 **Purpose:** Final integration check — run all tests, verify the full project
 starts and the happy path works.
@@ -411,14 +460,47 @@ with the full test output attached.
 
 ---
 
+### context-validator
+
+> **Stage definition pending** — full prompt and gate checklist added in Story 7.1
+> (Epic 7: Conflict-Free Brownfield Operation).
+>
+> This stage runs in brownfield mode between context-ingestion and analyst. It detects
+> do-not-touch zone violations, ADR contradictions, and sprint scope conflicts, producing
+> `CONTEXT_CONFLICTS.md`. See `_bmad-output/planning-artifacts/headless-bmad-v2-architecture.md` §7.
+
+---
+
+### security-scan
+
+> **Stage definition pending** — full prompt and gate checklist added in Story 5.1
+> (Epic 5: Security-Aware Architecture Generation).
+>
+> This stage runs between architect and task-breakdown. It reviews the architecture against
+> OWASP Top 10 and produces CRITICAL/HIGH/MEDIUM findings. Failures inject findings into
+> an architect retry rather than retrying the security scan. See architecture §5.
+
+---
+
+### integration-validator
+
+> **Stage definition pending** — full prompt and gate checklist added in Story 6.1
+> (Epic 6: Interface Contract Validation).
+>
+> This stage runs between developer and reviewer. It reads manifest `provides.exports` and
+> `downstream_contracts`, reads implemented source files, and verifies actual export signatures
+> match declared contracts. Failures trigger targeted manifest-scoped developer re-runs.
+> See architecture §6.
+
+---
+
 ## Adding custom stages
 
-To add a stage (e.g. a "security-review" stage between architect and developer):
+To add a stage (e.g. a `context-validator` stage between context-ingestion and analyst):
 
-1. Add an entry to this file following the format above
-2. Add it to the stage sequence at the top
-3. Update `scripts/run_pipeline.sh` with the new stage name
-4. Write its quality gate checklist into `references/quality-gate.md`
+1. Add an entry to `references/stage-registry.yaml` following the format above
+2. Add the stage definition (purpose, inputs, outputs, system prompt, gate checklist) to this file as a new `### <stage-id>` section
+3. Add the stage's gate blockers to `references/quality-gate.md`
 
-The system is designed to be extended — keep the same input/output conventions
-and the orchestrator will handle it automatically.
+From Story 3.3 onward, that's all — the pipeline runner reads stage order from the registry.
+No changes to `scripts/run_pipeline.sh`, `scripts/update_state.py`, or any other script.
