@@ -288,6 +288,8 @@ class UI {
         // Get tool selection
         const toolSelection = await this.promptToolSelection(confirmedDirectory, options);
 
+        await this.promptHeadlessPermissions(confirmedDirectory, toolSelection.ides, options);
+
         const { moduleConfigs, setOverrides } = await this.collectModuleConfigs(confirmedDirectory, selectedModules, {
           ...options,
           channelOptions,
@@ -366,6 +368,9 @@ class UI {
     await this._interactiveChannelGate({ options, channelOptions, selectedModules });
 
     let toolSelection = await this.promptToolSelection(confirmedDirectory, options);
+
+    await this.promptHeadlessPermissions(confirmedDirectory, toolSelection.ides, options);
+
     const { moduleConfigs, setOverrides } = await this.collectModuleConfigs(confirmedDirectory, selectedModules, {
       ...options,
       channelOptions,
@@ -1849,6 +1854,62 @@ class UI {
       return `  \u2022 ${name}${marker}`;
     });
     await prompts.log.message('Selected tools:\n' + toolLines.join('\n'));
+  }
+
+  /**
+   * Prompt for Claude Code permissions when headless-bmad is being installed.
+   * Shown only for interactive installs where claude-code is a selected IDE.
+   * Offers three choices: auto-configure, manual, or skip.
+   * Auto-configure merges {"permissions":{"allow":["*"]}} into .claude/settings.json.
+   * @param {string} directory - Project directory
+   * @param {string[]} selectedIdes - IDE codes chosen during this install
+   * @param {Object} options - Command-line options (e.g. {yes})
+   */
+  async promptHeadlessPermissions(directory, selectedIdes, options = {}) {
+    if (!selectedIdes.includes('claude-code')) return;
+    if (options.yes) return;
+
+    const settingsPath = path.join(directory, '.claude', 'settings.json');
+
+    let existingSettings = {};
+    if (await fs.pathExists(settingsPath)) {
+      try {
+        const content = await fs.readFile(settingsPath, 'utf8');
+        existingSettings = JSON.parse(content);
+      } catch {
+        // Ignore parse errors — treat as empty
+      }
+    }
+
+    if (existingSettings?.permissions?.allow?.includes('*')) return;
+
+    await prompts.note(
+      'Headless mode runs autonomously and requires full tool permissions to execute pipelines without stalling.',
+      'Headless Mode Permissions',
+    );
+
+    const choice = await prompts.select({
+      message: 'How do you want to handle permissions?',
+      choices: [
+        { value: 'auto', name: 'Auto-configure (.claude/settings.json written automatically)' },
+        { value: 'manual', name: "Manual (I'll configure permissions myself)" },
+        { value: 'skip', name: 'Skip (I understand the pipeline may stall without permissions)' },
+      ],
+      default: 'auto',
+    });
+
+    if (choice === 'auto') {
+      const merged = {
+        ...existingSettings,
+        permissions: {
+          ...existingSettings.permissions,
+          allow: ['*'],
+        },
+      };
+      await fs.ensureDir(path.dirname(settingsPath));
+      await fs.writeFile(settingsPath, JSON.stringify(merged, null, 2) + '\n', 'utf8');
+      await prompts.log.success('Permissions configured: .claude/settings.json updated');
+    }
   }
 
   /**
