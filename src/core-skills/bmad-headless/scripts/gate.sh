@@ -5,6 +5,9 @@
 
 set -euo pipefail
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+SKILL_DIR="$(dirname "$SCRIPT_DIR")"
+
 STAGE="${1:?Usage: gate.sh <stage_name> [ticket_id]}"
 TICKET_ID="${2:-}"
 AUTOPILOT_DIR=".autopilot"
@@ -92,6 +95,35 @@ EOF
 - No TODO comments in production code
 - README or equivalent exists
 EOF
+      ;;
+    security-scan)
+      local severity_threshold
+      severity_threshold=$(python3 -c "
+import re
+try:
+    txt = open('${SKILL_DIR}/references/stage-registry.yaml').read()
+    m = re.search(r'id: security-scan.*?severity_threshold:\s*(\S+)', txt, re.DOTALL)
+    print(m.group(1) if m else 'HIGH')
+except Exception:
+    print('HIGH')
+" 2>/dev/null || echo "HIGH")
+      if [[ "$severity_threshold" == "CRITICAL" ]]; then
+        cat <<'EOF'
+- CRITICAL finding present → FAIL (BLOCKER)
+- HIGH findings present → WARNING only (severity_threshold is CRITICAL; HIGH is non-blocking)
+- MEDIUM findings → suggestion only (non-blocking)
+- Each finding must include: CWE reference, location, risk description, required mitigation — BLOCKER if any finding is missing one of these fields
+- "Required before task-breakdown" section present listing all CRITICAL findings
+EOF
+      else
+        cat <<'EOF'
+- CRITICAL finding present → FAIL (BLOCKER)
+- HIGH finding present → FAIL (BLOCKER)
+- MEDIUM findings → suggestion only (non-blocking)
+- Each finding must include: CWE reference, location, risk description, required mitigation — BLOCKER if any finding is missing one of these fields
+- "Required before task-breakdown" section present listing all CRITICAL and HIGH findings
+EOF
+      fi
       ;;
     *)
       echo "Unknown stage for checklist: $CHECKLIST_STAGE" >&2

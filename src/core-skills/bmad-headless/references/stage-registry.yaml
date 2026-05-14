@@ -45,7 +45,6 @@ stages:
     prompt_file: references/pipeline-stages.md#security-scan
     gate_checklist: security-scan
     max_retries: 2
-    active: false
     optional: false
     severity_threshold: HIGH
 

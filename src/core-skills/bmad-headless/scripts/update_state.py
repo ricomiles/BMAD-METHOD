@@ -5,6 +5,7 @@ Usage:
   python3 update_state.py init <brief_path>
   python3 update_state.py start <stage>
   python3 update_state.py gate <stage> <PASS|FAIL> <score> [critique] [bc_score] [ech_score] [contested_count]
+    Note: gate security-scan also parses and records findings counts (critical/high/medium) from output.md
   python3 update_state.py ticket <ticket_id> <PASS|FAIL> <score> [critique] [manifest_path]
   python3 update_state.py escalate <stage>
   python3 update_state.py complete
@@ -149,6 +150,8 @@ def make_stage_entry(stage):
     if stage == "architect":
         base["adr_dir"] = f"{AUTOPILOT_DIR}/stages/architect/ADRs/"
         base["decision_engine_adrs"] = []
+    if stage == "security-scan":
+        base["findings"] = {"critical": 0, "high": 0, "medium": 0}
     if stage == "task-breakdown":
         base["ticket_count"] = None
     if stage == "reviewer":
@@ -241,6 +244,20 @@ def cmd_gate(stage, verdict, score, critique="", bc_score=None, ech_score=None, 
         state["total_retries"] = state.get("total_retries", 0) + 1
         if critique:
             s["critiques"].append(critique)
+
+    if stage == "security-scan":
+        output_path = s.get("output_path", f"{AUTOPILOT_DIR}/stages/security-scan/output.md")
+        s["findings"] = {"critical": 0, "high": 0, "medium": 0}
+        try:
+            with open(output_path) as fh:
+                content = fh.read()
+            s["findings"] = {
+                "critical": len(re.findall(r'^###\s+CRITICAL:', content, re.MULTILINE)),
+                "high": len(re.findall(r'^###\s+HIGH:', content, re.MULTILINE)),
+                "medium": len(re.findall(r'^###\s+MEDIUM:', content, re.MULTILINE)),
+            }
+        except OSError:
+            pass  # findings stay at initialized zeros if output file is absent
 
     save_state(state)
     print(f"Gate recorded: {stage} → {verdict} (score {score})")

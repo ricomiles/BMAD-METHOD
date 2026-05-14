@@ -577,12 +577,84 @@ Date: <date>
 
 ### security-scan
 
-> **Stage definition pending** — full prompt and gate checklist added in Story 5.1
-> (Epic 5: Security-Aware Architecture Generation).
->
-> This stage runs between architect and task-breakdown. It reviews the architecture against
-> OWASP Top 10 and produces CRITICAL/HIGH/MEDIUM findings. Failures inject findings into
-> an architect retry rather than retrying the security scan. See architecture §5.
+**Purpose:** Perform an architecture-level security review before any code is written. Identifies
+CRITICAL, HIGH, and MEDIUM vulnerabilities in the design using OWASP Top 10 and related
+security baselines. Results gate the pipeline — CRITICAL and HIGH findings block task-breakdown
+until the architect addresses them.
+
+**Inputs consumed:**
+
+- `.autopilot/stages/architect/output.md` — architecture document
+- `.autopilot/stages/architect/ADRs/` — all ADR files from the architect stage
+- `PROJECT_BRIEF.md` — project brief for context on application type and data sensitivity
+
+**Outputs produced:**
+
+File: `.autopilot/stages/security-scan/output.md`
+
+```markdown
+# Security Review: <project name>
+
+## Threat surface summary
+<application type, attack vectors, data sensitivity classification>
+
+## Findings
+
+### CRITICAL: <finding title>
+CWE: <CWE-NNN>
+Location: <architecture section or ADR>
+Risk: <what can go wrong>
+Required mitigation: <specific change to architecture or ADR>
+
+### HIGH: <finding title>
+CWE: ...
+Location: ...
+Risk: ...
+Required mitigation: ...
+
+### MEDIUM: <finding title>  (non-blocking, tracked as suggestion)
+...
+
+## ADR compliance
+<for each auth/data/API ADR: does it satisfy security baseline?>
+
+## Required before task-breakdown
+<list of CRITICAL and HIGH findings that must be resolved>
+```
+
+**IMPORTANT**: The `### CRITICAL:`, `### HIGH:`, `### MEDIUM:` heading format is load-bearing —
+`update_state.py` findings extraction depends on it exactly.
+
+**System prompt for `claude -p`:**
+
+```
+You are a security architect performing an automated threat analysis.
+You will receive a system architecture document, its ADRs, and the project brief.
+
+Your job: identify security vulnerabilities in the design before implementation begins.
+
+Review against:
+- OWASP Top 10 (relevant items for this application type)
+- Authentication and authorization model completeness
+- Input validation coverage (are all entry points validated?)
+- Secrets management (are credentials/keys handled correctly in the design?)
+- Data exposure risk (is sensitive data minimized, encrypted at rest/transit where needed?)
+- Dependency risk (are third-party libraries pinned? are there known-vulnerable choices?)
+
+Severity classification:
+- CRITICAL: can lead to authentication bypass, data breach, or RCE
+- HIGH: significant security gap, exploitable with moderate effort
+- MEDIUM: improvement recommended but not blocking
+
+Output ONLY the security review markdown. No preamble.
+```
+
+**Quality gate checklist (security-scan):**
+
+- CRITICAL finding present → FAIL (BLOCKER — always, regardless of severity_threshold)
+- HIGH finding present → FAIL (BLOCKER — unless `severity_threshold: CRITICAL` in stage-registry.yaml entry)
+- MEDIUM findings → suggestion only (non-blocking)
+- Each finding must include: CWE reference, location, risk description, required mitigation (BLOCKER if any field is missing)
 
 ---
 

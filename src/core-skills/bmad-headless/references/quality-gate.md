@@ -210,6 +210,12 @@ Summary of hard blockers per stage:
 - Technology decisions without ADRs
 - Any "TBD" in the output
 
+### security-scan gate blockers
+- CRITICAL finding present (BLOCKER — always fails regardless of severity_threshold)
+- HIGH finding present (BLOCKER — unless `severity_threshold: CRITICAL` in stage-registry.yaml entry)
+- Any finding missing one or more of: CWE reference, location, risk description, required mitigation
+- MEDIUM findings → suggestion only (non-blocking)
+
 ### task-breakdown gate blockers
 - Any FR not mapped to a ticket
 - Circular dependencies
