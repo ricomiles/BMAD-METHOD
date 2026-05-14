@@ -224,6 +224,70 @@ EOF
   exit 2
 }
 
+# ─── Security-scan escalation ─────────────────────────────────────────────────
+
+escalate_security() {
+  local stage="$1"
+  local arch_attempts="$2"
+  local arch_max="$3"
+
+  log "⚠ Escalating: $stage failed after $arch_attempts architect retry attempt(s)"
+  python3 "$SCRIPT_DIR/update_state.py" escalate "$stage"
+
+  local sec_findings=""
+  local sec_findings_file="$AUTOPILOT_DIR/stages/security-scan/output.md"
+  if [[ -f "$sec_findings_file" ]]; then
+    sec_findings=$(cat "$sec_findings_file")
+  fi
+
+  local arch_critiques=""
+  for i in $(seq 1 "$arch_attempts"); do
+    local arch_crit_file="$AUTOPILOT_DIR/stages/architect/critique_${i}.md"
+    if [[ -f "$arch_crit_file" ]]; then
+      arch_critiques+="### Architect attempt $i"$'\n'"$(cat "$arch_crit_file")"$'\n\n'
+    fi
+  done
+
+  cat > "$AUTOPILOT_DIR/ESCALATION.md" <<EOF
+# Escalation required — security-scan
+
+The pipeline cannot proceed automatically.
+The **security-scan** stage failed, and the **architect** was retried $arch_attempts time(s)
+but could not resolve all CRITICAL and HIGH findings.
+
+## What you need to do
+
+Review the security findings below. Determine which finding requires a human decision
+(e.g. a constraint in the brief that conflicts with security best practice, or a
+technology choice that needs replacing). Update **PROJECT_BRIEF.md** or the architecture
+document directly, then resume:
+
+\`\`\`bash
+bash scripts/run_pipeline.sh
+\`\`\`
+
+**Which finding needs your input?** Review the "Required before task-breakdown" section
+in the security review below and decide which item the architect could not resolve without
+human guidance.
+
+## Latest security review findings
+
+$sec_findings
+
+## Architect retry history
+
+$arch_critiques
+
+## Pipeline state
+
+$(python3 "$SCRIPT_DIR/update_state.py" status)
+EOF
+
+  log "Escalation written to $AUTOPILOT_DIR/ESCALATION.md"
+  log "Review security findings and update PROJECT_BRIEF.md, then re-run the pipeline."
+  exit 2
+}
+
 # ─── Main loop ───────────────────────────────────────────────────────────────
 
 main() {
@@ -372,6 +436,61 @@ for f in failures:
         escalate_repair_loop "$stage" "$repair_cycle"
       fi
       continue
+
+    elif [[ "$stage" == "security-scan" ]]; then
+      # Security-scan: on failure, inject findings into architect and retry architect
+      local arch_max_retries
+      arch_max_retries=$(stage_retries "architect")
+      [[ "$arch_max_retries" =~ ^[0-9]+$ ]] || { log "ERROR: invalid architect max_retries '${arch_max_retries}'"; exit 1; }
+
+      run_stage "$stage"
+
+      local arch_attempt=0
+      local security_passed=false
+
+      while true; do
+        if run_gate "$stage" "$((arch_attempt + 1))"; then
+          security_passed=true
+          break
+        fi
+
+        arch_attempt=$((arch_attempt + 1))
+        if [[ $arch_attempt -gt $arch_max_retries ]]; then
+          log "Architect retries exhausted ($arch_max_retries) — security-scan still failing"
+          break
+        fi
+
+        log "Security-scan failed — injecting findings into architect (retry $arch_attempt/$arch_max_retries)"
+
+        # Run architect; on gate failure retry it directly without re-gating security-scan
+        # (output hasn't changed — a re-gate would always fail and burn a retry slot)
+        while true; do
+          python3 "$SCRIPT_DIR/update_state.py" start "architect"
+          run_stage "architect"
+
+          if run_gate "architect" "$arch_attempt"; then
+            break  # architect passed; proceed to re-run security-scan
+          fi
+
+          log "Architect failed gate on security-findings retry $arch_attempt"
+          if [[ $arch_attempt -ge $arch_max_retries ]]; then
+            log "Architect max retries reached — escalating"
+            break 2
+          fi
+          arch_attempt=$((arch_attempt + 1))
+          log "Security-scan still failing — re-running architect (retry $arch_attempt/$arch_max_retries)"
+        done
+
+        log "Architect passed — re-running security-scan against updated architecture"
+        python3 "$SCRIPT_DIR/update_state.py" start "$stage"
+        run_stage "$stage"
+        # loop back to gate security-scan at top of while
+      done
+
+      if [[ "$security_passed" == "false" ]]; then
+        local effective_attempts=$(( arch_attempt > arch_max_retries ? arch_max_retries : arch_attempt ))
+        escalate_security "$stage" "$effective_attempts" "$arch_max_retries"
+      fi
 
     else
       # Standard stage: run → gate → retry loop

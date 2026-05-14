@@ -246,6 +246,41 @@ case "$STAGE" in
   architect)
     gather_prior "context-ingestion"
     gather_prior "analyst"
+    # Inject security-scan findings when re-running architect after security-scan failure
+    sec_output="$AUTOPILOT_DIR/stages/security-scan/output.md"
+    sec_status=$(python3 -c "
+import json, sys
+try:
+    s = json.load(open(sys.argv[1] + '/PIPELINE_STATE.json'))
+    print(s.get('stages', {}).get('security-scan', {}).get('status', 'absent'))
+except Exception:
+    print('absent')
+" "$AUTOPILOT_DIR" 2>/dev/null || echo "absent")
+    if [[ "$sec_status" == "pending" && -f "$sec_output" ]]; then
+      PRIOR_CONTEXT+="
+=== SECURITY REVIEW FINDINGS — ADDRESS ALL CRITICAL AND HIGH ITEMS BEFORE REGENERATING THE ARCHITECTURE ===
+$(cat "$sec_output")
+
+"
+    fi
+    ;;
+  security-scan)
+    gather_prior "architect"
+    sec_adr_dir="docs/ADRs"
+    if [[ ! -d "$sec_adr_dir" ]]; then
+      sec_adr_dir="$AUTOPILOT_DIR/stages/architect/ADRs"
+    fi
+    if [[ -d "$sec_adr_dir" ]]; then
+      PRIOR_CONTEXT+="
+=== ARCHITECTURE DECISION RECORDS ===
+"
+      for sec_adr in "$sec_adr_dir"/*.md; do
+        [[ -f "$sec_adr" ]] || continue
+        PRIOR_CONTEXT+="$(cat "$sec_adr")
+
+"
+      done
+    fi
     ;;
   task-breakdown)
     gather_prior "context-ingestion"
@@ -440,6 +475,30 @@ Output format:
 EOF
 )
       ;;
+    security-scan)
+      SYSTEM_PROMPT=$(cat <<'EOF'
+You are a security architect performing an automated threat analysis.
+You will receive a system architecture document, its ADRs, and the project brief.
+
+Your job: identify security vulnerabilities in the design before implementation begins.
+
+Review against:
+- OWASP Top 10 (relevant items for this application type)
+- Authentication and authorization model completeness
+- Input validation coverage (are all entry points validated?)
+- Secrets management (are credentials/keys handled correctly in the design?)
+- Data exposure risk (is sensitive data minimized, encrypted at rest/transit where needed?)
+- Dependency risk (are third-party libraries pinned? are there known-vulnerable choices?)
+
+Severity classification:
+- CRITICAL: can lead to authentication bypass, data breach, or RCE
+- HIGH: significant security gap, exploitable with moderate effort
+- MEDIUM: improvement recommended but not blocking
+
+Output ONLY the security review markdown. No preamble.
+EOF
+)
+      ;;
     *)
       echo "Unknown stage: $STAGE" >&2
       exit 1
@@ -500,6 +559,10 @@ case "$STAGE" in
       FULL_PROMPT+="[TASK: Execute the developer stage]
 "
     fi
+    ;;
+  security-scan)
+    FULL_PROMPT+="[TASK: Perform security review of the architecture against OWASP Top 10 and produce findings report]
+"
     ;;
 esac
 
