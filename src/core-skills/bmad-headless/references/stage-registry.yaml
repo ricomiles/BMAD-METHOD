@@ -71,7 +71,7 @@ stages:
     prompt_file: references/pipeline-stages.md#integration-validator
     gate_checklist: integration-validator
     max_retries: 2
-    active: false
+    repair_targets: [developer]
 
   - id: reviewer
     mode: [greenfield, brownfield]

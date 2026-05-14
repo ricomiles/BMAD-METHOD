@@ -236,6 +236,11 @@ Summary of hard blockers per stage:
 - Lint failing
 - Definition of done not satisfied
 
+### integration-validator gate blockers
+- Any `✗ MISMATCH` line present in the report → FAIL (BLOCKER)
+- Any `✗ UNRESOLVED` line present in the report → FAIL (BLOCKER)
+- `Status: PASS` at the end of the report means all checks passed (expected: no MISMATCH or UNRESOLVED lines present)
+
 ---
 
 ## Tuning the gate

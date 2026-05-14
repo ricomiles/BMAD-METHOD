@@ -341,6 +341,10 @@ $(cat "$sec_output")
       done
     fi
     ;;
+  integration-validator)
+    # Script-driven stage; validate_interfaces.py reads manifests directly
+    PRIOR_CONTEXT=""
+    ;;
 esac
 
 # ─── Critiques from failed attempts ──────────────────────────────────────────
@@ -498,6 +502,13 @@ Severity classification:
 Output ONLY the security review markdown. No preamble.
 EOF
 )
+      ;;
+    integration-validator)
+      python3 "$SCRIPT_DIR/validate_interfaces.py" \
+        --manifests-dir "$AUTOPILOT_DIR/stages/task-breakdown/manifests" \
+        --source-root "$(pwd)" \
+        > "$AUTOPILOT_OUTPUT" || true
+      exit 0
       ;;
     *)
       echo "Unknown stage: $STAGE" >&2

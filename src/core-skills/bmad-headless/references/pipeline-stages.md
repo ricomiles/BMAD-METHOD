@@ -660,13 +660,47 @@ Output ONLY the security review markdown. No preamble.
 
 ### integration-validator
 
-> **Stage definition pending** — full prompt and gate checklist added in Story 6.1
-> (Epic 6: Interface Contract Validation).
->
-> This stage runs between developer and reviewer. It reads manifest `provides.exports` and
-> `downstream_contracts`, reads implemented source files, and verifies actual export signatures
-> match declared contracts. Failures trigger targeted manifest-scoped developer re-runs.
-> See architecture §6.
+**Purpose:** Verify that export signature contracts between tickets are satisfied in the implemented source files, and that all relative imports resolve correctly.
+
+**How it runs:** Script-driven — NOT an LLM stage. `run_pipeline.sh` calls `scripts/run_stage.sh integration-validator`, which executes `scripts/validate_interfaces.py` directly and captures its output to `.autopilot/stages/integration-validator/output.md`. No `claude -p` invocation occurs.
+
+**Inputs:**
+- `.autopilot/stages/task-breakdown/manifests/TASK-NNN.json` — manifest files with `provides.exports` and `downstream_contracts`
+- Source files declared in `provides.new_files` and `provides.modified_files` across all manifests
+
+**Output format (Integration Validation Report):**
+
+```
+Integration Validation Report
+==============================
+Manifests:   <path>  (<N> tickets)
+Source root: <path>
+Language:    typescript
+
+Interface Checks:
+  ✓ MATCH    {consumer} ← {provider} :: {interface}
+  ✗ MISMATCH {consumer} ← {provider} :: {interface}
+    Expected: <normalized signature>
+    Actual:   <normalized signature>
+              (not determinable — <reason>)
+
+Import Resolution:
+  No import issues detected.
+  ✗ UNRESOLVED  {file}:{line} → {import_path}
+
+Status: PASS
+  0 mismatches, 0 unresolved imports across N interface checks
+
+Status: FAIL
+  X interface mismatch(es)
+  Y unresolved import(s)
+```
+
+**Quality gate checklist (integration-validator):**
+
+- Any `✗ MISMATCH` line present in the report → FAIL (BLOCKER)
+- Any `✗ UNRESOLVED` line present in the report → FAIL (BLOCKER)
+- `Status: PASS` at the end of the report → all blockers satisfied
 
 ---
 

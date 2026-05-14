@@ -492,6 +492,97 @@ for f in failures:
         escalate_security "$stage" "$effective_attempts" "$arch_max_retries"
       fi
 
+    elif [[ "$stage" == "integration-validator" ]]; then
+      # Integration-validator: script-driven stage with targeted developer repair loop
+      local iv_max_retries
+      iv_max_retries=$(stage_retries "$stage")
+      [[ "$iv_max_retries" =~ ^[0-9]+$ ]] || { log "ERROR: invalid max_retries '${iv_max_retries}' for $stage"; exit 1; }
+
+      local repair_cycle=0
+      local iv_passed=false
+
+      # Initial run (run_stage.sh executes validate_interfaces.py internally)
+      log "Starting $stage stage (targeted repair capable, max cycles: $iv_max_retries)"
+      python3 "$SCRIPT_DIR/update_state.py" start "$stage"
+      bash "$SCRIPT_DIR/run_stage.sh" "$stage" || true
+      cp "$AUTOPILOT_DIR/stages/$stage/output.md" \
+         "$AUTOPILOT_DIR/stages/$stage/output_repair_0.md" 2>/dev/null || true
+
+      while true; do
+        if run_gate "$stage" "$((repair_cycle + 1))"; then
+          iv_passed=true
+          break
+        fi
+
+        if [[ $repair_cycle -ge $iv_max_retries ]]; then
+          log "$stage repair cycles exhausted ($iv_max_retries)"
+          break
+        fi
+
+        repair_cycle=$((repair_cycle + 1))
+        log "$stage failed — repair cycle $repair_cycle/$iv_max_retries"
+
+        # Parse IV failures to find affected tickets
+        local repair_json
+        repair_json=$(python3 "$SCRIPT_DIR/parse_iv_failures.py" \
+          --iv-output "$AUTOPILOT_DIR/stages/$stage/output.md" \
+          --manifest-dir "$AUTOPILOT_DIR/stages/task-breakdown/manifests") || {
+          log "WARNING: parse_iv_failures.py failed — cannot identify failing tickets; escalating"
+          break
+        }
+
+        printf '%s\n' "$repair_json" \
+          > "$AUTOPILOT_DIR/stages/$stage/parse_failures_${repair_cycle}.json" 2>/dev/null || true
+
+        local failing_tickets
+        failing_tickets=$(printf '%s\n' "$repair_json" | python3 -c "
+import sys, json
+d = json.load(sys.stdin)
+for k in d.keys():
+    if k != 'unknown':
+        print(k)
+")
+
+        if [[ -z "$failing_tickets" ]]; then
+          log "WARNING: no tickets identified in IV failure output — escalating"
+          break
+        fi
+
+        while IFS= read -r ticket_id; do
+          [[ -z "$ticket_id" ]] && continue
+          log "Repairing $ticket_id (IV repair cycle $repair_cycle)"
+          local repair_dir="$AUTOPILOT_DIR/stages/developer/$ticket_id"
+          mkdir -p "$repair_dir"
+
+          printf '%s\n' "$repair_json" | python3 -c "
+import sys, json
+d = json.load(sys.stdin)
+cycle = sys.argv[1]
+tid = sys.argv[2]
+entry = d.get(tid, {})
+failures = entry.get('failures', [])
+print(f'REPAIR CYCLE {cycle}: Fix only the following interface contract violations. Do not change other behavior.')
+print()
+for f in failures:
+    line_ref = f'{f[\"file\"]}:{f[\"line\"]}' if f.get('line') else f['file']
+    print(f'- {line_ref} — {f[\"message\"]}')
+" "$repair_cycle" "$ticket_id" > "$repair_dir/critique_${repair_cycle}.md"
+
+          bash "$SCRIPT_DIR/run_stage.sh" developer "$ticket_id" || true
+          python3 "$SCRIPT_DIR/update_state.py" repair_cycle ticket "$ticket_id"
+        done <<< "$failing_tickets"
+
+        # Re-run integration-validator and save output copy for escalation history
+        python3 "$SCRIPT_DIR/update_state.py" start "$stage"
+        bash "$SCRIPT_DIR/run_stage.sh" "$stage" || true
+        cp "$AUTOPILOT_DIR/stages/$stage/output.md" \
+           "$AUTOPILOT_DIR/stages/$stage/output_repair_${repair_cycle}.md" 2>/dev/null || true
+      done
+
+      if [[ "$iv_passed" == "false" ]]; then
+        escalate_repair_loop "$stage" "$repair_cycle"
+      fi
+
     else
       # Standard stage: run → gate → retry loop
       local attempt=1
