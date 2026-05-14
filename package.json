@@ -1,7 +1,7 @@
 {
   "$schema": "https://json.schemastore.org/package.json",
   "name": "headless-bmad",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Fully autonomous BMAD-v6 pipeline for Claude Code — zero human-in-the-loop after ideation",
   "keywords": [
     "claude",
