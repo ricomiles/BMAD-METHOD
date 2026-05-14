@@ -675,7 +675,12 @@ Your task: Execute the $STAGE stage. Write the output artifact to $BMAD_OUTPUT_P
 
 # ─── Invoke claude -p ─────────────────────────────────────────────────────────
 
-echo "$FULL_PROMPT" | claude -p "$SYSTEM_PROMPT" \
+TMP_SP=$(mktemp)
+trap 'rm -f "$TMP_SP"' EXIT
+printf '%s' "$SYSTEM_PROMPT" > "$TMP_SP"
+
+echo "$FULL_PROMPT" | claude -p \
+  --system-prompt-file "$TMP_SP" \
   --dangerously-skip-permissions \
   "${IMAGE_FLAGS[@]+"${IMAGE_FLAGS[@]}"}" \
   > "$AUTOPILOT_OUTPUT"
