@@ -338,6 +338,41 @@ if [[ $ADJUDICATOR_STATUS -ne 0 ]]; then
   exit 0
 fi
 
+# ─── Extract JSON from LLM response (handles code fences and preamble prose) ──
+
+RESULT=$(printf '%s\n' "$RESULT" | python3 -c "
+import sys, re, json
+
+text = sys.stdin.read()
+
+# Strip markdown code fences anchored at start/end only (avoids corrupting mid-JSON backticks)
+text = re.sub(r'^\s*\`\`\`(?:json)?\s*\n?', '', text, count=1, flags=re.IGNORECASE)
+text = re.sub(r'\n?\s*\`\`\`\s*$', '', text, flags=re.IGNORECASE)
+text = text.strip()
+
+# If direct parse succeeds, use as-is
+try:
+    json.loads(text)
+    print(text)
+    sys.exit(0)
+except Exception:
+    pass
+
+# Find the first { ... } block spanning the text
+m = re.search(r'\{.*\}', text, re.DOTALL)
+if m:
+    candidate = m.group(0)
+    try:
+        json.loads(candidate)
+        print(candidate)
+        sys.exit(0)
+    except Exception:
+        pass
+
+# Nothing extractable — print original so the validation below produces the right error
+print(text)
+" 2>/dev/null || printf '%s\n' "$RESULT")
+
 # ─── Validate JSON ────────────────────────────────────────────────────────────
 
 if ! printf '%s\n' "$RESULT" | python3 -c "import sys,json; json.load(sys.stdin)" 2>/dev/null; then
