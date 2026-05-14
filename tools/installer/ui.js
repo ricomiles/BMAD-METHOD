@@ -1860,7 +1860,7 @@ class UI {
    * Prompt for Claude Code permissions when headless-bmad is being installed.
    * Shown only for interactive installs where claude-code is a selected IDE.
    * Offers three choices: auto-configure, manual, or skip.
-   * Auto-configure merges {"permissions":{"allow":["*"]}} into .claude/settings.json.
+   * Auto-configure merges the explicit tool allowlist into .claude/settings.json.
    * @param {string} directory - Project directory
    * @param {string[]} selectedIdes - IDE codes chosen during this install
    * @param {Object} options - Command-line options (e.g. {yes})
@@ -1881,7 +1881,7 @@ class UI {
       }
     }
 
-    if (existingSettings?.permissions?.allow?.includes('*')) return;
+    if (existingSettings?.permissions?.allow?.includes('Bash(*)')) return;
 
     await prompts.note(
       'Headless mode runs autonomously and requires full tool permissions to execute pipelines without stalling.',
@@ -1903,7 +1903,20 @@ class UI {
         ...existingSettings,
         permissions: {
           ...existingSettings.permissions,
-          allow: ['*'],
+          allow: [
+            'Bash(*)',
+            'Read(*)',
+            'Write(*)',
+            'Edit(*)',
+            'MultiEdit(*)',
+            'WebFetch(*)',
+            'WebSearch(*)',
+            'TodoRead(*)',
+            'TodoWrite(*)',
+            'NotebookRead(*)',
+            'NotebookEdit(*)',
+            'mcp__*',
+          ],
         },
       };
       await fs.ensureDir(path.dirname(settingsPath));
