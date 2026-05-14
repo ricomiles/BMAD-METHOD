@@ -12,6 +12,7 @@ Usage:
   python3 update_state.py get <json_path>   # e.g. "stages.analyst.status"
   python3 update_state.py repair_cycle reviewer
   python3 update_state.py repair_cycle ticket <ticket_id>
+  python3 update_state.py adr <stage> <adr_path>
 """
 
 import sys
@@ -36,19 +37,26 @@ def _load_registry_stages():
         return None
     stages = []
     current = None
-    with open(REGISTRY_FILE) as f:
-        for line in f:
-            m = re.match(r'^\s+-\s+id:\s+(\S+)', line)
-            if m:
-                if current is not None:
-                    stages.append(current)
-                current = {'id': m.group(1), 'mode': []}
-                continue
-            if current is None:
-                continue
-            m = re.match(r'^\s+mode:\s+\[([^\]]+)\]', line)
-            if m:
-                current['mode'] = [v.strip() for v in m.group(1).split(',')]
+    try:
+        with open(REGISTRY_FILE, encoding='utf-8') as f:
+            for line in f:
+                m = re.match(r'^\s+-\s+id:\s+(\S+)', line)
+                if m:
+                    if current is not None:
+                        stages.append(current)
+                    current = {'id': m.group(1), 'mode': [], 'active': True}
+                    continue
+                if current is None:
+                    continue
+                m = re.match(r'^\s+mode:\s+\[([^\]]+)\]', line)
+                if m:
+                    current['mode'] = [v.strip() for v in m.group(1).split(',')]
+                    continue
+                m = re.match(r'^\s+active:\s+(true|false)', line)
+                if m:
+                    current['active'] = m.group(1) == 'true'
+    except (OSError, UnicodeDecodeError):
+        return None
     if current is not None:
         stages.append(current)
     return stages or None
@@ -68,7 +76,8 @@ def get_stages(mode):
     registry = _load_registry_stages()
     if registry is None:
         return BROWNFIELD_STAGES if mode == "brownfield" else GREENFIELD_STAGES
-    return [s['id'] for s in registry if mode in s['mode']]
+    result = [s['id'] for s in registry if mode in s['mode'] and s.get('active', True)]
+    return result if result else (BROWNFIELD_STAGES if mode == "brownfield" else GREENFIELD_STAGES)
 
 def now():
     return datetime.now(timezone.utc).isoformat()
@@ -139,6 +148,7 @@ def make_stage_entry(stage):
     }
     if stage == "architect":
         base["adr_dir"] = f"{AUTOPILOT_DIR}/stages/architect/ADRs/"
+        base["decision_engine_adrs"] = []
     if stage == "task-breakdown":
         base["ticket_count"] = None
     if stage == "reviewer":
@@ -282,15 +292,10 @@ def cmd_ticket(ticket_id, verdict, score, critique="", manifest_path=None):
 
 def cmd_repair_cycle(target, ticket_id=None):
     state = load_state()
-    if target == "reviewer":
-        if "reviewer" not in state["stages"]:
-            print("ERROR: reviewer stage not found in state")
+    if target == "ticket":
+        if not ticket_id:
+            print("ERROR: repair_cycle ticket requires <ticket_id>")
             sys.exit(1)
-        s = state["stages"]["reviewer"]
-        s["repair_cycles"] = s.get("repair_cycles", 0) + 1
-        save_state(state)
-        print(f"repair_cycles: reviewer → {s['repair_cycles']}")
-    elif target == "ticket" and ticket_id:
         if "developer" not in state["stages"]:
             print("ERROR: developer stage not found in state")
             sys.exit(1)
@@ -303,8 +308,13 @@ def cmd_repair_cycle(target, ticket_id=None):
         save_state(state)
         print(f"repair_cycles: {ticket_id} → {t['repair_cycles']}")
     else:
-        print(f"ERROR: usage: repair_cycle reviewer | repair_cycle ticket <ticket_id>")
-        sys.exit(1)
+        if target not in state["stages"]:
+            print(f"ERROR: {target} stage not found in state")
+            sys.exit(1)
+        s = state["stages"][target]
+        s["repair_cycles"] = s.get("repair_cycles", 0) + 1
+        save_state(state)
+        print(f"repair_cycles: {target} → {s['repair_cycles']}")
 
 
 def cmd_complete():
@@ -376,6 +386,21 @@ def cmd_get(json_path):
             break
     print(val if val is not None else "pending")
 
+def cmd_adr(stage, adr_path):
+    if not adr_path:
+        print("ERROR: adr command requires <stage> <adr_path>")
+        sys.exit(1)
+    state = load_state()
+    if stage not in state["stages"]:
+        print(f"ERROR: Unknown stage: {stage}")
+        sys.exit(1)
+    s = state["stages"][stage]
+    if "decision_engine_adrs" not in s:
+        s["decision_engine_adrs"] = []
+    s["decision_engine_adrs"].append({"path": adr_path, "timestamp": now()})
+    save_state(state)
+    print(f"ADR recorded: {stage} → {adr_path}")
+
 # ─── Dispatch ─────────────────────────────────────────────────────────────────
 
 def main():
@@ -409,6 +434,10 @@ def main():
         cmd_get(sys.argv[2])
     elif cmd == "repair_cycle":
         cmd_repair_cycle(sys.argv[2], sys.argv[3] if len(sys.argv) > 3 else None)
+    elif cmd == "adr":
+        stage_arg = sys.argv[2] if len(sys.argv) > 2 else ""
+        path_arg = sys.argv[3] if len(sys.argv) > 3 else ""
+        cmd_adr(stage_arg, path_arg)
     else:
         print(f"Unknown command: {cmd}")
         print(__doc__)

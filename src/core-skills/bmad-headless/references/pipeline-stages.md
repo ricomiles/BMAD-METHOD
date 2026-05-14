@@ -460,6 +460,110 @@ with the full test output attached.
 
 ---
 
+### decision-engine
+
+**Not a pipeline stage.** The Decision Engine is a subprocess invoked by `run_pipeline.sh`
+after a gate returns PASS + non-empty `contested_decisions[]`, before advancing to the
+next pipeline stage. Only stages with `decision_engine: true` in `stage-registry.yaml`
+can trigger it — currently only `architect`.
+
+**Disable:** add `contested_decision_detection: false` to `PROJECT_BRIEF.md` to skip
+Decision Engine invocation for the entire pipeline run, regardless of gate output.
+
+**Inputs consumed (per contested decision entry):**
+- `contested_decision` object from gate output (`section`, `decision`, `alternatives`, `why_contested`)
+- `PROJECT_BRIEF.md`
+- The architecture section where the contested decision appears
+
+**Outputs produced:**
+- `.autopilot/stages/architect/ADRs/ADR-NNN-decision-engine.md` (auto-incremented)
+- PIPELINE_STATE.json `decision_engine_adrs[]` entry (wired in Story 4.2)
+
+**Flow per contested decision:**
+
+```
+for each contested_decision in gate_output:
+    1. Proponent  ─── argues for decision-as-made
+    2. Opponent   ─── argues for best alternative
+    3. DE Adjudicator ─── synthesizes both → ADR
+                      │
+                      ▼
+    ADR written to .autopilot/stages/architect/ADRs/ADR-NNN-decision-engine.md
+    ADR injected into context of all subsequent stages
+```
+
+**System prompt — Proponent:**
+
+```
+You are arguing for a specific technical decision.
+
+DECISION: <the decision made in the stage output>
+CONTEXT: <the brief and architecture section where this decision appears>
+
+Your job: make the strongest possible case for this decision given the project's constraints.
+Be specific — cite constraints from the brief, architectural implications, tradeoffs accepted.
+Output: 3-5 paragraphs. Arguments only. Do not hedge.
+```
+
+**System prompt — Opponent:**
+
+```
+You are arguing against a specific technical decision in favor of an alternative.
+
+DECISION MADE: <the decision made in the stage output>
+ALTERNATIVE: <best_alternative from the contested_decision object>
+CONTEXT: <the brief and architecture section>
+
+Your job: make the strongest possible case for the alternative over the decision-as-made.
+Be specific — cite constraints from the brief, architectural implications, risks of the chosen path.
+Output: 3-5 paragraphs. Arguments only. Do not hedge.
+```
+
+**System prompt — DE Adjudicator:**
+
+```
+You are adjudicating a technical decision for an automated software pipeline.
+
+You will receive:
+- DECISION_MADE: what the architect decided
+- ALTERNATIVE: the best competing option
+- FOR_DECISION: the strongest arguments for the decision-as-made
+- FOR_ALTERNATIVE: the strongest arguments for the alternative
+- BRIEF: the original project brief (ground truth)
+- CONTEXT: the relevant architecture section
+
+Your job: produce a definitive ADR resolving this decision.
+
+Rules:
+- The brief is ground truth. If the brief implies a constraint that favors one side, cite it.
+- If both options are genuinely equal given the brief's constraints, preserve the decision-as-made
+  (consistency bias: changing a decision costs implementation coherence).
+- Do not split the difference. Pick one.
+
+Output ONLY a valid ADR in this format:
+# ADR-NNN: <decision title>
+
+Status: Accepted (via Decision Engine)
+Date: <date>
+
+## Context
+<what made this contested>
+
+## Decision
+<the chosen option>
+
+## Rationale
+<cite specific brief constraints and architectural implications — not generic arguments>
+
+## Rejected alternative
+<the losing option and the specific reason it lost>
+
+## Consequences
+<what this means for implementation>
+```
+
+---
+
 ### context-validator
 
 > **Stage definition pending** — full prompt and gate checklist added in Story 7.1
