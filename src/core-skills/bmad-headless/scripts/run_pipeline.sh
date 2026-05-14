@@ -86,6 +86,18 @@ run_gate() {
   if [[ "$verdict" == "PASS" ]]; then
     log "✓ $stage passed (score $score/10)"
     python3 "$SCRIPT_DIR/update_state.py" gate "$stage" PASS "$score" "" "$blind_critic_score" "$edge_case_score" "$contested_count"
+    # Write contested decisions for Decision Engine (PASS only; FAIL path skips this block)
+    mkdir -p "$AUTOPILOT_DIR/stages/$stage"
+    : > "$AUTOPILOT_DIR/stages/$stage/contested_decisions.json"
+    if [[ "$contested_count" -gt 0 ]]; then
+      log "  ↳ $contested_count contested decision(s) flagged — Decision Engine may deliberate"
+      printf '%s\n' "$gate_output" | python3 -c "
+import sys, json
+d = json.load(sys.stdin)
+for dec in (d.get('contested_decisions') or []):
+    print(json.dumps(dec))
+" > "$AUTOPILOT_DIR/stages/$stage/contested_decisions.json" 2>/dev/null || true
+    fi
     return 0
   else
     log "✗ $stage failed (score $score/10)"
@@ -375,7 +387,19 @@ for f in failures:
         if run_gate "$stage" "$attempt"; then
           stage_passed=true
           if [[ "$(decision_engine_enabled)" == "true" ]] && [[ "$(stage_flag "$stage" "decision_engine")" == "true" ]]; then
-            : # Story 4.3: invoke decision-engine.sh for each contested decision
+            local de_decisions_file="$AUTOPILOT_DIR/stages/$stage/contested_decisions.json"
+            if [[ -f "$de_decisions_file" ]]; then
+              while IFS= read -r decision_json; do
+                [[ -z "$decision_json" ]] && continue
+                local de_label
+                de_label=$(python3 -c "import sys,json; print(json.loads(sys.argv[1]).get('decision','<unknown>')[:80])" "$decision_json" 2>/dev/null || echo "<unknown>")
+                log "Running Decision Engine for: $de_label"
+                bash "$SCRIPT_DIR/decision-engine.sh" "$decision_json" || \
+                  log "WARNING: Decision Engine failed for '$de_label' — continuing"
+              done < "$de_decisions_file"
+            fi
+          elif [[ -f "$AUTOPILOT_DIR/stages/$stage/contested_decisions.json" ]]; then
+            log "Decision Engine disabled — contested decisions for $stage logged but not deliberated"
           fi
           break
         fi

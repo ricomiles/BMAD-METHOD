@@ -267,6 +267,16 @@ case "$STAGE" in
       done
     fi
     mkdir -p "$AUTOPILOT_DIR/stages/task-breakdown/manifests"
+    # Include Decision Engine ADRs when primary dir is docs/ADRs (DE writes to .autopilot)
+    DE_ADR_DIR="$AUTOPILOT_DIR/stages/architect/ADRs"
+    if [[ "$ADR_DIR" != "$DE_ADR_DIR" && -d "$DE_ADR_DIR" ]]; then
+      for adr in "$DE_ADR_DIR"/*-decision-engine.md; do
+        [[ -f "$adr" ]] || continue
+        PRIOR_CONTEXT+="$(cat "$adr")
+
+"
+      done
+    fi
     ;;
   developer)
     if [[ -n "$TICKET_ID" ]]; then
@@ -285,6 +295,16 @@ case "$STAGE" in
     gather_prior "analyst"
     gather_prior "architect"
     gather_prior "task-breakdown"
+    # Include Decision Engine ADRs from architect stage
+    DE_ADR_DIR="$AUTOPILOT_DIR/stages/architect/ADRs"
+    if [[ -d "$DE_ADR_DIR" ]]; then
+      for adr in "$DE_ADR_DIR"/*-decision-engine.md; do
+        [[ -f "$adr" ]] || continue
+        PRIOR_CONTEXT+="$(cat "$adr")
+
+"
+      done
+    fi
     ;;
 esac
 
