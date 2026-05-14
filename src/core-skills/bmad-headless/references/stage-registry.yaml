@@ -19,7 +19,6 @@ stages:
     prompt_file: references/pipeline-stages.md#context-validator
     gate_checklist: context-validator
     max_retries: 2
-    active: false
     produces: conflict-report
 
   - id: analyst

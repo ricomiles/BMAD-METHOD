@@ -37,6 +37,13 @@ fi
 
 get_checklist() {
   case "$CHECKLIST_STAGE" in
+    context-validator)
+      cat <<'EOF'
+- Any `### CONFLICT-` heading present in the report → FAIL (BLOCKER)
+- `### WARN-` headings present → non-blocking suggestions only
+- All three sections present: "Conflicts", "Warnings", "Verified" — BLOCKER if any section missing
+EOF
+      ;;
     analyst)
       cat <<'EOF'
 - All features from brief appear as functional requirements
@@ -47,6 +54,17 @@ get_checklist() {
 - No invented features not in brief
 - "Decisions made" section present if any brief ambiguities were resolved
 EOF
+      local cv_output="$AUTOPILOT_DIR/stages/context-validator/output.md"
+      if [[ -f "$cv_output" ]]; then
+        echo "- All ### CONFLICT- items from the context validation report must be explicitly addressed — BLOCKER if any CONFLICT item is unaddressed"
+        local conflicts
+        conflicts=$(grep "^### CONFLICT-" "$cv_output" | sed 's/^### //')
+        if [[ -n "$conflicts" ]]; then
+          while IFS= read -r conflict; do
+            echo "- $conflict must be explicitly resolved in the sprint scope document"
+          done <<< "$conflicts"
+        fi
+      fi
       ;;
     architect)
       cat <<'EOF'

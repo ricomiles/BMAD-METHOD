@@ -135,12 +135,108 @@ Rules:
 
 ---
 
+### Stage: context-validator (brownfield only)
+
+**Purpose:** Detect conflicts between the sprint scope and the existing codebase context
+before analyst and architect stages build on potentially contradictory assumptions.
+
+**When it runs:** After context-ingestion, before analyst.
+
+**Inputs consumed:**
+- `.autopilot/stages/context-ingestion/output.md` — CONTEXT.md produced by context-ingestion
+- `PROJECT_BRIEF.md` — sprint scope (tickets in scope) and do-not-touch zones
+
+**Three conflict checks:**
+
+1. **Do-not-touch zone / sprint scope overlaps** — any in-scope sprint ticket that touches a
+   file or directory listed in the do-not-touch zone → CONFLICT entry (blocking)
+
+2. **Existing ADR / sprint scope contradictions** — any existing ADR that mandates a
+   technology or approach that a sprint ticket implicitly contradicts → CONFLICT entry (blocking)
+
+3. **"Done" ticket verification** — any sprint ticket marked DONE in the sprint board whose
+   expected files are absent from the codebase file tree → WARN entry (non-blocking)
+
+**Output:** `.autopilot/stages/context-validator/output.md`
+
+```markdown
+# Context Validation: <sprint name>
+
+## Conflicts (must resolve before proceeding)
+
+### CONFLICT-001: Sprint scope overlaps do-not-touch zone
+- Sprint ticket: BILL-046 — touches src/auth/token.ts
+- Conflict with: do-not-touch zone src/auth/ (from brief: "being refactored separately")
+- Detail: BILL-046 file list includes src/auth/token.ts, which is inside the protected zone
+- Resolution required: clarify whether BILL-046 should read src/auth/ read-only only,
+  or whether the do-not-touch should be narrowed to exclude token.ts
+
+### CONFLICT-002: Existing ADR contradicts sprint requirement
+- Sprint ticket: BILL-046 — PDF exports implied to use S3
+- Conflict with: ADR-007 (Accepted) "All file storage uses local filesystem"
+- Detail: BILL-046 acceptance criteria implies S3; ADR-007 prohibits external storage
+- Resolution required: update ADR-007 to allow S3 for generated exports, or revise scope
+
+## Warnings (non-blocking, but should be addressed)
+
+### WARN-001: Done ticket verification failed
+- Sprint board marks USER-101 as DONE
+- Expected files for USER-101 (src/users/email-templates/) not found in codebase file tree
+- Suggestion: confirm USER-101 files are committed; update CONTEXT.md file tree if so
+
+## Verified
+- ✓ USER-102 (DONE) — src/email-templates/ present in codebase
+- ✓ BILL-045 (IN-PROGRESS) — src/billing/webhook-handler.ts identified; marked do-not-conflict
+```
+
+**System prompt for context-validator:**
+```
+You are a context validator running in fully automated mode.
+You will receive CONTEXT.md from context-ingestion and PROJECT_BRIEF.md.
+
+Your job: detect conflicts between the sprint scope and the existing codebase before any planning begins.
+
+Perform three checks:
+
+1. DO-NOT-TOUCH ZONE CONFLICTS
+   - Extract the do-not-touch zones from PROJECT_BRIEF.md
+   - Extract the files each in-scope sprint ticket touches (from CONTEXT.md sprint status and file tree)
+   - If any in-scope ticket touches a file inside a do-not-touch zone → CONFLICT entry
+
+2. ADR CONTRADICTIONS
+   - Extract existing ADRs from CONTEXT.md (architecture summary and ADR list sections)
+   - For each ADR that mandates a specific technology or approach:
+     check whether any in-scope sprint ticket implies a contradictory technology or approach
+   - Each contradiction → CONFLICT entry
+
+3. DONE TICKET VERIFICATION
+   - For each sprint ticket marked DONE in CONTEXT.md sprint status:
+     check whether the files expected for that ticket appear in CONTEXT.md's codebase file tree
+   - Files absent → WARN entry (non-blocking)
+
+Rules:
+- CONFLICT items are blocking. Any CONFLICT item in the output → the gate will FAIL.
+- WARN items are non-blocking. Gate records them as suggestions, pipeline continues.
+- If no conflicts or warnings exist, output empty Conflicts and Warnings sections and a Verified section confirming DONE tickets.
+- If no DONE tickets exist in the sprint board, output the Verified section with a single entry: "- ✓ No DONE tickets to verify."
+- Output ONLY the CONTEXT_CONFLICTS.md content in markdown. No preamble.
+```
+
+**Quality gate checklist (context-validator):**
+- Any `### CONFLICT-` heading present → FAIL (BLOCKER — pipeline must not advance)
+- `### WARN-` headings present → non-blocking suggestions only
+- All three sections present: "Conflicts", "Warnings", "Verified" (even if empty) — BLOCKER if any section missing
+
+---
+
 ### Stage: analyst (brownfield variant)
 
 **In brownfield mode,** the analyst does NOT write a full PRD. Instead it produces
 a **sprint scope document** — what we're building this sprint relative to what exists.
 
-**Additional context consumed:** `CONTEXT.md` (from context-ingestion)
+**Additional context consumed:**
+- `CONTEXT.md` (from context-ingestion)
+- `.autopilot/stages/context-validator/output.md` — conflict report (when context-validator ran); all `### CONFLICT-` items must be explicitly addressed in the sprint scope document
 
 **Output structure (sprint scope):**
 ```markdown

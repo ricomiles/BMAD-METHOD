@@ -88,6 +88,7 @@ get_stage_skill() {
     task-breakdown)    echo "" ;;                              # use hardcoded v2 prompt
     developer)         echo "bmad-dev-story" ;;           # per-story, called from run_dev_story.sh
     context-ingestion) echo "bmad-document-project" ;;
+    context-validator) echo "" ;;                         # uses hardcoded system prompt
     reviewer)          echo "" ;;                          # keeps hardcoded prompt (runs bash tests)
     *)                 echo "" ;;
   esac
@@ -160,6 +161,7 @@ get_stage_persona_skill() {
     architect)         echo "bmad-agent-architect" ;;
     task-breakdown)    echo "bmad-agent-pm" ;;
     context-ingestion) echo "bmad-agent-analyst" ;;
+    context-validator) echo "bmad-agent-analyst" ;;
     developer)         echo "bmad-agent-dev" ;;
     reviewer)          echo "" ;;
     *)                 echo "" ;;
@@ -240,12 +242,33 @@ case "$STAGE" in
   context-ingestion)
     PRIOR_CONTEXT=""
     ;;
+  context-validator)
+    gather_prior "context-ingestion"
+    ;;
   analyst)
     gather_prior "context-ingestion"
+    # Inject context-validator conflict report in brownfield mode
+    cv_output="$AUTOPILOT_DIR/stages/context-validator/output.md"
+    if [[ -f "$cv_output" ]]; then
+      PRIOR_CONTEXT+="
+=== CONTEXT VALIDATION CONFLICTS — ALL ### CONFLICT- ITEMS MUST BE EXPLICITLY ADDRESSED IN YOUR SPRINT SCOPE DOCUMENT ===
+$(cat "$cv_output")
+
+"
+    fi
     ;;
   architect)
     gather_prior "context-ingestion"
     gather_prior "analyst"
+    # Inject context-validator conflict report in brownfield mode
+    cv_output="$AUTOPILOT_DIR/stages/context-validator/output.md"
+    if [[ -f "$cv_output" ]]; then
+      PRIOR_CONTEXT+="
+=== CONTEXT VALIDATION CONFLICTS — ARCHITECTURE AND ADRS MUST RESOLVE ALL ### CONFLICT- ITEMS ===
+$(cat "$cv_output")
+
+"
+    fi
     # Inject security-scan findings when re-running architect after security-scan failure
     sec_output="$AUTOPILOT_DIR/stages/security-scan/output.md"
     sec_status=$(python3 -c "
@@ -401,6 +424,40 @@ Rules:
 - If sprint board is inaccessible, use the brief sprint context section and note this
 - Output ONLY the CONTEXT.md in markdown. No preamble.
 CEOF
+)
+      ;;
+    context-validator)
+      SYSTEM_PROMPT=$(cat <<'EOF'
+You are a context validator running in fully automated mode.
+You will receive CONTEXT.md from context-ingestion and PROJECT_BRIEF.md.
+
+Your job: detect conflicts between the sprint scope and the existing codebase before any planning begins.
+
+Perform three checks:
+
+1. DO-NOT-TOUCH ZONE CONFLICTS
+   - Extract the do-not-touch zones from PROJECT_BRIEF.md
+   - Extract the files each in-scope sprint ticket touches (from CONTEXT.md sprint status and file tree)
+   - If any in-scope ticket touches a file inside a do-not-touch zone → CONFLICT entry
+
+2. ADR CONTRADICTIONS
+   - Extract existing ADRs from CONTEXT.md (architecture summary and ADR list sections)
+   - For each ADR that mandates a specific technology or approach:
+     check whether any in-scope sprint ticket implies a contradictory technology or approach
+   - Each contradiction → CONFLICT entry
+
+3. DONE TICKET VERIFICATION
+   - For each sprint ticket marked DONE in CONTEXT.md sprint status:
+     check whether the files expected for that ticket appear in CONTEXT.md's codebase file tree
+   - Files absent → WARN entry (non-blocking)
+
+Rules:
+- CONFLICT items are blocking. Any CONFLICT item in the output → the gate will FAIL.
+- WARN items are non-blocking. Gate records them as suggestions, pipeline continues.
+- If no conflicts or warnings exist, output empty Conflicts and Warnings sections and a Verified section confirming DONE tickets.
+- If no DONE tickets exist in the sprint board, output the Verified section with a single entry: "- ✓ No DONE tickets to verify."
+- Output ONLY the CONTEXT_CONFLICTS.md content in markdown. No preamble.
+EOF
 )
       ;;
     analyst)
@@ -560,6 +617,10 @@ case "$STAGE" in
     ;;
   context-ingestion)
     FULL_PROMPT+="[TASK: Produce the project context document]
+"
+    ;;
+  context-validator)
+    FULL_PROMPT+="[TASK: Detect do-not-touch zone violations, ADR contradictions, and done-ticket verification failures, and produce the conflict report]
 "
     ;;
   developer)

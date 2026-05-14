@@ -199,10 +199,16 @@ system prompt is the same; what changes is the CHECKLIST passed in.
 
 Summary of hard blockers per stage:
 
+### context-validator gate blockers
+- Any `### CONFLICT-` heading present in the report → FAIL (BLOCKER — pipeline must not advance to analyst)
+- `### WARN-` headings present → non-blocking suggestions only (analyst proceeds with awareness)
+- All three sections (Conflicts, Warnings, Verified) must be present — BLOCKER if any section is missing
+
 ### analyst gate blockers
 - Open questions present
 - Any FR missing acceptance criteria
 - Feature in brief not in PRD
+- Any `### CONFLICT-` item from context-validator report not explicitly addressed → FAIL (BLOCKER — brownfield mode only; vacuous in greenfield)
 
 ### architect gate blockers
 - Any FR not addressed by architecture
