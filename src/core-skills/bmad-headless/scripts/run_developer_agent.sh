@@ -3,7 +3,7 @@
 #
 # Replaces the bash-based run_developer_stage() in run_pipeline.sh.
 # The orchestrator runs as a single claude -p session that internally
-# fans out per-story subagents using the Agent tool, gates each one,
+# fans out per-ticket subagents using the Agent tool, gates each one,
 # retries failures, and writes all state updates itself.
 
 set -euo pipefail
@@ -14,12 +14,6 @@ AUTOPILOT_DIR=".autopilot"
 
 mkdir -p "$AUTOPILOT_DIR/stages/developer"
 
-# Generate sprint-status.yaml from docs/epics.md if it doesn't exist yet
-if [[ ! -f "stories/sprint-status.yaml" ]]; then
-  echo "[developer-agent] Generating sprint-status.yaml from docs/epics.md..." >&2
-  python3 "$SCRIPT_DIR/generate_sprint_status.py"
-fi
-
 # System prompt: the developer orchestrator skill
 ORCHESTRATOR_PROMPT=$(cat "$SKILL_ROOT/developer-orchestrator.md")
 
@@ -27,8 +21,8 @@ ORCHESTRATOR_PROMPT=$(cat "$SKILL_ROOT/developer-orchestrator.md")
 PIPELINE_STATE=""
 [[ -f "$AUTOPILOT_DIR/PIPELINE_STATE.json" ]] && PIPELINE_STATE=$(cat "$AUTOPILOT_DIR/PIPELINE_STATE.json")
 
-SPRINT_STATUS=""
-[[ -f "stories/sprint-status.yaml" ]] && SPRINT_STATUS=$(cat "stories/sprint-status.yaml")
+TASKS_MD=""
+[[ -f "$AUTOPILOT_DIR/stages/task-breakdown/output.md" ]] && TASKS_MD=$(cat "$AUTOPILOT_DIR/stages/task-breakdown/output.md")
 
 FULL_PROMPT="[PIPELINE_MODE: autonomous]
 
@@ -38,10 +32,10 @@ FULL_PROMPT="[PIPELINE_MODE: autonomous]
 $PIPELINE_STATE
 \`\`\`
 
-## Sprint Status (stories/sprint-status.yaml)
+## Tasks Manifest (.autopilot/stages/task-breakdown/output.md)
 
-\`\`\`yaml
-$SPRINT_STATUS
+\`\`\`markdown
+$TASKS_MD
 \`\`\`
 
 ---
