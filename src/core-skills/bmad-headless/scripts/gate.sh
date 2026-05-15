@@ -38,6 +38,40 @@ if [[ ! -f "$OUTPUT_FILE" ]]; then
   exit 0
 fi
 
+# ─── Pre-screen: deterministic structural check before any LLM call ───────────
+
+PRE_SCREEN_STATUS=0
+PRE_SCREEN_OUT=$(python3 "$SCRIPT_DIR/pre_screen.py" "$CHECKLIST_STAGE" "$OUTPUT_FILE" 2>&1) || PRE_SCREEN_STATUS=$?
+
+if [[ $PRE_SCREEN_STATUS -ne 0 ]]; then
+  printf 'gate.sh: pre-screen failed for %s — returning FAIL without invoking LLM agents\n' "$CHECKLIST_STAGE" >&2
+  printf '%s\n' "$PRE_SCREEN_OUT" >&2
+  printf '%s\n' "$PRE_SCREEN_OUT" | python3 -c "
+import sys, re, json
+text = sys.stdin.read()
+blockers = []
+for line in text.splitlines():
+    m = re.match(r'^\s+\d+\.\s+(.+)', line)
+    if m:
+        blockers.append(m.group(1).strip())
+if not blockers:
+    blockers = [text.strip() or 'Pre-screen structural check failed']
+result = {
+    'verdict': 'FAIL',
+    'score': 0,
+    'checklist': [],
+    'blockers': blockers,
+    'critique': text.strip(),
+    'suggestions': [],
+    'contested_decisions': [],
+    'blind_critic_score': None,
+    'edge_case_score': None,
+}
+print(json.dumps(result))
+"
+  exit 0
+fi
+
 # ─── Load checklist for this stage ───────────────────────────────────────────
 
 get_checklist() {

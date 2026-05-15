@@ -16,7 +16,7 @@ def _has_outcome_language(bullet_text):
     if len(words) <= 3:
         return False
     outcome_signals = re.compile(
-        r'\b(user[s]?\s+(can|will|may|should)|allow\w*|enable\w*|support\w*|'
+        r'\b(user[s]?\s+(can|will|may|should)|allow\w*|enable\w*|support(?:s|ed|ing)?\b|'
         r'provide\w*|let\s+user|so\s+that|in\s+order\s+to)\b',
         re.IGNORECASE
     )
@@ -64,7 +64,7 @@ def validate(path):
             if label_only_items:
                 errors.append(
                     f"Feature descriptions must state user outcomes ('user can X'), not just feature labels. "
-                    f"Found {len(label_only_items)} label-only bullet(s)."
+                    f"Found {len(label_only_items)} label-only bullets."
                 )
             if len(outcome_items) < 3:
                 errors.append(
@@ -109,7 +109,7 @@ def validate(path):
     # Open questions (any unresolved item blocks the pipeline)
     open_q_section = extract_section(content, ["open question", "open questions", "unknowns", "unresolved"])
     if open_q_section:
-        non_empty = [l for l in open_q_section.strip().splitlines() if l.strip()]
+        non_empty = [l for l in open_q_section.strip().splitlines() if l.strip() and not l.strip().startswith('#')]
         if non_empty:
             errors.append("Open questions section found with unresolved items. "
                           "Resolve all questions before running the pipeline. "
@@ -282,7 +282,7 @@ if __name__ == "__main__":
         # Open questions
         open_q_section = extract_section(content, ["open question", "open questions", "unknowns", "unresolved"])
         if open_q_section:
-            non_empty = [l for l in open_q_section.strip().splitlines() if l.strip()]
+            non_empty = [l for l in open_q_section.strip().splitlines() if l.strip() and not l.strip().startswith('#')]
             if non_empty:
                 errors.append("Open questions section found with unresolved items. "
                               "Resolve all questions before running the pipeline. "
@@ -314,9 +314,11 @@ if __name__ == "__main__":
                 print(f"  {i}. {warn}")
             print()
 
-        if not errors:
+        if not errors and not warnings:
             print("Brief richness: HIGH — analyst is likely to pass on attempt 1")
             print("✓ Brownfield brief looks good. Pipeline can start.\n")
+        elif not errors:
+            print("✓ No blocking issues. Warnings above are advisory.\n")
         else:
             print("✗ Fix blocking issues before running the pipeline.\n")
             sys.exit(1)
