@@ -699,7 +699,7 @@ Your task: Execute the $STAGE stage. Write the output artifact to $BMAD_OUTPUT_P
 # ─── Invoke claude -p ─────────────────────────────────────────────────────────
 
 TMP_SP=$(mktemp)
-trap 'rm -f "$TMP_SP"' EXIT
+trap 'rm -f "$TMP_SP"; kill "${_heartbeat_pid:-}" 2>/dev/null || true' EXIT
 printf '%s' "$SYSTEM_PROMPT" > "$TMP_SP"
 
 _log_append_stage() {

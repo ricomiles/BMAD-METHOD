@@ -21,7 +21,7 @@ GEMINI_GATE_MODEL="${GEMINI_GATE_MODEL:-gemini-2.5-pro}"
 
 TMPDIR_GATE=$(mktemp -d)
 [[ -n "$TMPDIR_GATE" ]] || { echo "gate.sh: mktemp failed — cannot create temp dir" >&2; exit 1; }
-trap 'rm -rf "$TMPDIR_GATE"' EXIT
+trap 'rm -rf "$TMPDIR_GATE"; kill "${_gate_hb_pid:-}" 2>/dev/null || true' EXIT
 
 # ─── Determine what to judge ─────────────────────────────────────────────────
 

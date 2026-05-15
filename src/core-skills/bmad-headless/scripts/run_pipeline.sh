@@ -43,13 +43,13 @@ decision_engine_enabled() {
 
 # ─── Helpers ────────────────────────────────────────────────────────────────
 
+LOG_FILE=".autopilot/pipeline.log"
+
 log() {
   local msg="$*"
   echo "[Autopilot $(date '+%H:%M:%S')] $msg"
   _log_append "pipeline" "" "$msg"
 }
-
-LOG_FILE=".autopilot/pipeline.log"
 
 _log_append() {
   local type="${1}" stage="${2:-}" msg="${3:-}" extra="${4:-}"
