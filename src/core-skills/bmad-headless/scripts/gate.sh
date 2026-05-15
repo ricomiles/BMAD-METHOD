@@ -15,6 +15,7 @@ AUTOPILOT_DIR=".autopilot"
 
 # Normalize non-numeric attempt (e.g. "synthesis") to full gate
 [[ "$ATTEMPT" =~ ^[0-9]+$ ]] || ATTEMPT=3
+GEMINI_GATE_MODEL="${GEMINI_GATE_MODEL:-gemini-2.5-pro}"
 
 # ─── Temp dir with cleanup trap ───────────────────────────────────────────────
 
@@ -280,10 +281,60 @@ Output ONLY valid JSON:
 }
 ADJPROMPT
 
+read -r -d '' GEMINI_REVIEWER_SYSTEM_PROMPT << 'GRPROMPT' || true
+You are an independent quality gate reviewer. You have been trained by Google and are reviewing
+a document produced by a Claude (Anthropic) model. Your role is to catch issues that
+same-model self-review consistently misses due to shared training biases and blindspots.
+
+You will receive:
+- OUTPUT: the document being evaluated
+- BRIEF: the original project brief that drove this document
+- CHECKLIST: the quality checklist for this stage
+
+Your job: evaluate the OUTPUT against the CHECKLIST and BRIEF. Apply your own independent
+judgment — do not inflate the score. Be especially alert to:
+- Vagueness where the checklist requires specificity
+- Missing coverage of brief requirements not caught by simple checklist matching
+- Internal contradictions the producing model may have rationalized away
+- Implicit assumptions that contradict the brief's constraints
+
+Process:
+1. Check each CHECKLIST item: PASS / FAIL / N/A with one-line reason
+2. Identify any blockers (items that prevent downstream stages from succeeding)
+3. Identify contested decisions (two legitimate options exist, neither clearly better from the brief)
+4. Assign a score and verdict
+
+Score:
+- 10: All checklist items pass, no gaps relative to brief
+- 8-9: All blockers pass, minor warnings only
+- 7: Threshold — all blockers pass, some warnings
+- 5-6: Has blockers
+- 1-4: Fundamental problems
+
+Output ONLY valid JSON:
+{
+  "verdict": "PASS" | "FAIL",
+  "score": <1-10>,
+  "checklist": [{"item": "...", "result": "PASS|FAIL|N/A", "reason": "..."}],
+  "blockers": ["..."],
+  "critique": "<if FAIL: specific actionable instructions. If PASS: empty string>",
+  "suggestions": ["..."],
+  "contested_decisions": [
+    {
+      "section": "<section heading>",
+      "decision": "<what was decided>",
+      "alternatives": ["<option A>", "<option B>"],
+      "why_contested": "<what signal from brief makes this genuinely unclear>"
+    }
+  ]
+}
+GRPROMPT
+
 # ─── Launch agents based on attempt number (progressive cost scaling) ─────────
 
 BC_STATUS=0
 ECH_STATUS=0
+SKIP_ADJUDICATOR=false
 
 if [[ "$ATTEMPT" -ge 3 ]]; then
   # Full ensemble: BC + ECH in parallel, then Adjudicator
@@ -299,13 +350,43 @@ if [[ "$ATTEMPT" -ge 3 ]]; then
   wait $ECH_PID || ECH_STATUS=$?
 
 elif [[ "$ATTEMPT" -eq 2 ]]; then
-  # BC only: blind critic + adjudicator; edge case hunter skipped
-  echo "$OUTPUT" | claude -p "$BLIND_CRITIC_SYSTEM_PROMPT" --dangerously-skip-permissions \
-    > "$TMPDIR_GATE/bc_output" 2>"$TMPDIR_GATE/bc_err" &
-  BC_PID=$!
-  wait $BC_PID || BC_STATUS=$?
-  printf '[EDGE_CASE_HUNTER_NOT_RUN: attempt 2 — edge case hunter skipped]\n' \
-    > "$TMPDIR_GATE/ech_output"
+  # Cross-model review: single Gemini call as independent reviewer
+  # Gemini receives full context and produces verdict JSON directly — Adjudicator skipped
+  if command -v gemini >/dev/null 2>&1; then
+    GEMINI_PROMPT="OUTPUT:
+$OUTPUT
+
+BRIEF:
+$BRIEF
+
+CHECKLIST:
+$CHECKLIST"
+    GEMINI_STATUS=0
+    printf '%s\n' "$GEMINI_PROMPT" | gemini -p "$GEMINI_REVIEWER_SYSTEM_PROMPT" \
+      --output-format text -m "$GEMINI_GATE_MODEL" --yolo \
+      > "$TMPDIR_GATE/gemini_output" 2>"$TMPDIR_GATE/gemini_err" || GEMINI_STATUS=$?
+    if [[ $GEMINI_STATUS -eq 0 && -s "$TMPDIR_GATE/gemini_output" ]]; then
+      RESULT=$(cat "$TMPDIR_GATE/gemini_output")
+      SKIP_ADJUDICATOR=true
+      printf '[BLIND_CRITIC_NOT_RUN: attempt 2 — gemini reviewer used]\n' \
+        > "$TMPDIR_GATE/bc_output"
+      printf '[EDGE_CASE_HUNTER_NOT_RUN: attempt 2 — gemini reviewer used]\n' \
+        > "$TMPDIR_GATE/ech_output"
+    else
+      printf 'gate.sh: Gemini reviewer failed (exit %s) — falling back to adjudicator-only\n' \
+        "$GEMINI_STATUS" >&2
+      [[ -s "$TMPDIR_GATE/gemini_err" ]] && cat "$TMPDIR_GATE/gemini_err" >&2
+    fi
+  else
+    printf 'gate.sh: gemini not in PATH — falling back to adjudicator-only\n' >&2
+  fi
+  # Fallback: adjudicator-only (same as attempt 1) when Gemini unavailable
+  if [[ "$SKIP_ADJUDICATOR" == "false" ]]; then
+    printf '[BLIND_CRITIC_NOT_RUN: attempt 2 — gemini unavailable, adjudicator fallback]\n' \
+      > "$TMPDIR_GATE/bc_output"
+    printf '[EDGE_CASE_HUNTER_NOT_RUN: attempt 2 — gemini unavailable, adjudicator fallback]\n' \
+      > "$TMPDIR_GATE/ech_output"
+  fi
 
 else
   # Attempt 1: adjudicator only — no BC, no ECH
@@ -333,9 +414,11 @@ else
   [[ -n "$ECH_REPORT" ]] || ECH_REPORT="[EDGE_CASE_HUNTER_UNAVAILABLE: agent produced no output]"
 fi
 
-# ─── Build Adjudicator input and run sequentially ────────────────────────────
+if [[ "$SKIP_ADJUDICATOR" == "false" ]]; then
 
-ADJUDICATOR_PROMPT="OUTPUT:
+  # ─── Build Adjudicator input and run sequentially ────────────────────────────
+
+  ADJUDICATOR_PROMPT="OUTPUT:
 $OUTPUT
 
 BRIEF:
@@ -350,13 +433,15 @@ $BC_REPORT
 EDGE_CASE_REPORT:
 $ECH_REPORT"
 
-ADJUDICATOR_STATUS=0
-RESULT=$(echo "$ADJUDICATOR_PROMPT" | claude -p "$ADJUDICATOR_SYSTEM_PROMPT" --dangerously-skip-permissions) || ADJUDICATOR_STATUS=$?
+  ADJUDICATOR_STATUS=0
+  RESULT=$(echo "$ADJUDICATOR_PROMPT" | claude -p "$ADJUDICATOR_SYSTEM_PROMPT" --dangerously-skip-permissions) || ADJUDICATOR_STATUS=$?
 
-if [[ $ADJUDICATOR_STATUS -ne 0 ]]; then
-  echo "gate.sh: adjudicator agent failed (exit $ADJUDICATOR_STATUS)" >&2
-  echo '{"verdict":"FAIL","score":1,"checklist":[],"blockers":["Adjudicator agent failed to run (exit '"$ADJUDICATOR_STATUS"')"],"critique":"The adjudicator agent exited non-zero. This is likely a transient error. Retry the gate run.","suggestions":[],"contested_decisions":[]}'
-  exit 0
+  if [[ $ADJUDICATOR_STATUS -ne 0 ]]; then
+    echo "gate.sh: adjudicator agent failed (exit $ADJUDICATOR_STATUS)" >&2
+    echo '{"verdict":"FAIL","score":1,"checklist":[],"blockers":["Adjudicator agent failed to run (exit '"$ADJUDICATOR_STATUS"')"],"critique":"The adjudicator agent exited non-zero. This is likely a transient error. Retry the gate run.","suggestions":[],"contested_decisions":[]}'
+    exit 0
+  fi
+
 fi
 
 # ─── Extract JSON from LLM response (handles code fences and preamble prose) ──

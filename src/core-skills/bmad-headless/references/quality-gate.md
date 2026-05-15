@@ -15,19 +15,20 @@ bash scripts/gate.sh <stage_name> [ticket_id] [attempt]
 
 **Progressive gate:** Agent count scales with attempt number to minimize cost on first-try passes.
 - **Attempt 1** (default): Adjudicator only — no Blind Critic, no Edge Case Hunter. Cheap; catches obvious blockers. Most stages pass here.
-- **Attempt 2**: Blind Critic + Adjudicator. Stage already failed once; worth spending more.
+- **Attempt 2**: Single Gemini cross-model reviewer (default: `gemini-2.5-pro`). Gemini's different training priors catch Claude blindspots at single-agent cost. No Blind Critic, Edge Case Hunter, or Claude Adjudicator run. Falls back to Adjudicator-only if `gemini` is not in PATH. Override model via `GEMINI_GATE_MODEL` env var.
 - **Attempt 3+**: Full ensemble — Blind Critic + Edge Case Hunter (parallel) + Adjudicator. Maximum scrutiny.
 - **Non-numeric attempt** (e.g., "synthesis"): Treated as attempt 3 — full ensemble always runs for synthesis retries.
 
 Available agents per attempt (only the agents listed for the current attempt tier run):
 
 - **Attempt 1**: Adjudicator only
-- **Attempt 2**: Blind Critic → Adjudicator
+- **Attempt 2**: Gemini cross-model reviewer (falls back to Adjudicator-only if Gemini unavailable)
 - **Attempt 3+**: Blind Critic + Edge Case Hunter (parallel) → Adjudicator
 
-1. **Blind Critic** (background, attempt 2+) — receives only the stage output; produces a plain-text numbered deficiencies list
+1. **Blind Critic** (background, attempt 3+) — receives only the stage output; produces a plain-text numbered deficiencies list
 2. **Edge Case Hunter** (background, parallel with Blind Critic, attempt 3+) — receives the stage output + project brief; produces a plain-text numbered list of unhandled edge cases
 3. **Adjudicator** (sequential, after sub-agents complete) — receives the output + brief + checklist + Blind Critic report + Edge Case Hunter report; issues the final JSON verdict
+4. **Gemini Reviewer** (attempt 2 only) — receives the output + brief + checklist and issues the full JSON verdict directly; replaces BC + ECH + Adjudicator at single-agent cost
 
 If Blind Critic or Edge Case Hunter fails, the Adjudicator still runs and receives a `[AGENT_UNAVAILABLE]` note in place of the missing report. The gate never aborts due to a sub-agent failure.
 
