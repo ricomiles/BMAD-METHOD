@@ -702,11 +702,51 @@ TMP_SP=$(mktemp)
 trap 'rm -f "$TMP_SP"' EXIT
 printf '%s' "$SYSTEM_PROMPT" > "$TMP_SP"
 
+_log_append_stage() {
+  local type="${1}" msg="${2:-}" extra="${3:-}"
+  local ts
+  ts="$(date -u '+%Y-%m-%dT%H:%M:%SZ')"
+  msg="${msg//\"/\\\"}"
+  if [[ -n "$extra" ]]; then
+    printf '{"ts":"%s","type":"%s","stage":"%s","msg":"%s",%s}\n' \
+      "$ts" "$type" "$STAGE" "$msg" "$extra" >> ".autopilot/pipeline.log" 2>/dev/null || true
+  else
+    printf '{"ts":"%s","type":"%s","stage":"%s","msg":"%s"}\n' \
+      "$ts" "$type" "$STAGE" "$msg" >> ".autopilot/pipeline.log" 2>/dev/null || true
+  fi
+}
+
+_stage_start=$(date +%s)
+_tokens_in=$(( ${#FULL_PROMPT} / 4 ))
+printf "  [run_stage] %s  LLM call started at %s (~%d tokens in)\n" "$STAGE" "$(date '+%H:%M:%S')" "$_tokens_in" >&2
+_log_append_stage "llm_start" "~${_tokens_in} tokens in" "\"tokens_in_est\":${_tokens_in}"
+
+# Heartbeat: print elapsed time every 20s while the LLM call is in flight
+(
+  while true; do
+    sleep 20
+    _elapsed=$(( $(date +%s) - _stage_start ))
+    printf "  [run_stage] %s  ... still running (%ds)\n" "$STAGE" "$_elapsed" >&2
+    ts="$(date -u '+%Y-%m-%dT%H:%M:%SZ')"
+    printf '{"ts":"%s","type":"llm_heartbeat","stage":"%s","msg":"still running %ds","elapsed_s":%d}\n' \
+      "$ts" "$STAGE" "$_elapsed" "$_elapsed" >> ".autopilot/pipeline.log" 2>/dev/null || true
+  done
+) &
+_heartbeat_pid=$!
+
 echo "$FULL_PROMPT" | claude -p \
   --system-prompt-file "$TMP_SP" \
   --dangerously-skip-permissions \
   "${IMAGE_FLAGS[@]+"${IMAGE_FLAGS[@]}"}" \
   > "$AUTOPILOT_OUTPUT"
+
+kill "$_heartbeat_pid" 2>/dev/null || true
+wait "$_heartbeat_pid" 2>/dev/null || true
+
+_elapsed=$(( $(date +%s) - _stage_start ))
+_tokens_out=$(( $(wc -c < "$AUTOPILOT_OUTPUT" 2>/dev/null || echo 0) / 4 ))
+printf "  [run_stage] %s  LLM call complete (%ds, ~%d tokens out)\n" "$STAGE" "$_elapsed" "$_tokens_out" >&2
+_log_append_stage "llm_end" "${_elapsed}s ~${_tokens_out} tokens out" "\"elapsed_s\":${_elapsed},\"tokens_out_est\":${_tokens_out}"
 
 # ─── Post-processing ──────────────────────────────────────────────────────────
 

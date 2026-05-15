@@ -206,6 +206,7 @@ def cmd_start(stage):
         print(f"ERROR: Unknown stage: {stage}")
         sys.exit(1)
     state["stages"][stage]["status"] = "running"
+    state["stages"][stage]["started_at"] = now()
     state["current_stage"] = stage
     save_state(state)
 

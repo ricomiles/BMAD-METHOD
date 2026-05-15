@@ -43,7 +43,27 @@ decision_engine_enabled() {
 
 # ─── Helpers ────────────────────────────────────────────────────────────────
 
-log() { echo "[Autopilot] $*"; }
+log() {
+  local msg="$*"
+  echo "[Autopilot $(date '+%H:%M:%S')] $msg"
+  _log_append "pipeline" "" "$msg"
+}
+
+LOG_FILE=".autopilot/pipeline.log"
+
+_log_append() {
+  local type="${1}" stage="${2:-}" msg="${3:-}" extra="${4:-}"
+  local ts
+  ts="$(date -u '+%Y-%m-%dT%H:%M:%SZ')"
+  msg="${msg//\"/\\\"}"
+  if [[ -n "$extra" ]]; then
+    printf '{"ts":"%s","type":"%s","stage":"%s","msg":"%s",%s}\n' \
+      "$ts" "$type" "$stage" "$msg" "$extra" >> "$LOG_FILE" 2>/dev/null || true
+  else
+    printf '{"ts":"%s","type":"%s","stage":"%s","msg":"%s"}\n' \
+      "$ts" "$type" "$stage" "$msg" >> "$LOG_FILE" 2>/dev/null || true
+  fi
+}
 
 state_get() {
   python3 "$SCRIPT_DIR/update_state.py" get "$1"
@@ -61,6 +81,7 @@ check_state() {
 run_stage() {
   local stage="$1"
   log "Starting stage: $stage"
+  _log_append "stage" "$stage" "Starting"
   python3 "$SCRIPT_DIR/update_state.py" start "$stage"
   bash "$SCRIPT_DIR/run_stage.sh" "$stage"
 }
@@ -71,7 +92,17 @@ run_gate() {
   local stage="$1"
   local attempt="$2"
 
-  log "Running quality gate: $stage (attempt $attempt)"
+  # Determine gate model label for logging
+  local gate_model="adjudicator"
+  if [[ "$attempt" -eq 2 ]] && command -v gemini >/dev/null 2>&1; then
+    gate_model="gemini"
+  elif [[ "$attempt" -ge 3 ]]; then
+    gate_model="ensemble"
+  fi
+
+  log "Running quality gate: $stage (attempt $attempt) [$gate_model]"
+  _log_append "gate_start" "$stage" "attempt=$attempt model=$gate_model" "\"attempt\":$attempt,\"model\":\"$gate_model\""
+
   local gate_output
   gate_output=$(bash "$SCRIPT_DIR/gate.sh" "$stage" "" "$attempt")
 
@@ -85,6 +116,7 @@ run_gate() {
 
   if [[ "$verdict" == "PASS" ]]; then
     log "✓ $stage passed (score $score/10)"
+    _log_append "gate_end" "$stage" "PASS score=$score/10 [$gate_model]" "\"verdict\":\"PASS\",\"score\":$score,\"attempt\":$attempt,\"model\":\"$gate_model\""
     python3 "$SCRIPT_DIR/update_state.py" gate "$stage" PASS "$score" "" "$blind_critic_score" "$edge_case_score" "$contested_count"
     # Write contested decisions for Decision Engine (PASS only; FAIL path skips this block)
     mkdir -p "$AUTOPILOT_DIR/stages/$stage"
@@ -101,6 +133,7 @@ for dec in (d.get('contested_decisions') or []):
     return 0
   else
     log "✗ $stage failed (score $score/10)"
+    _log_append "gate_end" "$stage" "FAIL score=$score/10 [$gate_model]" "\"verdict\":\"FAIL\",\"score\":$score,\"attempt\":$attempt,\"model\":\"$gate_model\""
     if [[ -n "$critique" ]]; then
       log "  Critique: ${critique:0:120}..."
     fi
@@ -647,6 +680,7 @@ for f in failures:
 
         if [[ $attempt -lt $max_retries ]]; then
           log "Retrying $stage (attempt $((attempt+1))/$max_retries)..."
+          _log_append "retry" "$stage" "attempt $((attempt+1))/$max_retries" "\"attempt\":$((attempt+1)),\"max\":$max_retries"
         fi
 
         ((attempt++))

@@ -433,8 +433,22 @@ $BC_REPORT
 EDGE_CASE_REPORT:
 $ECH_REPORT"
 
+  _gate_start=$(date +%s)
+  printf "  [gate] %s  adjudicator started at %s\n" "$STAGE" "$(date '+%H:%M:%S')" >&2
+  (
+    while true; do
+      sleep 15
+      printf "  [gate] %s  adjudicator still running (%ds)\n" "$STAGE" "$(( $(date +%s) - _gate_start ))" >&2
+    done
+  ) &
+  _gate_hb_pid=$!
+
   ADJUDICATOR_STATUS=0
   RESULT=$(echo "$ADJUDICATOR_PROMPT" | claude -p "$ADJUDICATOR_SYSTEM_PROMPT" --dangerously-skip-permissions) || ADJUDICATOR_STATUS=$?
+
+  kill "$_gate_hb_pid" 2>/dev/null || true
+  wait "$_gate_hb_pid" 2>/dev/null || true
+  printf "  [gate] %s  adjudicator complete (%ds)\n" "$STAGE" "$(( $(date +%s) - _gate_start ))" >&2
 
   if [[ $ADJUDICATOR_STATUS -ne 0 ]]; then
     echo "gate.sh: adjudicator agent failed (exit $ADJUDICATOR_STATUS)" >&2
