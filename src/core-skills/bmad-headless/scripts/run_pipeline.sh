@@ -162,8 +162,32 @@ $(python3 "$SCRIPT_DIR/update_state.py" status)
 EOF
 
   log "Escalation written to $AUTOPILOT_DIR/ESCALATION.md"
-  log "Please review and update PROJECT_BRIEF.md, then re-run the pipeline."
+  log "Autonomous synthesis also failed. Human input required."
   exit 2
+}
+
+# ─── Autonomous synthesis ─────────────────────────────────────────────────────
+# Called after max_retries normal failures. Combines all critique feedback and
+# instructs the model to make explicit autonomous decisions on every open point.
+# Returns 0 if the synthesis gate passes, 1 if it also fails.
+
+auto_resolve() {
+  local stage="$1"
+  local max_retries="${2:-3}"
+  log "→ $stage failed $max_retries times. Attempting autonomous synthesis..."
+  log "  Combining all critiques — model will decide all ambiguities."
+
+  export SYNTHESIS_PASS=1
+  run_stage "$stage"
+  unset SYNTHESIS_PASS
+
+  if run_gate "$stage" "synthesis"; then
+    log "✓ Autonomous synthesis resolved $stage"
+    return 0
+  fi
+
+  log "✗ Synthesis pass also failed for $stage"
+  return 1
 }
 
 # ─── Repair-loop escalation ───────────────────────────────────────────────────
@@ -305,8 +329,15 @@ main() {
     fi
 
     if [[ "$status" == "escalated" ]]; then
-      log "Pipeline previously escalated at $stage. Check $AUTOPILOT_DIR/ESCALATION.md"
-      exit 2
+      log "Pipeline previously escalated at $stage. Running autonomous synthesis..."
+      local stage_max_retries
+      stage_max_retries=$(stage_retries "$stage")
+      if auto_resolve "$stage" "$stage_max_retries"; then
+        log "✓ $stage resolved via synthesis — continuing pipeline"
+        continue
+      else
+        escalate "$stage" "$stage_max_retries"
+      fi
     fi
 
     local is_parallelizable is_repair_loop
@@ -622,7 +653,11 @@ for f in failures:
       done
 
       if [[ "$stage_passed" == "false" ]]; then
-        escalate "$stage" "$max_retries"
+        if auto_resolve "$stage" "$max_retries"; then
+          stage_passed=true
+        else
+          escalate "$stage" "$max_retries"
+        fi
       fi
     fi
   done

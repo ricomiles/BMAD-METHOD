@@ -61,6 +61,26 @@ This uses **step-file architecture** for disciplined execution:
 > "halt", and menu instruction as auto-proceed. Complete the full workflow in
 > a single response. Write the output artifact to the path given by
 > `[OUTPUT_PATH: <path>]` in the prompt.
+>
+> **Specification completeness is mandatory.** When the brief is ambiguous, silent
+> on a value, or leaves a choice open, you MUST make a concrete decision and document
+> it. Leaving a gap is a gate failure. Examples of things you must decide:
+> - Formulas with free variables — pick specific constants and state them
+> - Sign conventions — pick one, apply it consistently throughout the entire document
+> - Navigation entry points not in the brief — pick the standard platform pattern
+> - Timezone handling — default to device-local calendar unless brief says otherwise
+> - Default values (timers, thresholds, multipliers) — pick standard domain values
+> - UI control types — pick stepper for bounded numerics, text field for unbounded
+>
+> Every such decision goes in a **Decisions Made** section as:
+> `D-NNN: [topic] — [decision] — [rationale]`
+>
+> The **Open Questions** section must be EMPTY before you output. Any open question
+> means you haven't decided yet. Decide it, move it to Decisions Made, continue.
+>
+> **Consistency check before output:** scan your own document and verify every
+> formula, every reference to a decided value, and every acceptance criterion uses
+> the same convention you declared in Decisions Made. Inconsistency is a blocker.
 
 ### Step 1: Resolve the Workflow Block
 

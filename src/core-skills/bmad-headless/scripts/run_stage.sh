@@ -468,9 +468,17 @@ Your job is to produce a complete PRD from the provided PROJECT_BRIEF.md.
 Rules:
 - Every functional requirement must have a clear acceptance criterion phrased as "Given X, when Y, then Z"
 - Do NOT invent features not implied by the brief
-- If the brief is ambiguous on a point, make the most conservative/minimal interpretation
-  and document it in a "Decisions made" section — do not leave open questions
-- The "Open questions" section must be EMPTY. Any open question means you haven't decided yet.
+- When the brief is ambiguous, silent on a value, or leaves a choice open: make a concrete
+  decision, apply it consistently throughout the ENTIRE document, and document it in a
+  "Decisions Made" section as "D-NNN: [topic] — [decision] — [rationale]"
+- Examples of things you must decide without asking: sign conventions for numeric fields,
+  formula constants, navigation entry points, timezone handling, default values for timers
+  and thresholds, UI control types for numeric inputs
+- The "Open Questions" section must be EMPTY. If you have an open question, answer it,
+  move it to Decisions Made, and continue.
+- Before outputting: scan the document and verify every formula, every reference to a
+  decided value, and every acceptance criterion uses the same convention you declared.
+  Inconsistency is a blocker.
 - Output ONLY the PRD in markdown. No preamble, no explanation.
 EOF
 )
@@ -601,6 +609,20 @@ FULL_PROMPT+="[PIPELINE_MODE: autonomous]
 [OUTPUT_PATH: $BMAD_OUTPUT_PATH]
 "
 
+# Synthesis pass: injected when auto_resolve() is triggered after max_retries failures
+if [[ "${SYNTHESIS_PASS:-}" == "1" ]]; then
+  FULL_PROMPT+="[SYNTHESIS_PASS: FINAL AUTONOMOUS ATTEMPT]
+All prior retries failed the quality gate. This is the last attempt before escalating to the user.
+You MUST make an explicit documented decision on EVERY ambiguous, missing, or unclear point.
+Rules:
+- No open questions. No TBDs. No placeholders. No deferral.
+- For every decision you make, document it inline as: AUTONOMOUS DECISION: <what and why>
+- All prior critiques are included below — address EVERY single item, one by one
+- Treat conflicts in the brief as you would as a senior engineer: pick the most reasonable interpretation and state it
+Proceed autonomously.
+"
+fi
+
 # Stage-specific routing hints for the skill
 case "$STAGE" in
   task-breakdown)
@@ -609,6 +631,7 @@ case "$STAGE" in
     ;;
   analyst)
     FULL_PROMPT+="[TASK: Produce the complete PRD]
+[DECISION_RULE: Any point the brief leaves open — sign conventions, formula constants, navigation paths, timezone policy, default values, UI control types — you MUST decide and document in Decisions Made. Open Questions must be empty. Every decided value must be applied consistently across the entire document.]
 "
     ;;
   architect)

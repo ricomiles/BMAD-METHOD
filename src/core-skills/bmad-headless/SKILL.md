@@ -94,8 +94,12 @@ LOOP:
         - re-run stage with critique appended to context
         - increment retry counter
   4c. FAIL (retries = 3):
-        - write .autopilot/ESCALATION.md (see below)
-        - STOP — surface to user with full context
+        - Run auto_resolve: one synthesis attempt with SYNTHESIS_PASS=1
+          The model receives all critiques combined and is instructed to make
+          explicit autonomous decisions on every open/ambiguous point — no deferral
+        - If synthesis PASSES: update state → next stage (pipeline continues)
+        - If synthesis FAILS: write .autopilot/ESCALATION.md → exit 2
+          Only surface to user if autonomous synthesis also could not resolve it
 ```
 
 **Never go silent for more than 3 minutes.** Print a status line between stages:
@@ -176,7 +180,10 @@ Run: bash scripts/run_pipeline.sh
 The pipeline will retry <stage> with your update included.
 ```
 
-Then surface this file to the user and stop.
+This file is only written if autonomous synthesis (`auto_resolve`) also failed — meaning
+the pipeline tried max_retries+1 total attempts and still could not pass the gate.
+Only at that point should the user be asked for input. Do NOT surface escalation to the
+user if it has not yet been through the synthesis pass.
 
 ---
 
