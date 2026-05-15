@@ -73,7 +73,7 @@ run_gate() {
 
   log "Running quality gate: $stage (attempt $attempt)"
   local gate_output
-  gate_output=$(bash "$SCRIPT_DIR/gate.sh" "$stage")
+  gate_output=$(bash "$SCRIPT_DIR/gate.sh" "$stage" "" "$attempt")
 
   local verdict score critique blind_critic_score edge_case_score contested_count
   verdict=$(echo "$gate_output" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d['verdict'])")

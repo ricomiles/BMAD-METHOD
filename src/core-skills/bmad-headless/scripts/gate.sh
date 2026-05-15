@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# gate.sh — Run quality gate on a stage's output (3-agent adversarial ensemble)
+# gate.sh — Run quality gate on a stage's output (progressive multi-agent ensemble)
 # Usage: bash scripts/gate.sh <stage_name> [ticket_id]
 # Returns: JSON verdict to stdout
 
@@ -8,9 +8,13 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 SKILL_DIR="$(dirname "$SCRIPT_DIR")"
 
-STAGE="${1:?Usage: gate.sh <stage_name> [ticket_id]}"
+STAGE="${1:?Usage: gate.sh <stage_name> [ticket_id] [attempt]}"
 TICKET_ID="${2:-}"
+ATTEMPT="${3:-1}"
 AUTOPILOT_DIR=".autopilot"
+
+# Normalize non-numeric attempt (e.g. "synthesis") to full gate
+[[ "$ATTEMPT" =~ ^[0-9]+$ ]] || ATTEMPT=3
 
 # ─── Temp dir with cleanup trap ───────────────────────────────────────────────
 
@@ -276,23 +280,40 @@ Output ONLY valid JSON:
 }
 ADJPROMPT
 
-# ─── Launch Blind Critic and Edge Case Hunter in parallel ─────────────────────
-
-echo "$OUTPUT" | claude -p "$BLIND_CRITIC_SYSTEM_PROMPT" --dangerously-skip-permissions \
-  > "$TMPDIR_GATE/bc_output" 2>"$TMPDIR_GATE/bc_err" &
-BC_PID=$!
-
-printf '%s\n\nBRIEF:\n%s' "$OUTPUT" "$BRIEF" | claude -p "$EDGE_CASE_HUNTER_SYSTEM_PROMPT" --dangerously-skip-permissions \
-  > "$TMPDIR_GATE/ech_output" 2>"$TMPDIR_GATE/ech_err" &
-ECH_PID=$!
-
-# ─── Wait for both agents individually ───────────────────────────────────────
+# ─── Launch agents based on attempt number (progressive cost scaling) ─────────
 
 BC_STATUS=0
-wait $BC_PID || BC_STATUS=$?
-
 ECH_STATUS=0
-wait $ECH_PID || ECH_STATUS=$?
+
+if [[ "$ATTEMPT" -ge 3 ]]; then
+  # Full ensemble: BC + ECH in parallel, then Adjudicator
+  echo "$OUTPUT" | claude -p "$BLIND_CRITIC_SYSTEM_PROMPT" --dangerously-skip-permissions \
+    > "$TMPDIR_GATE/bc_output" 2>"$TMPDIR_GATE/bc_err" &
+  BC_PID=$!
+
+  printf '%s\n\nBRIEF:\n%s' "$OUTPUT" "$BRIEF" | claude -p "$EDGE_CASE_HUNTER_SYSTEM_PROMPT" --dangerously-skip-permissions \
+    > "$TMPDIR_GATE/ech_output" 2>"$TMPDIR_GATE/ech_err" &
+  ECH_PID=$!
+
+  wait $BC_PID || BC_STATUS=$?
+  wait $ECH_PID || ECH_STATUS=$?
+
+elif [[ "$ATTEMPT" -eq 2 ]]; then
+  # BC only: blind critic + adjudicator; edge case hunter skipped
+  echo "$OUTPUT" | claude -p "$BLIND_CRITIC_SYSTEM_PROMPT" --dangerously-skip-permissions \
+    > "$TMPDIR_GATE/bc_output" 2>"$TMPDIR_GATE/bc_err" &
+  BC_PID=$!
+  wait $BC_PID || BC_STATUS=$?
+  printf '[EDGE_CASE_HUNTER_NOT_RUN: attempt 2 — edge case hunter skipped]\n' \
+    > "$TMPDIR_GATE/ech_output"
+
+else
+  # Attempt 1: adjudicator only — no BC, no ECH
+  printf '[BLIND_CRITIC_NOT_RUN: attempt 1 — checklist review only]\n' \
+    > "$TMPDIR_GATE/bc_output"
+  printf '[EDGE_CASE_HUNTER_NOT_RUN: attempt 1 — checklist review only]\n' \
+    > "$TMPDIR_GATE/ech_output"
+fi
 
 # ─── Read results with fallback on failure ────────────────────────────────────
 
@@ -383,13 +404,13 @@ fi
 
 # ─── Compute BC/ECH issue counts and merge into result ───────────────────────
 
-if [[ -z "$BC_REPORT" || "$BC_REPORT" == \[BLIND_CRITIC_UNAVAILABLE* ]]; then
+if [[ -z "$BC_REPORT" || "$BC_REPORT" == \[BLIND_CRITIC_UNAVAILABLE* || "$BC_REPORT" == \[BLIND_CRITIC_NOT_RUN* ]]; then
   BC_SCORE="null"
 else
   BC_SCORE=$(printf '%s\n' "$BC_REPORT" | grep -cE '^[0-9]+\. ' || true)
 fi
 
-if [[ -z "$ECH_REPORT" || "$ECH_REPORT" == \[EDGE_CASE_HUNTER_UNAVAILABLE* ]]; then
+if [[ -z "$ECH_REPORT" || "$ECH_REPORT" == \[EDGE_CASE_HUNTER_UNAVAILABLE* || "$ECH_REPORT" == \[EDGE_CASE_HUNTER_NOT_RUN* ]]; then
   ECH_SCORE="null"
 else
   ECH_SCORE=$(printf '%s\n' "$ECH_REPORT" | grep -cE '^[0-9]+\. ' || true)
