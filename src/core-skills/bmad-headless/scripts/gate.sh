@@ -57,7 +57,7 @@ EOF
 - Out of scope section present and non-empty
 - Open questions section is EMPTY (any open question is a BLOCKER)
 - No invented features not in brief
-- "Decisions made" section present if any brief ambiguities were resolved
+- Every specific value, threshold, sign convention, state name, or behavior referenced in any AC that is NOT explicitly in the brief must have a corresponding Decisions Made entry (BLOCKER if any undocumented implicit decision found)
 EOF
       local cv_output="$AUTOPILOT_DIR/stages/context-validator/output.md"
       if [[ -f "$cv_output" ]]; then

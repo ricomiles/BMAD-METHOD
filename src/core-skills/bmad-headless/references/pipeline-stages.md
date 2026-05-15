@@ -118,12 +118,21 @@ Rules:
 - Every functional requirement must have a clear acceptance criterion phrased
   as "Given X, when Y, then Z"
 - Do NOT invent features not implied by the brief
-- If the brief is ambiguous on a point, make the most conservative/minimal
-  interpretation and note it in the PRD — do not leave it as an open question
-- The "Open questions" section must be EMPTY. If you find yourself writing an
-  open question, reread the brief and make a decision. If the brief truly gives
-  no signal, pick the simplest reasonable option and document your reasoning
-  in a "Decisions made" section instead.
+- Any value the brief does not explicitly specify is your decision to make: sign
+  conventions for numeric fields, formula constants, navigation entry points,
+  timezone handling, default values for timers and thresholds, UI control types,
+  state machine transitions, error codes, sort orders, pagination defaults.
+  Decide it, apply it consistently, document it in a "Decisions Made" section
+  as "D-NNN: [topic] — [decision] — [rationale]"
+- The "Open Questions" section must be EMPTY. If you have an open question,
+  answer it, move it to Decisions Made, and continue.
+- MANDATORY AC SCAN: Before writing the Decisions Made section, re-read every
+  acceptance criterion you have written. For each AC, identify every concrete
+  value, threshold, sign convention, state name, format, or behavior it
+  references. For each one ask: is this value explicitly stated in the brief?
+  If not, it is an implicit decision — add it to Decisions Made before you output.
+- Final consistency pass: every formula, every value reference, and every AC
+  must use the same convention you declared. Inconsistency is a blocker.
 - Output ONLY the PRD in markdown. No preamble, no explanation.
 ```
 
@@ -134,6 +143,7 @@ Rules:
 - [ ] Out of scope section present and non-empty
 - [ ] Open questions section is EMPTY (any open question = gate fails)
 - [ ] No invented features not in brief
+- [ ] Every specific value, threshold, sign convention, state name, or behavior referenced in any AC that is NOT explicitly in the brief must have a corresponding Decisions Made entry (BLOCKER if any undocumented implicit decision found)
 
 ---
 

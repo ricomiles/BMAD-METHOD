@@ -9,6 +9,21 @@ Exit 1: brief has blocking issues, fix before running
 import sys
 import re
 
+def _has_outcome_language(bullet_text):
+    """Detect if a feature bullet describes an outcome vs. just naming a feature."""
+    text = re.sub(r'^[-*•\d.]+\s*', '', bullet_text).strip()
+    words = text.split()
+    if len(words) <= 3:
+        return False
+    outcome_signals = re.compile(
+        r'\b(user[s]?\s+(can|will|may|should)|allow\w*|enable\w*|support\w*|'
+        r'provide\w*|let\s+user|so\s+that|in\s+order\s+to)\b',
+        re.IGNORECASE
+    )
+    if outcome_signals.search(text):
+        return True
+    return len(words) >= 6
+
 def validate(path):
     try:
         with open(path) as f:
@@ -21,6 +36,7 @@ def validate(path):
     warnings = []  # Non-blocking — pipeline will start but may hit gate failures
 
     text = content.lower()
+    word_count = len(content.split())
 
     # ─── BLOCKING checks ─────────────────────────────────────────────────────
 
@@ -36,12 +52,26 @@ def validate(path):
         errors.append("No core features / scope section found. "
                       "Add a section listing what the project must do.")
     else:
-        # Count feature-like items (bullets, numbered items, or sentences with verbs)
         bullets = re.findall(r'^[-*•]\s+.+', features_section, re.MULTILINE)
         numbered = re.findall(r'^\d+\.\s+.+', features_section, re.MULTILINE)
-        if len(bullets) + len(numbered) < 2:
+        all_items = bullets + numbered
+        if len(all_items) < 2:
             errors.append("Core features section has fewer than 2 listed items. "
                           "Use a bullet list to enumerate features explicitly.")
+        else:
+            outcome_items = [b for b in all_items if _has_outcome_language(b)]
+            label_only_items = [b for b in all_items if not _has_outcome_language(b)]
+            if label_only_items:
+                errors.append(
+                    f"Feature descriptions must state user outcomes ('user can X'), not just feature labels. "
+                    f"Found {len(label_only_items)} label-only bullet(s)."
+                )
+            if len(outcome_items) < 3:
+                errors.append(
+                    f"Fewer than 3 features with outcome language (found {len(outcome_items)}). "
+                    "Describe at minimum 3 features with what users can accomplish, "
+                    "e.g. 'Users can generate invoices from YAML config'."
+                )
 
     # Tech stack
     tech_section = extract_section(content, ["tech", "stack", "technology", "languages", "framework"])
@@ -70,6 +100,21 @@ def validate(path):
         errors.append(f"Brief contains placeholder text: {set(placeholders)}. "
                       "Replace all placeholders with real decisions before running.")
 
+    # Word count (blocking — brief under 150 words is too sparse to drive the pipeline)
+    if word_count < 150:
+        errors.append(f"Brief word count ({word_count}) is below 150 words. "
+                      "A brief this short will cause quality gate failures. "
+                      "Aim for at least 150-300 words for a small project.")
+
+    # Open questions (any unresolved item blocks the pipeline)
+    open_q_section = extract_section(content, ["open question", "open questions", "unknowns", "unresolved"])
+    if open_q_section:
+        non_empty = [l for l in open_q_section.strip().splitlines() if l.strip()]
+        if non_empty:
+            errors.append("Open questions section found with unresolved items. "
+                          "Resolve all questions before running the pipeline. "
+                          "If all questions are resolved, remove the section entirely.")
+
     # ─── WARNING checks ───────────────────────────────────────────────────────
 
     # Out of scope
@@ -86,13 +131,6 @@ def validate(path):
     if not extract_section(content, ["constraint", "non-negotiable", "must not", "requirement"]):
         warnings.append("No constraints section found. "
                         "The pipeline will make all discretionary decisions on its own.")
-
-    # Word count sanity check
-    word_count = len(content.split())
-    if word_count < 100:
-        warnings.append(f"Brief is only {word_count} words. "
-                        "A brief this short will likely cause quality gate failures. "
-                        "Aim for at least 150-300 words for a small project.")
 
     # ─── Report ───────────────────────────────────────────────────────────────
 
@@ -112,6 +150,7 @@ def validate(path):
         print()
 
     if not errors and not warnings:
+        print("Brief richness: HIGH — analyst is likely to pass on attempt 1")
         print("✓ Brief looks good. Pipeline can start.\n")
     elif not errors:
         print("✓ No blocking issues. Warnings above are advisory.\n")
@@ -211,6 +250,25 @@ if __name__ == "__main__":
             errors.append("[brownfield] Sprint scope not defined. "
                           "List ticket IDs autopilot should build this run.")
 
+        # Feature depth: scope items must describe what each ticket accomplishes
+        if scope and len(scope.split()) >= 8:
+            scope_bullets = re.findall(r'^[-*•]\s+.+', scope, re.MULTILINE)
+            scope_numbered = re.findall(r'^\d+\.\s+.+', scope, re.MULTILINE)
+            scope_items = scope_bullets + scope_numbered
+            if scope_items:
+                outcome_items = [b for b in scope_items if _has_outcome_language(b)]
+                label_only_items = [b for b in scope_items if not _has_outcome_language(b)]
+                if label_only_items:
+                    errors.append(
+                        f"[brownfield] Scope descriptions must state what each item accomplishes, not just labels. "
+                        f"Found {len(label_only_items)} label-only item(s)."
+                    )
+                if len(outcome_items) < 3:
+                    errors.append(
+                        f"[brownfield] Fewer than 3 scope items with outcome language (found {len(outcome_items)}). "
+                        "Describe what each scoped ticket accomplishes."
+                    )
+
         # Do-not-touch
         dnt = content.lower()
         if "do not touch" not in dnt and "don't touch" not in dnt and "do-not-touch" not in dnt:
@@ -221,9 +279,19 @@ if __name__ == "__main__":
         if not done_section or len(done_section.split()) < 8:
             errors.append("Definition of done missing or too vague.")
 
+        # Open questions
+        open_q_section = extract_section(content, ["open question", "open questions", "unknowns", "unresolved"])
+        if open_q_section:
+            non_empty = [l for l in open_q_section.strip().splitlines() if l.strip()]
+            if non_empty:
+                errors.append("Open questions section found with unresolved items. "
+                              "Resolve all questions before running the pipeline. "
+                              "If all questions are resolved, remove the section entirely.")
+
         # Warnings
         if word_count < 80:
-            warnings.append(f"Brief is only {word_count} words — add more context.")
+            errors.append(f"Brief word count ({word_count}) is below 80 words. "
+                          "Add more context — brownfield briefs must describe what's changing and why.")
 
         board_signals = ["http", "jira", "linear", "notion", "github", "asana"]
         if not any(s in content.lower() for s in board_signals):
@@ -247,6 +315,7 @@ if __name__ == "__main__":
             print()
 
         if not errors:
+            print("Brief richness: HIGH — analyst is likely to pass on attempt 1")
             print("✓ Brownfield brief looks good. Pipeline can start.\n")
         else:
             print("✗ Fix blocking issues before running the pipeline.\n")

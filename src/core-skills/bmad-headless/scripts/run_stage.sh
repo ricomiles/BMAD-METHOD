@@ -468,17 +468,20 @@ Your job is to produce a complete PRD from the provided PROJECT_BRIEF.md.
 Rules:
 - Every functional requirement must have a clear acceptance criterion phrased as "Given X, when Y, then Z"
 - Do NOT invent features not implied by the brief
-- When the brief is ambiguous, silent on a value, or leaves a choice open: make a concrete
-  decision, apply it consistently throughout the ENTIRE document, and document it in a
+- Any value the brief does not explicitly specify is your decision to make: sign conventions
+  for numeric fields, formula constants, navigation entry points, timezone handling, default
+  values for timers and thresholds, UI control types, state machine transitions, error codes,
+  sort orders, pagination defaults. Decide it, apply it consistently, document it in a
   "Decisions Made" section as "D-NNN: [topic] — [decision] — [rationale]"
-- Examples of things you must decide without asking: sign conventions for numeric fields,
-  formula constants, navigation entry points, timezone handling, default values for timers
-  and thresholds, UI control types for numeric inputs
 - The "Open Questions" section must be EMPTY. If you have an open question, answer it,
   move it to Decisions Made, and continue.
-- Before outputting: scan the document and verify every formula, every reference to a
-  decided value, and every acceptance criterion uses the same convention you declared.
-  Inconsistency is a blocker.
+- MANDATORY AC SCAN: Before writing the Decisions Made section, re-read every acceptance
+  criterion you have written. For each AC, identify every concrete value, threshold, sign
+  convention, state name, format, or behavior it references. For each one ask: is this
+  value explicitly stated in the brief? If not, it is an implicit decision — add it to
+  Decisions Made before you output.
+- Final consistency pass: every formula, every value reference, and every AC must use
+  the same convention you declared. Inconsistency is a blocker.
 - Output ONLY the PRD in markdown. No preamble, no explanation.
 EOF
 )
@@ -631,7 +634,7 @@ case "$STAGE" in
     ;;
   analyst)
     FULL_PROMPT+="[TASK: Produce the complete PRD]
-[DECISION_RULE: Any point the brief leaves open — sign conventions, formula constants, navigation paths, timezone policy, default values, UI control types — you MUST decide and document in Decisions Made. Open Questions must be empty. Every decided value must be applied consistently across the entire document.]
+[DECISION_RULE: Any value the brief does not explicitly specify is your decision. Before outputting: re-read every acceptance criterion and identify every concrete value, threshold, sign convention, state, format, or behavior it references. For each: is it in the brief? If not, decide it and add to Decisions Made. Open Questions section must be empty. Every decided value must be consistent throughout the entire document. The gate WILL FAIL if any AC references an undocumented implicit decision.]
 "
     ;;
   architect)
