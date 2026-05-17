@@ -383,6 +383,18 @@ $(cat "$local_crit")
   fi
 done
 
+# ─── Previous output for patch mode (retry only, not synthesis pass) ──────────
+
+PREVIOUS_OUTPUT=""
+if [[ -n "$CRITIQUE_CONTEXT" && "${SYNTHESIS_PASS:-}" != "1" && -f "$OUTPUT_DIR/output.md" ]]; then
+  PREVIOUS_OUTPUT=$(cat "$OUTPUT_DIR/output.md")
+  # Cap at 50 000 chars (~12 k tokens) to avoid context-window overflow on large docs
+  if [[ ${#PREVIOUS_OUTPUT} -gt 50000 ]]; then
+    PREVIOUS_OUTPUT="${PREVIOUS_OUTPUT:0:50000}
+[TRUNCATED — document exceeds 50 000 chars. Only the first portion is shown. Apply critiqued patches based on the sections visible above; do not alter sections outside the critique.]"
+  fi
+fi
+
 # ─── System prompt: skill-based or hardcoded fallback ────────────────────────
 
 BMAD_OUTPUT_PATH=$(get_bmad_output_path "$STAGE")
@@ -673,7 +685,21 @@ if [[ -n "$DESIGN_CONTEXT" ]]; then
 "
 fi
 
-if [[ -n "$CRITIQUE_CONTEXT" ]]; then
+if [[ -n "$CRITIQUE_CONTEXT" && "${SYNTHESIS_PASS:-}" != "1" ]]; then
+  FULL_PROMPT+="PATCH MODE RETRY: Your previous attempt failed the quality gate. Patch the previous output.
+Fix ONLY the sections identified in the critique below. Do not change any other section.
+Return the COMPLETE document with patches applied — not just the changed sections.
+$CRITIQUE_CONTEXT
+"
+  if [[ -n "$PREVIOUS_OUTPUT" ]]; then
+    FULL_PROMPT+="
+PREVIOUS OUTPUT — patch this document, return the full document with only the critiqued sections changed:
+$PREVIOUS_OUTPUT
+
+---
+"
+  fi
+elif [[ -n "$CRITIQUE_CONTEXT" ]]; then
   FULL_PROMPT+="PREVIOUS ATTEMPT(S) FAILED. YOU MUST ADDRESS ALL CRITIQUES BELOW BEFORE OUTPUTTING:
 $CRITIQUE_CONTEXT
 

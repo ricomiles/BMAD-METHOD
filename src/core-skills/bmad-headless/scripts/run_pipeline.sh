@@ -91,6 +91,8 @@ run_stage() {
 run_gate() {
   local stage="$1"
   local attempt="$2"
+  local allow_triage_escalate="${3:-true}"
+  [[ "$attempt" =~ ^[0-9]+$ ]] || attempt=3
 
   # Determine gate model label for logging
   local gate_model="adjudicator"
@@ -106,13 +108,18 @@ run_gate() {
   local gate_output
   gate_output=$(bash "$SCRIPT_DIR/gate.sh" "$stage" "" "$attempt")
 
-  local verdict score critique blind_critic_score edge_case_score contested_count
+  local verdict score critique blind_critic_score edge_case_score contested_count triage_escalate
   verdict=$(echo "$gate_output" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d['verdict'])")
   score=$(echo "$gate_output"   | python3 -c "import sys,json; d=json.load(sys.stdin); print(d['score'])")
   critique=$(echo "$gate_output" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('critique',''))")
   blind_critic_score=$(printf '%s\n' "$gate_output" | python3 -c "import sys,json; d=json.load(sys.stdin); v=d.get('blind_critic_score'); print(v if v is not None else 'null')")
   edge_case_score=$(printf '%s\n' "$gate_output" | python3 -c "import sys,json; d=json.load(sys.stdin); v=d.get('edge_case_score'); print(v if v is not None else 'null')")
   contested_count=$(printf '%s\n' "$gate_output" | python3 -c "import sys,json; d=json.load(sys.stdin); print(len(d.get('contested_decisions') or []))")
+  triage_escalate=$(printf '%s\n' "$gate_output" | python3 -c "
+import sys, json
+d = json.load(sys.stdin)
+print('true' if d.get('triage_escalate') else 'false')
+" 2>/dev/null || echo "false")
 
   if [[ "$verdict" == "PASS" ]]; then
     log "✓ $stage passed (score $score/10)"
@@ -134,6 +141,14 @@ for dec in (d.get('contested_decisions') or []):
   else
     log "✗ $stage failed (score $score/10)"
     _log_append "gate_end" "$stage" "FAIL score=$score/10 [$gate_model]" "\"verdict\":\"FAIL\",\"score\":$score,\"attempt\":$attempt,\"model\":\"$gate_model\""
+    if [[ "$triage_escalate" == "true" && "$allow_triage_escalate" == "true" ]]; then
+      log "  ↳ triage score below threshold — escalating immediately (no retries)"
+      python3 "$SCRIPT_DIR/update_state.py" gate "$stage" FAIL "$score" "$critique" "$blind_critic_score" "$edge_case_score" "$contested_count"
+      mkdir -p "$AUTOPILOT_DIR/stages/$stage"
+      echo "$critique" > "$AUTOPILOT_DIR/stages/$stage/critique_${attempt}.md"
+      escalate_triage "$stage" "$critique"
+      # escalate_triage calls exit 2 — unreachable
+    fi
     if [[ -n "$critique" ]]; then
       log "  Critique: ${critique:0:120}..."
     fi
@@ -199,6 +214,51 @@ EOF
   exit 2
 }
 
+# ─── Triage escalation (score < 5 — fundamentally broken, no retries) ────────
+
+escalate_triage() {
+  local stage="$1"
+  local diagnosis="$2"
+
+  log "⚠ Escalating: $stage — triage score below recoverable threshold (score < 5)"
+  python3 "$SCRIPT_DIR/update_state.py" escalate "$stage"
+
+  cat > "$AUTOPILOT_DIR/ESCALATION.md" <<EOF
+# Escalation required — $stage (triage)
+
+The pipeline cannot proceed automatically.
+Stage **$stage** received a triage score below 5. This indicates the output is fundamentally
+broken and will not improve with retries — the source brief likely lacks sufficient detail.
+
+## Triage diagnosis
+
+$diagnosis
+
+## What you need to do
+
+1. Review the stage output: \`$AUTOPILOT_DIR/stages/$stage/output.md\`
+2. Identify what context the stage was missing or what brief constraint was unclear
+3. Update \`PROJECT_BRIEF.md\` with the missing information
+4. Resume the pipeline:
+
+\`\`\`bash
+bash scripts/run_pipeline.sh
+\`\`\`
+
+## Stage output (last attempt)
+
+See: $AUTOPILOT_DIR/stages/$stage/output.md
+
+## Pipeline state
+
+$(python3 "$SCRIPT_DIR/update_state.py" status)
+EOF
+
+  log "Escalation written to $AUTOPILOT_DIR/ESCALATION.md"
+  log "Triage determined output is fundamentally broken. Human input required."
+  exit 2
+}
+
 # ─── Autonomous synthesis ─────────────────────────────────────────────────────
 # Called after max_retries normal failures. Combines all critique feedback and
 # instructs the model to make explicit autonomous decisions on every open point.
@@ -214,7 +274,7 @@ auto_resolve() {
   run_stage "$stage"
   unset SYNTHESIS_PASS
 
-  if run_gate "$stage" "synthesis"; then
+  if run_gate "$stage" "synthesis" "false"; then
     log "✓ Autonomous synthesis resolved $stage"
     return 0
   fi
@@ -421,7 +481,7 @@ print(targets[0] if targets else '')
          "$AUTOPILOT_DIR/stages/$stage/output_repair_0.md" 2>/dev/null || true
 
       while true; do
-        if run_gate "$stage" "$((repair_cycle + 1))"; then
+        if run_gate "$stage" "$((repair_cycle + 1))" "false"; then
           reviewer_passed=true
           break
         fi
@@ -513,7 +573,7 @@ for f in failures:
       local security_passed=false
 
       while true; do
-        if run_gate "$stage" "$((arch_attempt + 1))"; then
+        if run_gate "$stage" "$((arch_attempt + 1))" "false"; then
           security_passed=true
           break
         fi
@@ -532,7 +592,7 @@ for f in failures:
           python3 "$SCRIPT_DIR/update_state.py" start "architect"
           run_stage "architect"
 
-          if run_gate "architect" "$arch_attempt"; then
+          if run_gate "architect" "$arch_attempt" "false"; then
             break  # architect passed; proceed to re-run security-scan
           fi
 
@@ -573,7 +633,7 @@ for f in failures:
          "$AUTOPILOT_DIR/stages/$stage/output_repair_0.md" 2>/dev/null || true
 
       while true; do
-        if run_gate "$stage" "$((repair_cycle + 1))"; then
+        if run_gate "$stage" "$((repair_cycle + 1))" "false"; then
           iv_passed=true
           break
         fi
