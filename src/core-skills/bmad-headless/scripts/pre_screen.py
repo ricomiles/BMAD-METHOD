@@ -130,10 +130,13 @@ def check_architect_specifics(content):
             'TBD found in file/folder structure section. '
             'All file paths must be specified concretely — replace every TBD with a real path.'
         )
-    if '--- ADR ---' not in content:
+    has_inline_adrs = '--- ADR ---' in content or bool(re.search(r'(?m)^#+ ADR[-\s]', content))
+    has_adr_file_ref = bool(re.search(r'ADR[s]?.*(?:file|doc|separate|see)|see.*ADR', content, re.IGNORECASE))
+    if not has_inline_adrs and not has_adr_file_ref:
         failures.append(
-            'ADR separator "--- ADR ---" not found. '
-            'Each ADR must be separated by "--- ADR ---" between entries.'
+            'No ADRs found. Architecture must include ADRs either inline '
+            '(headings matching "# ADR-..." or separated by "--- ADR ---") '
+            'or reference a separate ADR document.'
         )
     return failures
 
