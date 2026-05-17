@@ -197,6 +197,123 @@ fi
 BRIEF=$(cat PROJECT_BRIEF.md)
 OUTPUT=$(cat "$OUTPUT_FILE")
 
+# ─── Triage: fast score estimation before full gate ──────────────────────────
+
+read -r -d '' TRIAGE_SYSTEM_PROMPT << 'TGPROMPT' || true
+You are a triage agent estimating document quality before a full gate review.
+Output ONLY valid JSON — no preamble, no explanation, no markdown fences:
+{"score": <integer 1-10>, "failing_sections": ["<section heading>", ...], "diagnosis": "<one sentence>"}
+score 8-10: high quality, likely passes full gate.
+score 5-7: issues present, full review needed.
+score 1-4: fundamentally broken, retries will not help.
+failing_sections: list of exact markdown heading names that fail quality. Empty array if score >= 8.
+diagnosis: one sentence on the primary problem, or "No major issues found" if score >= 8.
+Maximum output: 200 tokens. Output only the JSON object.
+TGPROMPT
+
+TRIAGE_SCORE=""
+TRIAGE_SECTIONS='[]'
+TRIAGE_DIAGNOSIS=""
+TRIAGE_DONE=false
+
+TRIAGE_PROMPT="STAGE_OUTPUT:
+$OUTPUT
+
+PROJECT_BRIEF:
+$BRIEF"
+
+printf '  [gate] %s  triage started at %s\n' "$STAGE" "$(date '+%H:%M:%S')" >&2
+TRIAGE_STATUS=0
+TRIAGE_RAW=$(printf '%s\n' "$TRIAGE_PROMPT" | claude -p "$TRIAGE_SYSTEM_PROMPT" --dangerously-skip-permissions \
+  --json-schema '{"type":"object","properties":{"score":{"type":"integer","minimum":1,"maximum":10},"failing_sections":{"type":"array","items":{"type":"string"}},"diagnosis":{"type":"string"}},"required":["score","failing_sections","diagnosis"]}' \
+  2>"$TMPDIR_GATE/triage_err") || TRIAGE_STATUS=$?
+
+if [[ $TRIAGE_STATUS -ne 0 || -z "$TRIAGE_RAW" ]]; then
+  printf 'gate.sh: triage agent failed (exit %s) — falling back to full gate\n' "$TRIAGE_STATUS" >&2
+  [[ -s "$TMPDIR_GATE/triage_err" ]] && cat "$TMPDIR_GATE/triage_err" >&2
+else
+  TRIAGE_PARSED=$(printf '%s\n' "$TRIAGE_RAW" | python3 -c "
+import sys, re, json
+text = sys.stdin.read()
+text = re.sub(r'^\s*\`\`\`(?:json)?\s*\n?', '', text, count=1, flags=re.IGNORECASE)
+text = re.sub(r'\n?\s*\`\`\`\s*$', '', text, flags=re.IGNORECASE)
+text = text.strip()
+m = re.search(r'\{.*\}', text, re.DOTALL)
+if m:
+    text = m.group(0)
+try:
+    d = json.loads(text)
+    score = int(d.get('score', 0))
+    if not 1 <= score <= 10:
+        raise ValueError('score out of range: ' + str(score))
+    sections = d.get('failing_sections', [])
+    sections = [str(s) for s in sections] if isinstance(sections, list) else []
+    diagnosis = str(d.get('diagnosis', ''))[:500]
+    print(json.dumps({'ok': True, 'score': score, 'sections': sections, 'diagnosis': diagnosis}))
+except Exception as e:
+    print(json.dumps({'ok': False, 'error': str(e)}))
+" 2>/dev/null || printf '%s\n' '{"ok":false,"error":"python parse failed"}')
+
+  TRIAGE_OK=$(printf '%s\n' "$TRIAGE_PARSED" | python3 -c "import sys,json; print('true' if json.load(sys.stdin).get('ok') else 'false')" 2>/dev/null || echo "false")
+
+  if [[ "$TRIAGE_OK" != "true" ]]; then
+    TRIAGE_ERR=$(printf '%s\n' "$TRIAGE_PARSED" | python3 -c "import sys,json; print(json.load(sys.stdin).get('error','unknown'))" 2>/dev/null || echo "unknown")
+    printf 'gate.sh: triage output malformed (%s) — falling back to full gate\n' "$TRIAGE_ERR" >&2
+  else
+    TRIAGE_SCORE=$(printf '%s\n' "$TRIAGE_PARSED" | python3 -c "import sys,json; print(json.load(sys.stdin)['score'])")
+    TRIAGE_SECTIONS=$(printf '%s\n' "$TRIAGE_PARSED" | python3 -c "import sys,json; print(json.dumps(json.load(sys.stdin)['sections']))")
+    TRIAGE_DIAGNOSIS=$(printf '%s\n' "$TRIAGE_PARSED" | python3 -c "import sys,json; print(json.load(sys.stdin)['diagnosis'])")
+    TRIAGE_DONE=true
+    printf '  [gate] %s  triage complete — score=%s\n' "$STAGE" "$TRIAGE_SCORE" >&2
+  fi
+fi
+
+if [[ "$TRIAGE_DONE" == "true" ]]; then
+  if [[ "$TRIAGE_SCORE" -ge 8 ]]; then
+    printf 'gate.sh: triage score=%s >= 8 — PASS (fast-path, no ensemble)\n' "$TRIAGE_SCORE" >&2
+    python3 -c "
+import sys, json
+score = int(sys.argv[1])
+print(json.dumps({
+    'verdict': 'PASS',
+    'score': score,
+    'checklist': [],
+    'blockers': [],
+    'critique': '',
+    'suggestions': [],
+    'contested_decisions': [],
+    'blind_critic_score': None,
+    'edge_case_score': None,
+}))
+" "$TRIAGE_SCORE"
+    exit 0
+  elif [[ "$TRIAGE_SCORE" -lt 5 ]]; then
+    printf 'gate.sh: triage score=%s < 5 — FAIL (immediate escalation)\n' "$TRIAGE_SCORE" >&2
+    python3 -c "
+import sys, json
+score = int(sys.argv[1])
+diagnosis = sys.argv[2]
+print(json.dumps({
+    'verdict': 'FAIL',
+    'score': score,
+    'checklist': [],
+    'blockers': [diagnosis],
+    'critique': diagnosis,
+    'suggestions': [],
+    'contested_decisions': [],
+    'blind_critic_score': None,
+    'edge_case_score': None,
+    'triage_escalate': True,
+}))
+" "$TRIAGE_SCORE" "$TRIAGE_DIAGNOSIS"
+    exit 0
+  else
+    printf 'gate.sh: triage score=%s (5-7) — proceeding to full gate\n' "$TRIAGE_SCORE" >&2
+    TRIAGE_FAILING_SECTIONS="$TRIAGE_SECTIONS"
+  fi
+fi
+
+MANIFEST_CONTEXT=""
 # ─── For task-breakdown: append manifest contents to output for Adjudicator ───
 
 if [[ "$CHECKLIST_STAGE" == "task-breakdown" ]]; then
@@ -229,6 +346,28 @@ $(cat "$manifest_file")
 $MANIFEST_CONTEXT"
   else
     printf 'gate.sh: WARNING: no valid manifest files found in %s — manifest BLOCKER checks rely on LLM inference only\n' "$MANIFEST_DIR" >&2
+  fi
+fi
+
+# ─── Section-scoped gate: pass only failing sections to full gate agents ──────
+
+GATE_INPUT="$OUTPUT"
+if [[ -n "${TRIAGE_FAILING_SECTIONS:-}" && "${TRIAGE_FAILING_SECTIONS:-}" != '[]' ]]; then
+  SCOPED_STATUS=0
+  SCOPED_CONTENT=$(python3 "$SCRIPT_DIR/extract_sections.py" "$OUTPUT_FILE" "$TRIAGE_FAILING_SECTIONS" \
+    2>"$TMPDIR_GATE/scope_err") || SCOPED_STATUS=$?
+  [[ -s "$TMPDIR_GATE/scope_err" ]] && cat "$TMPDIR_GATE/scope_err" >&2
+  if [[ $SCOPED_STATUS -eq 0 && -n "$SCOPED_CONTENT" ]]; then
+    GATE_INPUT="$SCOPED_CONTENT"
+    if [[ -n "$MANIFEST_CONTEXT" ]]; then
+      GATE_INPUT="$GATE_INPUT
+
+=== CONTEXT MANIFESTS ===
+$MANIFEST_CONTEXT"
+    fi
+    printf 'gate.sh: section-scoped gate active — agents receive failing sections only\n' >&2
+  else
+    printf 'gate.sh: section-scoped gate unavailable — using full document\n' >&2
   fi
 fi
 
@@ -372,11 +511,11 @@ SKIP_ADJUDICATOR=false
 
 if [[ "$ATTEMPT" -ge 3 ]]; then
   # Full ensemble: BC + ECH in parallel, then Adjudicator
-  echo "$OUTPUT" | claude -p "$BLIND_CRITIC_SYSTEM_PROMPT" --dangerously-skip-permissions \
+  echo "$GATE_INPUT" | claude -p "$BLIND_CRITIC_SYSTEM_PROMPT" --dangerously-skip-permissions \
     > "$TMPDIR_GATE/bc_output" 2>"$TMPDIR_GATE/bc_err" &
   BC_PID=$!
 
-  printf '%s\n\nBRIEF:\n%s' "$OUTPUT" "$BRIEF" | claude -p "$EDGE_CASE_HUNTER_SYSTEM_PROMPT" --dangerously-skip-permissions \
+  printf '%s\n\nBRIEF:\n%s' "$GATE_INPUT" "$BRIEF" | claude -p "$EDGE_CASE_HUNTER_SYSTEM_PROMPT" --dangerously-skip-permissions \
     > "$TMPDIR_GATE/ech_output" 2>"$TMPDIR_GATE/ech_err" &
   ECH_PID=$!
 
@@ -388,7 +527,7 @@ elif [[ "$ATTEMPT" -eq 2 ]]; then
   # Gemini receives full context and produces verdict JSON directly — Adjudicator skipped
   if command -v gemini >/dev/null 2>&1; then
     GEMINI_PROMPT="OUTPUT:
-$OUTPUT
+$GATE_INPUT
 
 BRIEF:
 $BRIEF
@@ -453,7 +592,7 @@ if [[ "$SKIP_ADJUDICATOR" == "false" ]]; then
   # ─── Build Adjudicator input and run sequentially ────────────────────────────
 
   ADJUDICATOR_PROMPT="OUTPUT:
-$OUTPUT
+$GATE_INPUT
 
 BRIEF:
 $BRIEF
@@ -557,5 +696,14 @@ d['blind_critic_score'] = int(bc) if bc != 'null' else None
 d['edge_case_score'] = int(ech) if ech != 'null' else None
 print(json.dumps(d))
 " "$BC_SCORE" "$ECH_SCORE") || { printf '%s\n' '{"verdict":"FAIL","score":1,"checklist":[],"blockers":["Gate score merge failed"],"critique":"Internal error merging BC/ECH scores into result JSON.","suggestions":[],"contested_decisions":[]}'; exit 0; }
+
+if [[ -n "${TRIAGE_FAILING_SECTIONS:-}" && "${TRIAGE_FAILING_SECTIONS:-}" != '[]' ]]; then
+  RESULT=$(printf '%s\n' "$RESULT" | python3 -c "
+import sys, json
+d = json.load(sys.stdin)
+d['triage_failing_sections'] = json.loads(sys.argv[1])
+print(json.dumps(d))
+" "$TRIAGE_FAILING_SECTIONS") || true
+fi
 
 printf '%s\n' "$RESULT"

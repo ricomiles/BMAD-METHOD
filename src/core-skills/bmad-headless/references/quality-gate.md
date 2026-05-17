@@ -32,6 +32,46 @@ Available agents per attempt (only the agents listed for the current attempt tie
 
 If Blind Critic or Edge Case Hunter fails, the Adjudicator still runs and receives a `[AGENT_UNAVAILABLE]` note in place of the missing report. The gate never aborts due to a sub-agent failure.
 
+**Triage phase (runs before all LLM agents):** A single fast agent estimates a quality score and identifies failing sections. Three routing outcomes:
+- **Score ≥ 8**: PASS immediately — no ensemble agents run. `blind_critic_score` and `edge_case_score` are `null`.
+- **Score < 5**: FAIL immediately — `run_pipeline.sh` escalates to human with the diagnosis. No retry is attempted.
+- **Score 5–7**: Proceed to full gate (ensemble or Gemini per attempt number). Failing section list passed to `extract_sections.py` for section-scoped evaluation.
+- **Triage failure** (non-zero exit or malformed JSON): Fall back to full gate with a stderr warning.
+
+Triage system prompt:
+```
+You are a triage agent estimating document quality before a full gate review.
+Output ONLY valid JSON — no preamble, no explanation, no markdown fences:
+{"score": <integer 1-10>, "failing_sections": ["<section heading>", ...], "diagnosis": "<one sentence>"}
+score 8-10: high quality, likely passes full gate.
+score 5-7: issues present, full review needed.
+score 1-4: fundamentally broken, retries will not help.
+failing_sections: list of exact markdown heading names that fail quality. Empty array if score >= 8.
+diagnosis: one sentence on the primary problem, or "No major issues found" if score >= 8.
+Maximum output: 200 tokens. Output only the JSON object.
+```
+
+Triage output schema: `{"score": <1-10>, "failing_sections": ["<heading>", ...], "diagnosis": "<one sentence>"}`
+
+When `triage_escalate: true` appears in gate JSON, `run_pipeline.sh` calls `escalate_triage()` immediately — bypassing the retry loop entirely.
+
+**Section-scoped gate (applies when score 5–7 and triage identified failing sections):**
+`gate.sh` invokes `scripts/extract_sections.py <output_file> <sections_json>` to extract
+only the failing sections before launching full gate agents.
+
+How `extract_sections.py` works:
+- Splits document on H2 (`## `) boundaries (falls back to H1 if no H2 present)
+- Matches each requested heading case-insensitively with fuzzy substring matching (query in heading or heading in query)
+- Always includes the document preamble (content before first heading, incl. H1 title) for context
+- Deduplicates: a heading matched by multiple requested entries is included once
+
+Fallback conditions (any one → full document used instead):
+- Any requested heading has no match in the document (logs warning to stderr)
+- Extracted word count > 70% of total document word count
+- Extracted content < 1200 chars (~300 tokens)
+
+For `task-breakdown` stage: manifest context (`=== CONTEXT MANIFESTS ===`) is re-appended to the extracted content after section-scoping, ensuring manifest validation checks still run.
+
 Returns JSON to stdout. The pipeline script parses this JSON to decide PASS/FAIL.
 
 ---
@@ -184,22 +224,44 @@ way that the stage can act on without further input.
 
 ## Retry context
 
-When a stage is retried after a FAIL, the gate's critique is prepended to the
-stage's system prompt:
+When a stage fails (pre-screen, triage, or full ensemble FAIL), `run_stage.sh` assembles
+**patch mode** context for the retry:
+
+- **Previous output** — the document from the last attempt, capped at 50 000 chars (~12 k tokens). Documents exceeding the cap are truncated with a `[TRUNCATED]` marker; the model is instructed to apply critiqued patches to visible sections only.
+- **Gate critique verbatim** — what must be fixed
+- **Patch instruction** — "Fix ONLY the sections identified in the critique. Do not change
+  any other section. Return the COMPLETE document with patches applied."
+
+The stage receives the previous output as a base and patches only the failing sections —
+full document regeneration is never the retry strategy.
+
+**Pre-screen failures**: `gate.sh` stores the pre-screen output as the `critique` field
+in its FAIL JSON. The patch context is therefore the structural issues identified by
+`pre_screen.py` — not a gate-level critique. Pre-screen output is always the repair context
+for pre-screen failures.
+
+**pre_screen.py always runs on retry**: `gate.sh` runs `pre_screen.py` unconditionally
+at the start of every invocation — there is no skip-on-retry logic.
+
+**Synthesis pass** (triggered after all retries exhausted): uses full-regen language
+("PREVIOUS ATTEMPT(S) FAILED. YOU MUST ADDRESS ALL CRITIQUES BELOW BEFORE OUTPUTTING")
+without patch mode — synthesis makes autonomous decisions that may change the document structure.
+
+Patch mode prompt:
 
 ```
-PREVIOUS ATTEMPT FAILED. You must address all of the following before outputting:
+PATCH MODE RETRY: Your previous attempt failed the quality gate. Patch the previous output.
+Fix ONLY the sections identified in the critique below. Do not change any other section.
+Return the COMPLETE document with patches applied — not just the changed sections.
 
+=== CRITIQUE FROM ATTEMPT N — YOU MUST ADDRESS THIS ===
 <critique text>
 
+PREVIOUS OUTPUT — patch this document, return the full document with only the critiqued sections changed:
+<previous output>
+
 ---
-
-Original task:
-<original stage system prompt>
 ```
-
-This ensures the retry is not a blind re-run — it has specific instructions for
-what to fix.
 
 ---
 
