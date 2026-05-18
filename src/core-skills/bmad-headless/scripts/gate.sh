@@ -535,7 +535,7 @@ $BRIEF
 CHECKLIST:
 $CHECKLIST"
     GEMINI_STATUS=0
-    printf '%s\n' "$GEMINI_PROMPT" | gemini -p "$GEMINI_REVIEWER_SYSTEM_PROMPT" \
+    printf '%s\n' "$GEMINI_PROMPT" | GEMINI_CLI_TRUST_WORKSPACE=true gemini -p "$GEMINI_REVIEWER_SYSTEM_PROMPT" \
       --output-format text -m "$GEMINI_GATE_MODEL" --yolo \
       > "$TMPDIR_GATE/gemini_output" 2>"$TMPDIR_GATE/gemini_err" || GEMINI_STATUS=$?
     if [[ $GEMINI_STATUS -eq 0 && -s "$TMPDIR_GATE/gemini_output" ]]; then
